@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/joho/godotenv"
 )
 
 const R2RequestTimeout = 360 * time.Second
@@ -39,28 +38,6 @@ type R2Client struct {
 
 // LoadR2Config loads R2 configuration from .env file
 func LoadR2Config() (*R2Config, error) {
-	// Try to load .env file from current directory or scripts directory
-	envPaths := []string{
-		".env",
-		"scripts/.env",
-		filepath.Join(
-			os.Getenv("HOME"), "Developer/code/go_code/src/github.com/vincenty1ung/vincenty1ung.github.io/scripts/.env",
-		),
-	}
-
-	var err error
-	for _, path := range envPaths {
-		err = godotenv.Load(path)
-		if err == nil {
-			fmt.Printf("✓ Loaded .env from: %s\n", path)
-			break
-		}
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to load .env file: %w", err)
-	}
-
 	// Read configuration from environment variables
 	config := &R2Config{
 		Endpoint:        getEnv("NUXT_PROVIDER_S3_ENDPOINT", "R2_ENDPOINT"),
@@ -250,9 +227,11 @@ func (r *R2Client) DeleteObjects(keys []string) error {
 
 	var objects []types.ObjectIdentifier
 	for _, key := range keys {
-		objects = append(objects, types.ObjectIdentifier{
-			Key: aws.String(key),
-		})
+		objects = append(
+			objects, types.ObjectIdentifier{
+				Key: aws.String(key),
+			},
+		)
 	}
 
 	// S3 batch delete limit is 1000
@@ -264,13 +243,15 @@ func (r *R2Client) DeleteObjects(keys []string) error {
 		}
 
 		batch := objects[i:end]
-		_, err := r.client.DeleteObjects(ctx, &s3.DeleteObjectsInput{
-			Bucket: aws.String(r.config.Bucket),
-			Delete: &types.Delete{
-				Objects: batch,
-				Quiet:   aws.Bool(true),
+		_, err := r.client.DeleteObjects(
+			ctx, &s3.DeleteObjectsInput{
+				Bucket: aws.String(r.config.Bucket),
+				Delete: &types.Delete{
+					Objects: batch,
+					Quiet:   aws.Bool(true),
+				},
 			},
-		})
+		)
 
 		if err != nil {
 			return fmt.Errorf("failed to delete batch objects from R2: %w", err)

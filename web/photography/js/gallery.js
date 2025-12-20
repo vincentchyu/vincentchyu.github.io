@@ -744,7 +744,18 @@ async function loadGallery() {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const albums = await response.json();
+        const albumsData = await response.json();
+
+        // Filter out hidden photos
+        const albums = albumsData.map((album) => {
+            if (album.photos) {
+                return {
+                    ...album,
+                    photos: album.photos.filter((photo) => !photo.is_hidden),
+                };
+            }
+            return album;
+        });
 
         // Global gallery state
         const galleryItems = [];

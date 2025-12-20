@@ -41,6 +41,13 @@ const (
 	MaxConcurrency = 10
 )
 
+var (
+	IsHiddenList map[string]bool = map[string]bool{
+		"DSC_1436__edit_nx.JPG": true,
+		"DSC_1371_edit_ps.jpg":  true,
+	}
+)
+
 // Photo represents a single photo entry
 type Photo struct {
 	Filename  string                 `json:"filename"`
@@ -55,6 +62,7 @@ type Photo struct {
 	Exif      map[string]interface{} `json:"exif,omitempty"` // Complete EXIF data
 	Hash      string                 `json:"hash,omitempty"` // File hash for caching
 	Timestamp int64                  `json:"-"`              // Timestamp for sorting
+	IsHidden  bool                   `json:"is_hidden"`      // is_hidden
 }
 
 // YearAlbum represents a collection of photos for a specific year
@@ -366,6 +374,10 @@ func UpdatePhotosHandler() {
 					fmt.Printf("Error processing %s: %v\n", filepath.Base(job.Path), err)
 					continue
 				}
+				if b := IsHiddenList[photo.Filename]; b {
+					fmt.Printf("👋 需要隐藏的照片【%s】...\n", photo.Filename)
+					photo.IsHidden = true
+				}
 				resultsChan <- photo
 			}
 		}()
@@ -500,6 +512,13 @@ func UpdatePhotosHandler() {
 			fmt.Printf("❌ Failed to upload photos.json: %v\n", err)
 		} else {
 			fmt.Printf("✓ Uploaded photos.json to R2\n")
+		}
+	}
+
+	if CFCli != nil {
+		err := CfKvSetValue(fmt.Sprintf("cache:photos:%s", "jsonValue"), string(jsonData), 86400)
+		if err != nil {
+			fmt.Printf("❌Error setting value for %s: %v\n", outputFilePath, err)
 		}
 	}
 
