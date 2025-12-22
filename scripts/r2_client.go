@@ -141,13 +141,31 @@ func (r *R2Client) UploadFile(localPath, key, cacheControl string) error {
 
 	// Determine content type
 	contentType := getContentType(localPath)
-
 	// Upload to R2
+	// Default input fields
 	input := &s3.PutObjectInput{
 		Bucket:      aws.String(r.config.Bucket),
 		Key:         aws.String(key),
 		Body:        bytes.NewReader(fileData),
 		ContentType: aws.String(contentType),
+	}
+
+	// Check if image needs compression (only for images)
+	if strings.Contains(contentType, "image/") {
+		// Try to compress if > 10MB
+		compressedData, newContentType, err := CompressImage(localPath)
+		if err != nil {
+			// Log error but continue with original file? Or return error?
+			// For now, let's log to stdout and proceed with original
+			fmt.Printf("Warning: failed to compress image %s: %v\n", localPath, err)
+		} else if compressedData != nil {
+			// Use compressed data
+			fmt.Printf("Uploaded compressed image: %s (Original: %d bytes, Compressed: %d bytes)\n", localPath, len(fileData), len(compressedData))
+			input.Body = bytes.NewReader(compressedData)
+			if newContentType != "" {
+				input.ContentType = aws.String(newContentType)
+			}
+		}
 	}
 
 	if cacheControl != "" {

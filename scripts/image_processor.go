@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	_ "image/gif"
 	"image/jpeg"
+	_ "image/png"
 	"os"
 
 	"github.com/chai2010/webp"
@@ -122,4 +124,83 @@ func GenerateThumbnailJPEG(imagePath string, config ThumbnailConfig) ([]byte, er
 	}
 
 	return buf.Bytes(), nil
+}
+
+// CompressImage checks if the image at the given path is larger than 10MB.
+// If so, it resizes/compresses it and returns the new data and content type.
+// If not, it returns nil, empty string, and nil error.
+func CompressImage(localPath string) ([]byte, string, error) {
+	// 10MB limit
+	const MaxSize = 10 * 1024 * 1024
+
+	info, err := os.Stat(localPath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if info.Size() <= MaxSize {
+		return nil, "", nil
+	}
+
+	// Open file
+	file, err := os.Open(localPath)
+	if err != nil {
+		return nil, "", err
+	}
+	defer file.Close()
+
+	// Decode
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return nil, "", fmt.Errorf("decode failed: %w", err)
+	}
+
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	// Target constraints
+	// Keep 5000px as a safe limit for "zoomed in" high quality while saving space.
+	// 5000px is usually enough for even 5K screens.
+	const MaxDimension = 5000
+
+	newWidth, newHeight := width, height
+
+	if width > MaxDimension || height > MaxDimension {
+		ratio := float64(width) / float64(height)
+		if width > height {
+			newWidth = MaxDimension
+			newHeight = int(float64(MaxDimension) / ratio)
+		} else {
+			newHeight = MaxDimension
+			newWidth = int(float64(MaxDimension) * ratio)
+		}
+	}
+
+	// Resize if dimensions changed
+	var dst image.Image
+	if newWidth != width || newHeight != height {
+		tmp := image.NewRGBA(image.Rect(0, 0, newWidth, newHeight))
+		draw.CatmullRom.Scale(tmp, tmp.Bounds(), img, bounds, draw.Over, nil)
+		dst = tmp
+	} else {
+		dst = img
+	}
+
+	// Encode to JPEG
+	var buf bytes.Buffer
+	// Quality 85 is standard "high quality" for web
+	err = jpeg.Encode(&buf, dst, &jpeg.Options{Quality: 85})
+	if err != nil {
+		return nil, "", err
+	}
+
+	// Check if we actually saved space
+	if int64(buf.Len()) >= info.Size() {
+		// If somehow we made it bigger or same (rare if original was raw/png, possible if already optimzed jpeg),
+		// return nil to keep original
+		return nil, "", nil
+	}
+
+	return buf.Bytes(), "image/jpeg", nil
 }

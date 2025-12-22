@@ -41,13 +41,6 @@ const (
 	MaxConcurrency = 10
 )
 
-var (
-	IsHiddenList map[string]bool = map[string]bool{
-		"DSC_1436__edit_nx.JPG": true,
-		"DSC_1371_edit_ps.jpg":  true,
-	}
-)
-
 // Photo represents a single photo entry
 type Photo struct {
 	Filename  string                 `json:"filename"`
@@ -81,6 +74,7 @@ type PhotoProcessor struct {
 	NewPhotos      []Photo
 	Mutex          sync.Mutex
 	DateRegex      *regexp.Regexp
+	IsHiddenList   map[string]bool
 }
 
 // NewPhotoProcessor creates a new PhotoProcessor
@@ -113,6 +107,19 @@ func NewPhotoProcessor() (*PhotoProcessor, error) {
 		}
 	}
 
+	// Initialize hidden list from environment
+	hiddenMap := make(map[string]bool, 0)
+	hiddenPhotos := getEnv("HIDDEN_PHOTOS")
+	if hiddenPhotos != "" {
+		for _, filename := range strings.Split(hiddenPhotos, ",") {
+			filename = strings.TrimSpace(filename)
+			if filename != "" {
+				hiddenMap[filename] = true
+			}
+		}
+		fmt.Printf("✓ Loaded %d hidden photos from environment\n", len(hiddenMap))
+	}
+
 	return &PhotoProcessor{
 		RootDir:        rootDir,
 		ImgDirPath:     filepath.Join(rootDir, ImgDir),
@@ -120,6 +127,7 @@ func NewPhotoProcessor() (*PhotoProcessor, error) {
 		ThumbnailBase:  thumbnailBase,
 		ExistingPhotos: make(map[string]Photo),
 		DateRegex:      regexp.MustCompile(`DSC_(\d{4})-(\d{2})-(\d{2})`),
+		IsHiddenList:   hiddenMap,
 	}, nil
 }
 
@@ -196,6 +204,8 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 			// But ensure path is correct (in case of URL changes, though hash check implies content same)
 			// We might want to re-verify R2 existence if we were being very strict, but for perf we skip
 			// fmt.Printf("Skipping unchanged photo: %s\n", filename)
+			// 恢复是否隐藏的默认值
+			existing.IsHidden = false
 			return existing, nil
 		}
 	}
@@ -374,11 +384,15 @@ func UpdatePhotosHandler() {
 					fmt.Printf("Error processing %s: %v\n", filepath.Base(job.Path), err)
 					continue
 				}
-				if b := IsHiddenList[photo.Filename]; b {
+				if b := processor.IsHiddenList[photo.Filename]; b {
 					fmt.Printf("👋 需要隐藏的照片【%s】...\n", photo.Filename)
 					photo.IsHidden = true
 				}
-				resultsChan <- photo
+				// 全部清空
+				if false {
+				} else {
+					resultsChan <- photo
+				}
 			}
 		}()
 	}
@@ -506,8 +520,7 @@ func UpdatePhotosHandler() {
 	if processor.R2Client != nil {
 		jsonKey := fmt.Sprintf("%sphotos.json", processor.R2Client.config.BasePrefix)
 		if err := processor.R2Client.UploadBytes(
-			// jsonData, jsonKey, "application/json", "public, max-age=720, must-revalidate",
-			jsonData, jsonKey, "application/json", "public, max-age=720",
+			jsonData, jsonKey, "application/json", "no-cache",
 		); err != nil {
 			fmt.Printf("❌ Failed to upload photos.json: %v\n", err)
 		} else {
@@ -516,9 +529,12 @@ func UpdatePhotosHandler() {
 	}
 
 	if CFCli != nil {
+		key := fmt.Sprintf("cache:photos:%s", "jsonValue")
 		err := CfKvSetValue(fmt.Sprintf("cache:photos:%s", "jsonValue"), string(jsonData), 86400)
 		if err != nil {
 			fmt.Printf("❌Error setting value for %s: %v\n", outputFilePath, err)
+		} else {
+			fmt.Printf("✓ Uploaded photos.json to KV[%s]\n", key)
 		}
 	}
 
