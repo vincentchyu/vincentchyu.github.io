@@ -160,7 +160,7 @@ func (r *R2Client) UploadFile(localPath, key, cacheControl string) error {
 			fmt.Printf("Warning: failed to compress image %s: %v\n", localPath, err)
 		} else if compressedData != nil {
 			// Use compressed data
-			fmt.Printf("Uploaded compressed image: %s (Original: %d bytes, Compressed: %d bytes)\n", localPath, len(fileData), len(compressedData))
+			fmt.Printf("Uploaded compressed image: %s (Original: %.2f MB, Compressed: %.2f MB)\n", localPath, float64(len(fileData))/1024/1024, float64(len(compressedData))/1024/1024)
 			input.Body = bytes.NewReader(compressedData)
 			if newContentType != "" {
 				input.ContentType = aws.String(newContentType)
