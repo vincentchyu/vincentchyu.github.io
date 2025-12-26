@@ -932,6 +932,7 @@
             <button class="tab-button" onclick="switchTab('md5')">MD5 哈希</button>
             <button class="tab-button" onclick="switchTab('json')">JSON 格式化</button>
             <button class="tab-button" onclick="switchTab('yaml')">YAML 转换</button>
+            <button class="tab-button" onclick="switchTab('time-calc')">日期计算器</button>
         </div>
 
         <!-- Base64 Tool -->
@@ -953,6 +954,87 @@
             <div class="input-group">
                 <label>结果</label>
                 <div id="base64Result" class="result-area">结果将显示在这里...</div>
+            </div>
+        </div>
+
+        <!-- Time Calculator Tool -->
+        <div id="time-calc" class="tool-panel">
+            <h2 class="tool-title">日期计算器</h2>
+            <p class="tool-description">计算日期推移或两个日期之间的间隔天数</p>
+
+            <div class="input-group">
+                <div style="border-left: 4px solid var(--primary-gradient); padding-left: 15px; margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-primary);">计算几天后的日期:</h3>
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <span style="color: var(--text-secondary);">和</span>
+                        <input type="number" id="calcYear" style="width: 80px;" placeholder="Year">
+                        <span style="color: var(--text-primary);">年</span>
+                        <input type="number" id="calcMonth" style="width: 60px;" placeholder="Month">
+                        <span style="color: var(--text-primary);">月</span>
+                        <input type="number" id="calcDay" style="width: 60px;" placeholder="Day">
+                        <span style="color: var(--text-primary);">日 (默认今天)</span>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+                        <span style="color: var(--text-secondary);">相差</span>
+                        <input type="number" id="calcOffset" style="width: 100px;" placeholder="Days" value="100">
+                        <span style="color: var(--text-primary);">天 (输入负数向前计算)</span>
+                    </div>
+
+                    <div style="margin-top: 15px; font-size: 1.2em;">
+                        <span style="color: var(--text-secondary);">是: </span>
+                        <span id="calcResult" style="color: #ff6b6b; font-weight: bold; margin-left: 10px;">-</span>
+                    </div>
+
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button onclick="calculateDateOffset()" class="secondary" style="padding: 8px 16px; font-size: 0.9em; background: transparent; border: 1px solid var(--border-color);">计算日期</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div style="border-left: 4px solid var(--primary-gradient); padding-left: 15px; margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-primary);">计算日期差:</h3>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <input type="number" id="diffYear1" style="width: 80px;" placeholder="Year">
+                        <span style="color: var(--text-primary);">年</span>
+                        <input type="number" id="diffMonth1" style="width: 60px;" placeholder="Month">
+                        <span style="color: var(--text-primary);">月</span>
+                        <input type="number" id="diffDay1" style="width: 60px;" placeholder="Day">
+                        <span style="color: var(--text-primary);">日 (默认今日)</span>
+                    </div>
+
+                    <div style="text-align: center; margin: 10px 0; color: var(--text-secondary);">和</div>
+
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <input type="number" id="diffYear2" style="width: 80px;" placeholder="Year">
+                        <span style="color: var(--text-primary);">年</span>
+                        <input type="number" id="diffMonth2" style="width: 60px;" placeholder="Month">
+                        <span style="color: var(--text-primary);">月</span>
+                        <input type="number" id="diffDay2" style="width: 60px;" placeholder="Day">
+                        <span style="color: var(--text-primary);">日</span>
+                    </div>
+
+                    <div style="margin-top: 15px; font-size: 1.2em;">
+                        <span style="color: var(--text-secondary);">相差: </span>
+                        <span id="diffResult" style="color: #ff6b6b; font-weight: bold; margin-left: 10px;">-</span>
+                        <span style="color: var(--text-primary);"> 天</span>
+                    </div>
+
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button onclick="calculateDateDiff()" class="secondary" style="padding: 8px 16px; font-size: 0.9em; background: transparent; border: 1px solid var(--border-color);">计算日期</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div style="border-left: 4px solid var(--primary-gradient); padding-left: 15px;">
+                    <h3 style="margin-bottom: 15px; color: var(--text-primary);">时间计算器说明</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.8;">
+                        此日期计算器可以帮您算出从出生至今日一共存活了多少天数、距离节日、高考、考研、纪念日等日期还相差多少天数。有向前向后两种计算方式;并有计算几天后的时间和日期差数两种换算模式。
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -2456,7 +2538,83 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             
             document.getElementById('dateInput').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+            // Initialize Time Calculator defaults
+            initTimeCalc();
         });
+
+        // Time Calculator Functions
+        function initTimeCalc() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+
+            // Init "Date After N Days"
+            document.getElementById('calcYear').value = year;
+            document.getElementById('calcMonth').value = month;
+            document.getElementById('calcDay').value = day;
+
+            // Init "Date Diff"
+            document.getElementById('diffYear1').value = year;
+            document.getElementById('diffMonth1').value = month;
+            document.getElementById('diffDay1').value = day;
+            
+            // Set input 2 to tomorrow for demo
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('diffYear2').value = tomorrow.getFullYear();
+            document.getElementById('diffMonth2').value = tomorrow.getMonth() + 1;
+            document.getElementById('diffDay2').value = tomorrow.getDate();
+
+            // Run initial calc
+            calculateDateOffset();
+            calculateDateDiff();
+        }
+
+        function calculateDateOffset() {
+            const year = parseInt(document.getElementById('calcYear').value);
+            const month = parseInt(document.getElementById('calcMonth').value);
+            const day = parseInt(document.getElementById('calcDay').value);
+            const offset = parseInt(document.getElementById('calcOffset').value);
+
+            if (isNaN(year) || isNaN(month) || isNaN(day) || isNaN(offset)) {
+                return;
+            }
+
+            const date = new Date(year, month - 1, day);
+            date.setDate(date.getDate() + offset);
+
+            const resultYear = date.getFullYear();
+            const resultMonth = date.getMonth() + 1;
+            const resultDay = date.getDate();
+            const weekDay = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][date.getDay()];
+
+            document.getElementById('calcResult').textContent = 
+                `${resultYear}年${resultMonth}月${resultDay}日 ${weekDay}`;
+        }
+
+        function calculateDateDiff() {
+            const y1 = parseInt(document.getElementById('diffYear1').value);
+            const m1 = parseInt(document.getElementById('diffMonth1').value);
+            const d1 = parseInt(document.getElementById('diffDay1').value);
+
+            const y2 = parseInt(document.getElementById('diffYear2').value);
+            const m2 = parseInt(document.getElementById('diffMonth2').value);
+            const d2 = parseInt(document.getElementById('diffDay2').value);
+
+            if (isNaN(y1) || isNaN(m1) || isNaN(d1) || isNaN(y2) || isNaN(m2) || isNaN(d2)) {
+                return;
+            }
+
+            const date1 = new Date(y1, m1 - 1, d1);
+            const date2 = new Date(y2, m2 - 1, d2);
+
+            const diffTime = Math.abs(date2 - date1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+            document.getElementById('diffResult').textContent = diffDays;
+        }
     </script>
 </body>
 </html>
