@@ -503,7 +503,7 @@ function openFancyboxDirectly(photoIndex, galleryItems) {
                         if (existingPanel) existingPanel.remove();
 
                         if (exif) {
-                            const metadataPanel = createMetadataPanel(exif, filename);
+                            const metadataPanel = createMetadataPanel(exif, filename, item.Subject);
                             container.appendChild(metadataPanel);
                         }
                     } catch (e) {
@@ -551,7 +551,8 @@ function openFancyboxDirectly(photoIndex, galleryItems) {
                         if (exif) {
                             const metadataPanel = createMetadataPanel(
                                 exif,
-                                filename
+                                filename,
+                                slide.Subject
                             );
                             fancybox.container.appendChild(metadataPanel);
                         }
@@ -909,7 +910,8 @@ async function loadGallery() {
                                             if (exif) {
                                                 const metadataPanel = createMetadataPanel(
                                                     exif,
-                                                    filename
+                                                    filename,
+                                                    item.Subject
                                                 );
                                                 container.appendChild(metadataPanel);
                                             }
@@ -959,7 +961,8 @@ async function loadGallery() {
                                             if (exif) {
                                                 const metadataPanel = createMetadataPanel(
                                                     exif,
-                                                    filename
+                                                    filename,
+                                                    slide.Subject
                                                 );
                                                 fancybox.container.appendChild(metadataPanel);
                                             }
@@ -1091,7 +1094,7 @@ async function loadGallery() {
                                     if (existingPanel) existingPanel.remove();
 
                                     if (exif) {
-                                        const metadataPanel = createMetadataPanel(exif, filename);
+                                        const metadataPanel = createMetadataPanel(exif, filename, item.Subject);
                                         container.appendChild(metadataPanel);
                                     }
                                 } catch (e) {
@@ -1143,7 +1146,7 @@ async function loadGallery() {
                                     }
 
                                     if (exif) {
-                                        const metadataPanel = createMetadataPanel(exif, filename);
+                                        const metadataPanel = createMetadataPanel(exif, filename, slide.Subject);
                                         fancybox.container.appendChild(metadataPanel);
                                     }
                                 } catch (e) {
@@ -1431,6 +1434,7 @@ function renderWaterfallLayout(container, photos, year, month, galleryItems) {
             caption: photo.alt || "",
             exif: photo.exif, // Store full EXIF object
             filename: photo.filename || "",
+            Subject: photo.Subject || [], // Store root Subject
         });
     });
 
@@ -1752,14 +1756,14 @@ function activateTimelineItem(id) {
 /**
  * Create metadata panel HTML from EXIF data
  */
-function createMetadataPanel(exif, filename) {
+function createMetadataPanel(exif, filename, rootSubject) {
     console.log("Creating metadata panel for:", filename, exif);
     const panel = document.createElement("div");
     panel.className = "fancybox__metadata";
 
     // Extract key EXIF values
     const rating = exif.Rating || 0;
-    const tags = extractTags(exif);
+    const tags = extractTags(exif, rootSubject);
     const shootingParams = extractShootingParams(exif);
     const deviceInfo = extractDeviceInfo(exif);
     const shootingMode = extractShootingMode(exif);
@@ -2064,10 +2068,15 @@ if ("onorientationchange" in window) {
 /**
  * Extract tags from EXIF data
  */
-function extractTags(exif) {
+function extractTags(exif, rootSubject) {
     const tags = [];
 
-    // Try different tag fields
+    // Prioritize rootSubject (manual tags)
+    if (rootSubject && Array.isArray(rootSubject) && rootSubject.length > 0) {
+        return rootSubject.filter((tag) => tag && tag.trim());
+    }
+
+    // Fallback to EXIF tags
     if (exif.Keywords) {
         if (Array.isArray(exif.Keywords)) {
             tags.push(...exif.Keywords);
