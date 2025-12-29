@@ -1,4 +1,4 @@
-package scripts
+package photo
 
 import (
 	"bytes"
@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,6 +15,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/vincentchyu/vincentchyu.github.io/internal/imaging"
+	"github.com/vincentchyu/vincentchyu.github.io/internal/storage"
 )
 
 // Configuration
@@ -52,10 +56,11 @@ type Photo struct {
 	Date      string                 `json:"date"` // YYYY-MM-DD for sorting
 	Width     int                    `json:"width,omitempty"`
 	Height    int                    `json:"height,omitempty"`
-	Exif      map[string]interface{} `json:"exif,omitempty"` // Complete EXIF data
-	Hash      string                 `json:"hash,omitempty"` // File hash for caching
-	Timestamp int64                  `json:"-"`              // Timestamp for sorting
-	IsHidden  bool                   `json:"is_hidden"`      // is_hidden
+	Exif      map[string]interface{} `json:"exif,omitempty"`    // Complete EXIF data
+	Hash      string                 `json:"hash,omitempty"`    // File hash for caching
+	Timestamp int64                  `json:"-"`                 // Timestamp for sorting
+	IsHidden  bool                   `json:"is_hidden"`         // is_hidden
+	Subject   []string               `json:"Subject,omitempty"` // Custom tags
 }
 
 // YearAlbum represents a collection of photos for a specific year
@@ -68,13 +73,12 @@ type YearAlbum struct {
 type PhotoProcessor struct {
 	RootDir        string
 	ImgDirPath     string
-	R2Client       *R2Client
+	R2Client       *storage.R2Client
 	ThumbnailBase  string
 	ExistingPhotos map[string]Photo // Key: Filename
 	NewPhotos      []Photo
 	Mutex          sync.Mutex
 	DateRegex      *regexp.Regexp
-	IsHiddenList   map[string]bool
 }
 
 // NewPhotoProcessor creates a new PhotoProcessor
@@ -85,13 +89,13 @@ func NewPhotoProcessor() (*PhotoProcessor, error) {
 	}
 
 	// Initialize R2 client
-	var r2Client *R2Client
+	var r2Client *storage.R2Client
 	var thumbnailBase string
 
-	r2Config, err := LoadR2Config()
+	r2Config, err := storage.LoadR2Config()
 	if err != nil {
-		fmt.Printf("⚠ Warning: R2 configuration load failed: %v\n", err)
-		fmt.Println("Using default/empty configuration...")
+		log.Printf("⚠ Warning: R2 configuration load failed: %v\n", err)
+		log.Println("Using default/empty configuration...")
 	} else {
 		thumbnailBase = fmt.Sprintf(
 			"%s/%s%s",
@@ -99,25 +103,12 @@ func NewPhotoProcessor() (*PhotoProcessor, error) {
 			r2Config.BasePrefix,
 			r2Config.ThumbnailPrefix,
 		)
-		r2Client, err = NewR2Client(r2Config)
+		r2Client, err = storage.NewR2Client(r2Config)
 		if err != nil {
-			fmt.Printf("⚠ Warning: Failed to create R2 client: %v\n", err)
+			log.Printf("⚠ Warning: Failed to create R2 client: %v\n", err)
 		} else {
-			fmt.Println("✓ R2 client initialized successfully")
+			log.Println("✓ R2 client initialized successfully")
 		}
-	}
-
-	// Initialize hidden list from environment
-	hiddenMap := make(map[string]bool, 0)
-	hiddenPhotos := getEnv("HIDDEN_PHOTOS")
-	if hiddenPhotos != "" {
-		for _, filename := range strings.Split(hiddenPhotos, ",") {
-			filename = strings.TrimSpace(filename)
-			if filename != "" {
-				hiddenMap[filename] = true
-			}
-		}
-		fmt.Printf("✓ Loaded %d hidden photos from environment\n", len(hiddenMap))
 	}
 
 	return &PhotoProcessor{
@@ -127,7 +118,6 @@ func NewPhotoProcessor() (*PhotoProcessor, error) {
 		ThumbnailBase:  thumbnailBase,
 		ExistingPhotos: make(map[string]Photo),
 		DateRegex:      regexp.MustCompile(`DSC_(\d{4})-(\d{2})-(\d{2})`),
-		IsHiddenList:   hiddenMap,
 	}, nil
 }
 
@@ -156,7 +146,7 @@ func (p *PhotoProcessor) LoadExistingMetadata() ([]byte, error) {
 					p.ExistingPhotos[photo.Filename] = photo
 				}
 			}
-			fmt.Printf("🟢 Loaded existing metadata for %d photos.\n", len(p.ExistingPhotos))
+			log.Printf("🟢 Loaded existing metadata for %d photos.\n", len(p.ExistingPhotos))
 		}
 	}
 	return content, nil
@@ -171,7 +161,7 @@ func calculateFileHash(filePath string) (string, error) {
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-			fmt.Println("Failed to close file.")
+			log.Println("Failed to close file.")
 		}
 	}(file)
 
@@ -196,22 +186,15 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 
 	// Check if photo exists and hash matches
 	if existing, ok := p.ExistingPhotos[filename]; ok {
-		// 第一次是相同的
 		if existing.Hash == hash {
-			// if true {
-			// 	existing.Hash = hash
-			// Photo hasn't changed, return existing data
-			// But ensure path is correct (in case of URL changes, though hash check implies content same)
-			// We might want to re-verify R2 existence if we were being very strict, but for perf we skip
+			// Photo hasn't changed, return existing data with all custom fields preserved
 			// fmt.Printf("Skipping unchanged photo: %s\n", filename)
-			// 恢复是否隐藏的默认值
-			existing.IsHidden = false
 			return existing, nil
 		}
 	}
 
 	// New or modified photo
-	fmt.Printf("🟢 Processing %s...\n", filename)
+	log.Printf("🟢 Processing %s...\n", filename)
 
 	relPath, _ := filepath.Rel(p.RootDir, path)
 	webPath := strings.ReplaceAll(relPath, "\\", "/")
@@ -224,13 +207,13 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 	// R2 Upload Logic
 	if p.R2Client != nil {
 		// 1. Upload Original
-		originalKey := fmt.Sprintf("%s%s%s", p.R2Client.config.BasePrefix, p.R2Client.config.OriginalPrefix, filename)
+		originalKey := fmt.Sprintf("%s%s%s", p.R2Client.Config.BasePrefix, p.R2Client.Config.OriginalPrefix, filename)
 		// We could check existence, but since hash changed or it's new, we should probably upload
 		// Or we can check if it exists to avoid re-uploading if only local metadata changed?
 		// For simplicity/safety, if hash changed, we upload.
 
 		if err := p.R2Client.UploadFile(path, originalKey, "public, max-age=31536000"); err != nil {
-			fmt.Printf("❌ Failed to upload original %s: %v\n", filename, err)
+			log.Printf("❌ Failed to upload original %s: %v\n", filename, err)
 			finalPath = webPath
 			return Photo{}, fmt.Errorf("failed to upload original %s: %w", filename, err)
 		} else {
@@ -239,18 +222,18 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 
 		// 2. Upload Thumbnail
 		thumbnailKey := fmt.Sprintf(
-			"%s%s%s%s", p.R2Client.config.BasePrefix, p.R2Client.config.ThumbnailPrefix, filenameNoExt, ExtWebP,
+			"%s%s%s%s", p.R2Client.Config.BasePrefix, p.R2Client.Config.ThumbnailPrefix, filenameNoExt, ExtWebP,
 		)
-		thumbnailData, err := GenerateThumbnail(path, DefaultThumbnailConfig())
+		thumbnailData, err := imaging.GenerateThumbnail(path, imaging.DefaultThumbnailConfig())
 		if err != nil {
-			fmt.Printf("❌ Failed to generate thumbnail for %s: %v\n", filename, err)
+			log.Printf("❌ Failed to generate thumbnail for %s: %v\n", filename, err)
 			finalThumbnail = p.ThumbnailBase + filenameNoExt + ".webp"
 			return Photo{}, fmt.Errorf("failed to upload thumbnail %s: %w", filename, err)
 		} else {
 			if err := p.R2Client.UploadBytes(
 				thumbnailData, thumbnailKey, "image/webp", "public, max-age=31536000",
 			); err != nil {
-				fmt.Printf("❌ Failed to upload thumbnail for %s: %v\n", filename, err)
+				log.Printf("❌ Failed to upload thumbnail for %s: %v\n", filename, err)
 				finalThumbnail = p.ThumbnailBase + filenameNoExt + ".webp"
 			} else {
 				finalThumbnail = p.R2Client.GetCDNUrl(thumbnailKey)
@@ -285,7 +268,7 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 			dateStr = fmt.Sprintf(DateFormatDefault, yearDirName)
 		}
 		if err != nil {
-			fmt.Printf("⚠ EXIF extraction failed for %s: %v\n", filename, err)
+			log.Printf("⚠ EXIF extraction failed for %s: %v\n", filename, err)
 		}
 	}
 
@@ -305,24 +288,59 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 		Timestamp: timestamp,
 	}
 
-	// Preserve Alt from existing if available
+	// Extract tags from EXIF Subject if available
+	if subj, ok := exifData["Subject"].([]interface{}); ok {
+		for _, s := range subj {
+			if str, ok := s.(string); ok {
+				photo.Subject = append(photo.Subject, str)
+			}
+		}
+	} else if subj, ok := exifData["Subject"].(string); ok {
+		// Sometimes it's a single string
+		photo.Subject = []string{subj}
+	} else if kw, ok := exifData["Keywords"].([]interface{}); ok {
+		for _, k := range kw {
+			if str, ok := k.(string); ok {
+				photo.Subject = append(photo.Subject, str)
+			}
+		}
+	} else if kw, ok := exifData["Keywords"].(string); ok {
+		photo.Subject = []string{kw}
+	}
+
+	// Preserve custom fields from existing photo if available
 	if existing, ok := p.ExistingPhotos[filename]; ok {
 		photo.Alt = existing.Alt
+		photo.IsHidden = existing.IsHidden
+		// If photo has no tags from EXIF, preserve existing tags
+		if len(photo.Subject) == 0 {
+			photo.Subject = existing.Subject
+		}
 	}
 
 	return photo, nil
 }
 
-func UpdatePhotosHandler() {
+// UpdatePhotosHandler processes all photos
+func UpdatePhotosHandler(logChan chan<- string) {
+	// Helper for logging
+	logMsg := func(format string, v ...interface{}) {
+		msg := fmt.Sprintf(format, v...)
+		log.Println(msg) // Keep stdout logging
+		if logChan != nil {
+			logChan <- msg
+		}
+	}
+
 	processor, err := NewPhotoProcessor()
 	if err != nil {
-		fmt.Printf("Error initializing processor: %v\n", err)
+		logMsg("Error initializing processor: %v", err)
 		os.Exit(1)
 	}
 	var existingContent []byte
 
 	if existingContent, err = processor.LoadExistingMetadata(); err != nil {
-		fmt.Printf("Warning: Failed to load existing metadata: %v\n", err)
+		logMsg("Warning: Failed to load existing metadata: %v", err)
 	}
 
 	// Collect all image files
@@ -334,7 +352,7 @@ func UpdatePhotosHandler() {
 
 	entries, err := os.ReadDir(processor.ImgDirPath)
 	if err != nil {
-		fmt.Printf("Error reading image directory: %v\n", err)
+		logMsg("Error reading image directory: %v", err)
 		os.Exit(1)
 	}
 
@@ -357,7 +375,7 @@ func UpdatePhotosHandler() {
 			},
 		)
 		if err != nil {
-			fmt.Printf("Error walking directory %s: %v\n", yearDir, err)
+			logMsg("Error walking directory %s: %v", yearDir, err)
 		}
 	}
 
@@ -372,7 +390,7 @@ func UpdatePhotosHandler() {
 		numWorkers = len(jobs)
 	}
 
-	fmt.Printf("🟢 Starting %d workers for %d photos...\n", numWorkers, len(jobs))
+	logMsg("🟢 Starting %d workers for %d photos...", numWorkers, len(jobs))
 
 	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
@@ -381,13 +399,10 @@ func UpdatePhotosHandler() {
 			for job := range jobsChan {
 				photo, err := processor.processPhoto(job.Path, job.YearDir)
 				if err != nil {
-					fmt.Printf("Error processing %s: %v\n", filepath.Base(job.Path), err)
+					logMsg("Error processing %s: %v", filepath.Base(job.Path), err)
 					continue
 				}
-				if b := processor.IsHiddenList[photo.Filename]; b {
-					fmt.Printf("👋 需要隐藏的照片【%s】...\n", photo.Filename)
-					photo.IsHidden = true
-				}
+
 				// 全部清空
 				if false {
 				} else {
@@ -402,11 +417,11 @@ func UpdatePhotosHandler() {
 		jobsChan <- job
 	}
 	close(jobsChan)
-	fmt.Println("✓ 任务分发完成")
+	logMsg("✓ 任务分发完成")
 
 	// Wait for workers
 	wg.Wait()
-	fmt.Println("✓ 任务已经结束")
+	logMsg("✓ 任务已经结束")
 	close(resultsChan)
 
 	// Collect results
@@ -455,16 +470,16 @@ func UpdatePhotosHandler() {
 		var keysToDelete []string
 		for filename := range processor.ExistingPhotos {
 			if !newPhotosMap[filename] {
-				fmt.Printf("Marking for deletion: %s\n", filename)
+				logMsg("Marking for deletion: %s", filename)
 				// Add original and thumbnail to delete list
 				keysToDelete = append(
 					keysToDelete,
 					fmt.Sprintf(
-						"%s%s%s", processor.R2Client.config.BasePrefix, processor.R2Client.config.OriginalPrefix,
+						"%s%s%s", processor.R2Client.Config.BasePrefix, processor.R2Client.Config.OriginalPrefix,
 						filename,
 					),
 					fmt.Sprintf(
-						"%s%s%s%s", processor.R2Client.config.BasePrefix, processor.R2Client.config.ThumbnailPrefix,
+						"%s%s%s%s", processor.R2Client.Config.BasePrefix, processor.R2Client.Config.ThumbnailPrefix,
 						strings.TrimSuffix(filename, filepath.Ext(filename)), ExtWebP,
 					),
 				)
@@ -472,11 +487,11 @@ func UpdatePhotosHandler() {
 		}
 
 		if len(keysToDelete) > 0 {
-			fmt.Printf("🟢 Deleting %d orphaned files from R2...\n", len(keysToDelete))
+			logMsg("🟢 Deleting %d orphaned files from R2...", len(keysToDelete))
 			if err := processor.R2Client.DeleteObjects(keysToDelete); err != nil {
-				fmt.Printf("Error deleting objects: %v\n", err)
+				logMsg("Error deleting objects: %v", err)
 			} else {
-				fmt.Println("✓ Successfully deleted orphaned files.")
+				logMsg("✓ Successfully deleted orphaned files.")
 			}
 		}
 	}
@@ -484,7 +499,7 @@ func UpdatePhotosHandler() {
 	// Write output
 	jsonData, err := json.Marshal(newAlbums)
 	if err != nil {
-		fmt.Printf("Error marshaling JSON: %v\n", err)
+		logMsg("Error marshaling JSON: %v", err)
 		os.Exit(1)
 	}
 
@@ -496,7 +511,7 @@ func UpdatePhotosHandler() {
 
 	err = os.WriteFile(outputFilePath, jsonData, 0644)
 	if err != nil {
-		fmt.Printf("Error writing output file: %v\n", err)
+		logMsg("Error writing output file: %v", err)
 		os.Exit(1)
 	}
 
@@ -504,41 +519,41 @@ func UpdatePhotosHandler() {
 	if len(existingContent) > 0 {
 		backupPath := outputFilePath + "." + time.Now().Format("20060102_150405") + ".bak"
 		if err := os.WriteFile(backupPath, existingContent, 0644); err != nil {
-			fmt.Printf("Warning: Could not create backup of %s: %v\n", outputFilePath, err)
+			logMsg("Warning: Could not create backup of %s: %v", outputFilePath, err)
 		} else {
-			fmt.Printf("✓ Backup created: %s\n", backupPath)
+			logMsg("✓ Backup created: %s", backupPath)
 		}
 	}
 
 	// Check if content has changed
 	if JSONEqual(existingContent, jsonData) {
-		fmt.Println("✓ photos.json has not changed. Skipping backup, file write, and R2 upload.")
+		logMsg("✓ photos.json has not changed. Skipping backup, file write, and R2 upload.")
 		return
 	}
 
 	// Upload photos.json to R2
 	if processor.R2Client != nil {
-		jsonKey := fmt.Sprintf("%sphotos.json", processor.R2Client.config.BasePrefix)
+		jsonKey := fmt.Sprintf("%sphotos.json", processor.R2Client.Config.BasePrefix)
 		if err := processor.R2Client.UploadBytes(
 			jsonData, jsonKey, "application/json", "no-cache",
 		); err != nil {
-			fmt.Printf("❌ Failed to upload photos.json: %v\n", err)
+			logMsg("❌ Failed to upload photos.json: %v", err)
 		} else {
-			fmt.Printf("✓ Uploaded photos.json to R2\n")
+			logMsg("✓ Uploaded photos.json to R2")
 		}
 	}
 
-	if CFCli != nil {
+	if storage.CFCli != nil {
 		key := fmt.Sprintf("cache:photos:%s", "jsonValue")
-		err := CfKvSetValue(fmt.Sprintf("cache:photos:%s", "jsonValue"), string(jsonData), 86400)
+		err := storage.CfKvSetValue(fmt.Sprintf("cache:photos:%s", "jsonValue"), string(jsonData), 86400)
 		if err != nil {
-			fmt.Printf("❌Error setting value for %s: %v\n", outputFilePath, err)
+			logMsg("❌Error setting value for %s: %v", outputFilePath, err)
 		} else {
-			fmt.Printf("✓ Uploaded photos.json to KV[%s]\n", key)
+			logMsg("✓ Uploaded photos.json to KV[%s]", key)
 		}
 	}
 
-	fmt.Printf("Successfully updated photos.json with %d photos.\n", len(allPhotos))
+	logMsg("Successfully updated photos.json with %d photos.", len(allPhotos))
 }
 
 // JSONEqual compares two JSON byte slices for equality, ignoring whitespace and key order
@@ -563,10 +578,10 @@ func JSONEqual(a, b []byte) bool {
 	}
 
 	if !bytes.Equal(m1, m2) {
-		fmt.Println("⚠️ JSON content differs. Writing to files for comparison...")
+		log.Println("⚠️ JSON content differs. Writing to files for comparison...")
 		_ = os.WriteFile("photos_old.json", m1, 0644)
 		_ = os.WriteFile("photos_new.json", m2, 0644)
-		fmt.Println("👉 Please compare 'photos_old.json' and 'photos_new.json' to see the differences.")
+		log.Println("👉 Please compare 'photos_old.json' and 'photos_new.json' to see the differences.")
 		return false
 	}
 

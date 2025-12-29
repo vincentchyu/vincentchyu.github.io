@@ -10,7 +10,6 @@ docker_mysql.session.sql
 
 # Photography images (stored in R2)
 *gallery_images*
-scripts/.env
 scripts/migrate_photos.go
 *.bak
 *photos*.json
@@ -19,3 +18,5 @@ scripts/migrate_photos.go
 *.json
 *.wrangler/
 /web/lastfm-scrobbler/functions/
+.env
+/shell/bin/

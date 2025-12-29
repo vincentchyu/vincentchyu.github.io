@@ -1,8 +1,9 @@
-package scripts
+package photo
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strconv"
@@ -67,7 +68,7 @@ func extractExifNative(filePath string) (map[string]interface{}, int, int, time.
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-			fmt.Println("Failed to close file.")
+			log.Println("Failed to close file.")
 		}
 	}(f)
 

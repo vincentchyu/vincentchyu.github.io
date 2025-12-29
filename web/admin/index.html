@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>照片管理后台</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📸 照片管理后台</h1>
+            <div class="header-actions">
+                <input type="file" id="photoUpload" multiple accept="image/*" style="display:none">
+                <button id="importBtn" class="btn btn-secondary">
+                    <span class="icon">📤</span>
+                    导入照片
+                </button>
+                <button id="rebuildBtn" class="btn btn-primary">
+                    <span class="icon">🔄</span>
+                    重建并上传
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">总照片数</span>
+                <span class="stat-value" id="totalPhotos">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">隐藏照片</span>
+                <span class="stat-value" id="hiddenPhotos">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">已选择</span>
+                <span class="stat-value" id="selectedPhotos">0</span>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="搜索照片文件名..." />
+            </div>
+            <div class="filters">
+                <select id="yearFilter">
+                    <option value="">所有年份</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="">所有状态</option>
+                    <option value="visible">可见</option>
+                    <option value="hidden">隐藏</option>
+                </select>
+            </div>
+            <div class="batch-actions">
+                <button id="batchHideBtn" class="btn btn-secondary" disabled>批量隐藏</button>
+                <button id="batchShowBtn" class="btn btn-secondary" disabled>批量显示</button>
+            </div>
+        </div>
+
+        <!-- Photo Grid -->
+        <div id="photoGrid" class="photo-grid">
+            <div class="loading">加载中...</div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div id="detailPanel" class="detail-panel">
+            <div class="detail-header">
+                <h2>照片详情</h2>
+                <button id="closeDetailBtn" class="btn-close">×</button>
+            </div>
+            <div class="detail-content">
+                <div class="detail-preview">
+                    <img id="detailImage" src="" alt="" />
+                    <div class="preview-actions">
+                        <button id="viewR2ThumbBtn" class="btn btn-small">查看 R2 缩略图</button>
+                        <button id="viewR2OriginalBtn" class="btn btn-small">查看 R2 原图</button>
+                    </div>
+                </div>
+                <div class="detail-form">
+                    <div class="form-group">
+                        <label>文件名</label>
+                        <input type="text" id="detailFilename" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>拍摄日期</label>
+                        <input type="text" id="detailDate" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>尺寸</label>
+                        <input type="text" id="detailSize" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Alt 文本</label>
+                        <input type="text" id="detailAlt" placeholder="输入照片描述..." />
+                    </div>
+                    <div class="form-group">
+                        <label>标签（逗号分隔）</label>
+                        <input type="text" id="detailTags" placeholder="风景, 人物, 建筑..." />
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="detailIsHidden" />
+                            隐藏此照片
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="saveDetailBtn" class="btn btn-primary">保存</button>
+                        <button id="deletePhotoBtn" class="btn btn-danger" style="background-color: #ef4444; color: white;">删除</button>
+                        <button id="cancelDetailBtn" class="btn btn-secondary">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rebuild Modal -->
+        <div id="rebuildModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>重建进度</h2>
+                    <button id="closeRebuildBtn" class="btn-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <p id="rebuildMessage">准备中...</p>
+                    <div id="rebuildLogs" class="logs"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- R2 Preview Modal -->
+        <div id="r2Modal" class="modal">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2 id="r2ModalTitle">R2 预览</h2>
+                    <button id="closeR2Btn" class="btn-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="r2-preview">
+                        <div class="preview-actions-bar" style="margin-bottom: 10px; text-align: right;">
+                             <span class="preview-hint" style="font-size: 0.85em; color: var(--text-secondary);">按住 Cmd 键预览，或点击图片锁定/解锁</span>
+                        </div>
+                        <div id="r2PreviewContainer" class="r2-preview-container">
+                             <img id="r2PreviewImage" src="" alt="" draggable="false" />
+                        </div>
+                        <div class="r2-info">
+                            <p id="r2Url"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Modal -->
+        <div id="uploadModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>上传照片</h2>
+                    <button id="closeUploadBtn" class="btn-close">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="progress-bar">
+                        <div id="uploadProgressFill" class="progress-fill"></div>
+                    </div>
+                    <p id="uploadMessage">准备上传...</p>
+                    <div id="uploadLogs" class="logs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/virtual-scroll.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

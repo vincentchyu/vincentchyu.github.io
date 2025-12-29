@@ -1,4 +1,4 @@
-module github.com/vincenty1ung/vincenty1ung.github.io
+module github.com/vincentchyu/vincentchyu.github.io
 
 go 1.25.1
 

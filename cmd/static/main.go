@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -18,10 +17,10 @@ func main() {
 	fs := http.FileServer(http.Dir(cwd))
 	http.Handle("/", fs)
 
-	port := "3001"
-	fmt.Printf("Starting local server at http://localhost:%s\n", port)
-	fmt.Printf("Serving files from: %s\n", cwd)
-	fmt.Println("Press Ctrl+C to stop")
+	port := "3003"
+	log.Printf("Starting local server at http://localhost:%s\n", port)
+	log.Printf("Serving files from: %s\n", cwd)
+	log.Println("Press Ctrl+C to stop")
 
 	err = http.ListenAndServe(":"+port, nil)
 	if err != nil {

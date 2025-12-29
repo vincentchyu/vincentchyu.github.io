@@ -1,4 +1,4 @@
-package scripts
+package storage
 
 import (
 	"github.com/cloudflare/cloudflare-go/v6"

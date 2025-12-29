@@ -1,9 +1,10 @@
-package scripts
+package storage
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/vincentchyu/vincentchyu.github.io/internal/imaging"
 )
 
 const R2RequestTimeout = 360 * time.Second
@@ -33,7 +35,7 @@ type R2Config struct {
 // R2Client wraps the S3 client for R2 operations
 type R2Client struct {
 	client *s3.Client
-	config R2Config
+	Config R2Config
 }
 
 // LoadR2Config loads R2 configuration from .env file
@@ -110,7 +112,7 @@ func NewR2Client(config *R2Config) (*R2Client, error) {
 
 	return &R2Client{
 		client: client,
-		config: *config,
+		Config: *config,
 	}, nil
 }
 
@@ -121,7 +123,7 @@ func (r *R2Client) CheckFileExists(key string) bool {
 
 	_, err := r.client.HeadObject(
 		ctx, &s3.HeadObjectInput{
-			Bucket: aws.String(r.config.Bucket),
+			Bucket: aws.String(r.Config.Bucket),
 			Key:    aws.String(key),
 		},
 	)
@@ -144,7 +146,7 @@ func (r *R2Client) UploadFile(localPath, key, cacheControl string) error {
 	// Upload to R2
 	// Default input fields
 	input := &s3.PutObjectInput{
-		Bucket:      aws.String(r.config.Bucket),
+		Bucket:      aws.String(r.Config.Bucket),
 		Key:         aws.String(key),
 		Body:        bytes.NewReader(fileData),
 		ContentType: aws.String(contentType),
@@ -153,14 +155,14 @@ func (r *R2Client) UploadFile(localPath, key, cacheControl string) error {
 	// Check if image needs compression (only for images)
 	if strings.Contains(contentType, "image/") {
 		// Try to compress if > 10MB
-		compressedData, newContentType, err := CompressImage(localPath)
+		compressedData, newContentType, err := imaging.CompressImage(localPath)
 		if err != nil {
 			// Log error but continue with original file? Or return error?
 			// For now, let's log to stdout and proceed with original
-			fmt.Printf("Warning: failed to compress image %s: %v\n", localPath, err)
+			log.Printf("Warning: failed to compress image %s: %v\n", localPath, err)
 		} else if compressedData != nil {
 			// Use compressed data
-			fmt.Printf("Uploaded compressed image: %s (Original: %.2f MB, Compressed: %.2f MB)\n", localPath, float64(len(fileData))/1024/1024, float64(len(compressedData))/1024/1024)
+			log.Printf("Uploaded compressed image: %s (Original: %.2f MB, Compressed: %.2f MB)\n", localPath, float64(len(fileData))/1024/1024, float64(len(compressedData))/1024/1024)
 			input.Body = bytes.NewReader(compressedData)
 			if newContentType != "" {
 				input.ContentType = aws.String(newContentType)
@@ -187,7 +189,7 @@ func (r *R2Client) UploadBytes(data []byte, key, contentType, cacheControl strin
 	defer cancel()
 
 	input := &s3.PutObjectInput{
-		Bucket:      aws.String(r.config.Bucket),
+		Bucket:      aws.String(r.Config.Bucket),
 		Key:         aws.String(key),
 		Body:        bytes.NewReader(data),
 		ContentType: aws.String(contentType),
@@ -213,7 +215,7 @@ func (r *R2Client) DeleteObject(key string) error {
 
 	_, err := r.client.DeleteObject(
 		ctx, &s3.DeleteObjectInput{
-			Bucket:                    aws.String(r.config.Bucket),
+			Bucket:                    aws.String(r.Config.Bucket),
 			Key:                       aws.String(key),
 			BypassGovernanceRetention: nil,
 			ExpectedBucketOwner:       nil,
@@ -263,7 +265,7 @@ func (r *R2Client) DeleteObjects(keys []string) error {
 		batch := objects[i:end]
 		_, err := r.client.DeleteObjects(
 			ctx, &s3.DeleteObjectsInput{
-				Bucket: aws.String(r.config.Bucket),
+				Bucket: aws.String(r.Config.Bucket),
 				Delete: &types.Delete{
 					Objects: batch,
 					Quiet:   aws.Bool(true),
@@ -281,11 +283,11 @@ func (r *R2Client) DeleteObjects(keys []string) error {
 
 // GetCDNUrl returns the CDN URL for a given key
 func (r *R2Client) GetCDNUrl(key string) string {
-	if r.config.CDNUrl != "" {
-		return fmt.Sprintf("%s/%s", r.config.CDNUrl, key)
+	if r.Config.CDNUrl != "" {
+		return fmt.Sprintf("%s/%s", r.Config.CDNUrl, key)
 	}
 	// Fallback to direct R2 URL
-	return fmt.Sprintf("%s/%s/%s", r.config.Endpoint, r.config.Bucket, key)
+	return fmt.Sprintf("%s/%s/%s", r.Config.Endpoint, r.Config.Bucket, key)
 }
 
 // getContentType determines the content type based on file extension

@@ -1,7 +1,7 @@
-package scripts
+package config
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -22,7 +22,7 @@ func init() {
 	for _, path := range envPaths {
 		err = godotenv.Load(path)
 		if err == nil {
-			fmt.Printf("✓ Loaded .env from: %s\n", path)
+			log.Printf("✓ Loaded .env from: %s\n", path)
 			break
 		}
 	}
