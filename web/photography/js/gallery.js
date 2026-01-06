@@ -2169,7 +2169,7 @@ function extractDeviceInfo(exif) {
 
     info.push({
         label: "版权信息",
-        value: "© 2025 VINCENT CHYU PHOTOGRAPHY - ALL RIGHT RESERVED",
+        value: "© 2026 VINCENT CHYU PHOTOGRAPHY - ALL RIGHT RESERVED",
     });
 
     return info;
