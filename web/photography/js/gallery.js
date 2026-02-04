@@ -503,7 +503,7 @@ function openFancyboxDirectly(photoIndex, galleryItems) {
                         if (existingPanel) existingPanel.remove();
 
                         if (exif) {
-                            const metadataPanel = createMetadataPanel(exif, filename, item.Subject);
+                            const metadataPanel = createMetadataPanel(exif, filename, item.Subject, item.caption);
                             container.appendChild(metadataPanel);
                         }
                     } catch (e) {
@@ -552,7 +552,8 @@ function openFancyboxDirectly(photoIndex, galleryItems) {
                             const metadataPanel = createMetadataPanel(
                                 exif,
                                 filename,
-                                slide.Subject
+                                slide.Subject,
+                                slide.caption
                             );
                             fancybox.container.appendChild(metadataPanel);
                         }
@@ -911,7 +912,8 @@ async function loadGallery() {
                                                 const metadataPanel = createMetadataPanel(
                                                     exif,
                                                     filename,
-                                                    item.Subject
+                                                    item.Subject,
+                                                    item.caption
                                                 );
                                                 container.appendChild(metadataPanel);
                                             }
@@ -962,7 +964,8 @@ async function loadGallery() {
                                                 const metadataPanel = createMetadataPanel(
                                                     exif,
                                                     filename,
-                                                    slide.Subject
+                                                    slide.Subject,
+                                                    slide.caption
                                                 );
                                                 fancybox.container.appendChild(metadataPanel);
                                             }
@@ -1094,7 +1097,7 @@ async function loadGallery() {
                                     if (existingPanel) existingPanel.remove();
 
                                     if (exif) {
-                                        const metadataPanel = createMetadataPanel(exif, filename, item.Subject);
+                                        const metadataPanel = createMetadataPanel(exif, filename, item.Subject, item.caption);
                                         container.appendChild(metadataPanel);
                                     }
                                 } catch (e) {
@@ -1146,7 +1149,7 @@ async function loadGallery() {
                                     }
 
                                     if (exif) {
-                                        const metadataPanel = createMetadataPanel(exif, filename, slide.Subject);
+                                        const metadataPanel = createMetadataPanel(exif, filename, slide.Subject, slide.caption);
                                         fancybox.container.appendChild(metadataPanel);
                                     }
                                 } catch (e) {
@@ -1756,7 +1759,7 @@ function activateTimelineItem(id) {
 /**
  * Create metadata panel HTML from EXIF data
  */
-function createMetadataPanel(exif, filename, rootSubject) {
+function createMetadataPanel(exif, filename, rootSubject, alt) {
     console.log("Creating metadata panel for:", filename, exif);
     const panel = document.createElement("div");
     panel.className = "fancybox__metadata";
@@ -1802,6 +1805,17 @@ function createMetadataPanel(exif, filename, rootSubject) {
                 .map((tag) => `<span class="metadata-tag">${tag}</span>`)
                 .join("")}
         </span>
+      </div>
+      `
+            : ""
+    }
+
+      ${
+        alt
+            ? `
+      <div class="metadata-alt">
+        <span class="metadata-alt-label">作者注释</span>
+        <div class="metadata-alt-content">${alt}</div>
       </div>
       `
             : ""
@@ -2092,7 +2106,7 @@ function extractTags(exif, rootSubject) {
             tags.push(exif.Subject);
         }
     }
-
+        
     return tags.filter((tag) => tag && tag.trim());
 }
 

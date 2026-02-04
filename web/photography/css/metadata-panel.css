@@ -202,6 +202,52 @@
   }
 }
 
+/* Author Note (Alt) */
+.metadata-alt {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border-left: 3px solid #6366f1; /* Add a subtle blue accent */
+}
+
+@media (prefers-color-scheme: dark) {
+  .metadata-alt {
+    background: #1f2937;
+    border-left-color: #818cf8;
+  }
+}
+
+.metadata-alt-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+@media (prefers-color-scheme: dark) {
+  .metadata-alt-label {
+    color: #9ca3af;
+  }
+}
+
+.metadata-alt-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #374151;
+  font-style: italic;
+}
+
+@media (prefers-color-scheme: dark) {
+  .metadata-alt-content {
+    color: #d1d5db;
+  }
+}
+
 /* Section */
 .metadata-section {
   margin-bottom: 24px;
