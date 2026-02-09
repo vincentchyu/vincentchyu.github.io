@@ -20,3 +20,5 @@ scripts/migrate_photos.go
 /web/lastfm-scrobbler/functions/
 .env
 /shell/bin/
+internal/imaging/img.png
+internal/imaging/img.webp
