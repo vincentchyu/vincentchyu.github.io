@@ -1,4 +1,4 @@
-# Last.fm Scrobbler Web Project
+# SonicLens Web Project
 
 由于这是一个 Cloudflare Pages 项目，后端 API 使用 **Pages Functions** 实现。
 

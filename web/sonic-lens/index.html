@@ -14,7 +14,7 @@
     />
     <meta
       property="og:url"
-      content="https://blog-vincent.chyu.org/web/lastfm-scrobbler/"
+      content="https://blog-vincent.chyu.org/web/sonic-lens/"
     />
     <meta property="og:locale" content="zh_CN" />
     <meta property="og:site_name" content="VINCENT CHYU Portfolio" />
@@ -63,9 +63,8 @@
       content="https://cdn-photography-img-vincent.chyu.org/info/favicon.png"
     />
     <!-- og -->
-    <link rel="icon" href="https://cdn-photography-img-vincent.chyu.org/info/favicon.png" />
-    <link rel="apple-touch-icon" href="https://cdn-photography-img-vincent.chyu.org/info/favicon.png">
-    <link rel="apple-touch-icon-precomposed" href="https://cdn-photography-img-vincent.chyu.org/info/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="./static/logo_black.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="./static/logo.svg" media="(prefers-color-scheme: dark)" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
@@ -100,6 +99,28 @@
         --source-applemusic: #ec7063; /* 红色 */
         --source-audirvana: #bb8fce; /* 紫色 */
         --source-roon: #bdc3c7; /* 灰色 */
+      }
+
+      /* Watermark Logo */
+      .watermark {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        width: 150px;
+        height: 50px;
+        background-image: url('./static/logo_all_black.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: left bottom;
+        opacity: 0.15;
+        z-index: 9999;
+        pointer-events: none;
+        transition: background-image 0.3s ease;
+      }
+
+      .dark-mode .watermark {
+        background-image: url('./static/logo_all.svg');
+        opacity: 0.15;
       }
 
       /* 全局毛玻璃组件统一样式 */
@@ -597,6 +618,7 @@
       .rank-number {
         width: 36px;
         height: 36px;
+        flex-shrink: 0;
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -624,20 +646,30 @@
 
       .track-info {
         flex: 1;
+        min-width: 0;
+        margin-right: 15px;
       }
 
       .track-title {
         font-weight: 500;
-        /* margin-bottom: 3px; */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .track-artist {
         font-size: 0.8rem;
         color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .track-album {
         font-size: 0.8rem;
         color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .play-count {
@@ -656,6 +688,8 @@
         align-self: flex-end;
         display: inline-block;
         width: auto;
+        flex-shrink: 0;
+        white-space: nowrap;
       }
 
       .source-applemusic {
@@ -4018,5 +4052,7 @@
         <!-- 内容将通过JavaScript动态填充 -->
       </div>
     </div>
+    <!-- Watermark Logo -->
+    <div class="watermark"></div>
   </body>
 </html>
