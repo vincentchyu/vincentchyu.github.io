@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+
 	"github.com/vincentchyu/vincentchyu.github.io/internal/imaging"
 )
 
@@ -162,7 +163,10 @@ func (r *R2Client) UploadFile(localPath, key, cacheControl string) error {
 			log.Printf("Warning: failed to compress image %s: %v\n", localPath, err)
 		} else if compressedData != nil {
 			// Use compressed data
-			log.Printf("Uploaded compressed image: %s (Original: %.2f MB, Compressed: %.2f MB)\n", localPath, float64(len(fileData))/1024/1024, float64(len(compressedData))/1024/1024)
+			log.Printf(
+				"Uploaded compressed image: %s (Original: %.2f MB, Compressed: %.2f MB)\n", localPath,
+				float64(len(fileData))/1024/1024, float64(len(compressedData))/1024/1024,
+			)
 			input.Body = bytes.NewReader(compressedData)
 			if newContentType != "" {
 				input.ContentType = aws.String(newContentType)

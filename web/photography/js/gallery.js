@@ -1,11 +1,23 @@
 /**
  * Gallery Renderer
- * Fetches photos.json and renders the photography portfolio with a timeline layout.
+ * Fetches the gallery manifest and year shards, then renders the photography portfolio with a timeline layout.
  */
 
 // Flag to prevent URL updates during initial photo load from URL
 // This prevents Carousel.change events during initialization from updating URL incorrectly
 let isInitializingFromUrl = false;
+let galleryItems = [];
+let galleryManifest = null;
+let galleryLoadToken = 0;
+let galleryWaterfall = null;
+let galleryLoadedYears = new Set();
+let scrollSpyObserver = null;
+let observedScrollTargets = new WeakSet();
+let activeGalleryMode = "legacy";
+let imageLoadEventsBound = false;
+
+const DEFAULT_REMOTE_GALLERY_DATA_BASE =
+    "https://cdn-photography-img-vincent.chyu.org/pages/";
 
 /**
  * Normalize URL immediately on page load to prevent 308 redirect cache issues
@@ -173,6 +185,52 @@ function setupTimelineHover() {
         },
         {passive: true}
     );
+}
+
+function getGalleryDataMode() {
+    const configuredMode = window.__PHOTO_GALLERY_DATA_MODE__;
+    if (configuredMode === "local" || configuredMode === "remote") {
+        return configuredMode;
+    }
+
+    const hostname = window.location.hostname;
+    if (
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "::1" ||
+        hostname.endsWith(".local")
+    ) {
+        return "local";
+    }
+
+    return "remote";
+}
+
+function getRemoteGalleryDataBase() {
+    const configuredBase = window.__PHOTO_GALLERY_REMOTE_DATA_BASE__;
+    if (typeof configuredBase === "string" && configuredBase.trim()) {
+        return configuredBase.endsWith("/")
+            ? configuredBase
+            : `${configuredBase}/`;
+    }
+
+    return DEFAULT_REMOTE_GALLERY_DATA_BASE;
+}
+
+function resolveGalleryManifestUrl() {
+    if (getGalleryDataMode() === "local") {
+        return "data/photos-manifest.json";
+    }
+
+    return new URL("photos-manifest.json", getRemoteGalleryDataBase()).toString();
+}
+
+function resolveGalleryShardUrl(year) {
+    if (getGalleryDataMode() === "local") {
+        return `data/photos/${year}.json`;
+    }
+
+    return new URL(`photos/${year}.json`, getRemoteGalleryDataBase()).toString();
 }
 
 /**
@@ -651,11 +709,12 @@ function parseAndOpenPhotoFromUrl(galleryItems) {
 
             if (photoIndex >= galleryItems.length) {
                 console.warn(
-                    "Photo index out of range:",
+                    "Photo index out of range for current load, will retry:",
                     photoIndex,
                     "max:",
                     galleryItems.length - 1
                 );
+                setTimeout(() => parseAndOpenPhotoFromUrl(galleryItems), 500);
                 return;
             }
 
@@ -739,10 +798,23 @@ async function loadGallery() {
     }
 
     try {
-        // const response = await fetch("photos.json");
-        const response = await fetch(
-            "https://cdn-photography-img-vincent.chyu.org/pages/photos.json"
-        );
+        activeGalleryMode = getGalleryDataMode();
+        const manifest = await fetchGalleryManifest();
+        if (manifest && manifest.years && manifest.years.length > 0) {
+            await loadShardedGallery(
+                manifest,
+                timelineContainer,
+                galleryContainer
+            );
+            return;
+        }
+
+        if (activeGalleryMode !== "local") {
+            throw new Error("Remote gallery manifest is unavailable");
+        }
+
+        // Legacy fallback: single large photos.json
+        const response = await fetch("photos.json");
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -1216,6 +1288,248 @@ async function loadGallery() {
     }
 }
 
+async function fetchGalleryManifest() {
+    try {
+        const response = await fetch(resolveGalleryManifestUrl(), {
+            cache: "no-cache",
+        });
+        if (!response.ok) {
+            return null;
+        }
+
+        const manifest = await response.json();
+        if (!manifest || !Array.isArray(manifest.years)) {
+            return null;
+        }
+        return manifest;
+    } catch (error) {
+        console.warn("Failed to load manifest:", error);
+        return null;
+    }
+}
+
+async function loadShardedGallery(manifest, timelineContainer, galleryContainer) {
+    const token = ++galleryLoadToken;
+    activeGalleryMode = "sharded";
+    galleryManifest = manifest;
+    galleryItems.length = 0;
+    galleryLoadedYears = new Set();
+    observedScrollTargets = new WeakSet();
+
+    timelineContainer.innerHTML = "";
+    galleryContainer.innerHTML = "";
+
+    renderTimeline(timelineContainer, manifest.years);
+    setupScrollSpy();
+
+    galleryWaterfall = createWaterfallState(galleryContainer);
+    currentColumnCount = galleryWaterfall.columnCount;
+    observeScrollTargets(timelineContainer);
+    bindGalleryItemClicks(galleryContainer, galleryItems);
+    bindImageLoadEvents();
+
+    startYearLoadQueue(manifest.years, token);
+    parseAndOpenPhotoFromUrl(galleryItems);
+}
+
+function createWaterfallState(container) {
+    const columnCount = getColumnCount();
+    const waterfallContainer = document.createElement("div");
+    waterfallContainer.className = "waterfall-container";
+
+    const columns = [];
+    const heights = new Array(columnCount).fill(0);
+    for (let i = 0; i < columnCount; i++) {
+        const column = document.createElement("div");
+        column.className = "waterfall-column";
+        waterfallContainer.appendChild(column);
+        columns.push(column);
+    }
+
+    container.appendChild(waterfallContainer);
+    return {
+        columnCount,
+        container: waterfallContainer,
+        columns,
+        heights,
+    };
+}
+
+function sortPhotosForRender(photos) {
+    return photos.sort((a, b) => {
+        if (a.date !== b.date) {
+            return String(b.date || "").localeCompare(String(a.date || ""));
+        }
+        if ((a.timestamp || 0) !== (b.timestamp || 0)) {
+            return (b.timestamp || 0) - (a.timestamp || 0);
+        }
+        return String(b.filename || "").localeCompare(String(a.filename || ""));
+    });
+}
+
+function preparePhotosForRender(year, photos) {
+    const sortedPhotos = sortPhotosForRender([...photos]);
+    const photosByMonth = groupPhotosByMonth(sortedPhotos);
+    const months = Object.keys(photosByMonth).sort((a, b) => b.localeCompare(a));
+    let isFirstYearPhoto = true;
+    const orderedPhotos = [];
+
+    months.forEach((month) => {
+        const monthPhotos = photosByMonth[month];
+        if (!monthPhotos || monthPhotos.length === 0) {
+            return;
+        }
+
+        if (!monthPhotos[0].markers) {
+            monthPhotos[0].markers = [];
+        }
+        monthPhotos[0].markers.push(`section-${year}-${month}`);
+
+        if (isFirstYearPhoto) {
+            monthPhotos[0].markers.push(`year-${year}`);
+            isFirstYearPhoto = false;
+        }
+
+        orderedPhotos.push(...monthPhotos);
+    });
+
+    return orderedPhotos;
+}
+
+async function startYearLoadQueue(yearEntries, token) {
+    for (const entry of yearEntries) {
+        if (token !== galleryLoadToken) {
+            return;
+        }
+
+        await loadYearShard(entry, token);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+}
+
+async function loadYearShard(entry, token) {
+    if (!entry || !entry.year || galleryLoadedYears.has(entry.year)) {
+        return;
+    }
+
+    const shardUrl = resolveGalleryShardUrl(entry.year);
+    try {
+        const response = await fetch(shardUrl, {cache: "no-cache"});
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const album = await response.json();
+        if (token !== galleryLoadToken) {
+            return;
+        }
+
+        const visiblePhotos = (album.photos || []).filter((photo) => !photo.is_hidden);
+        if (visiblePhotos.length === 0) {
+            if (galleryWaterfall && galleryWaterfall.container) {
+                const placeholder = document.createElement("div");
+                placeholder.id = `year-${entry.year}`;
+                placeholder.className =
+                    "py-10 text-center text-sm text-gray-400 dark:text-gray-500";
+                placeholder.textContent = `${entry.year} 暂无可见照片`;
+                galleryWaterfall.container.appendChild(placeholder);
+                observeScrollTargets(placeholder.parentElement || galleryWaterfall.container);
+            }
+            galleryLoadedYears.add(entry.year);
+            return;
+        }
+
+        const preparedPhotos = preparePhotosForRender(entry.year, visiblePhotos);
+        appendLoadedPhotos(preparedPhotos);
+        galleryLoadedYears.add(entry.year);
+        observeScrollTargets(galleryContainerForObserver());
+        bindImageLoadEvents();
+        parseAndOpenPhotoFromUrl(galleryItems);
+    } catch (error) {
+        console.warn(`Failed to load shard ${entry.year}:`, error);
+    }
+}
+
+function appendLoadedPhotos(photos) {
+    if (!galleryWaterfall || !Array.isArray(photos) || photos.length === 0) {
+        return;
+    }
+
+    photos.forEach((photo) => {
+        photo.waterfallIndex = galleryItems.length;
+        galleryItems.push({
+            src: photo.path,
+            thumb: photo.thumbnail,
+            caption: photo.alt || "",
+            exif: photo.exif,
+            filename: photo.filename || "",
+            Subject: photo.Subject || [],
+        });
+
+        const columnCount = galleryWaterfall.columnCount;
+        let minIndex = 0;
+        for (let i = 1; i < columnCount; i++) {
+            if (galleryWaterfall.heights[i] < galleryWaterfall.heights[minIndex]) {
+                minIndex = i;
+            }
+        }
+
+        const card = createPhotoCard(photo);
+        galleryWaterfall.columns[minIndex].appendChild(card);
+
+        const aspectRatio =
+            photo.width && photo.height ? photo.width / photo.height : 1.5;
+        const relativeHeight = 1000 / aspectRatio;
+        galleryWaterfall.heights[minIndex] += relativeHeight + 8;
+    });
+
+    requestAnimationFrame(() => {
+        if (galleryWaterfall && galleryWaterfall.container) {
+            window.dispatchEvent(new Event("resize"));
+        }
+    });
+}
+
+function bindGalleryItemClicks(galleryContainer, items) {
+    if (!galleryContainer || galleryContainer.dataset.galleryClicksBound === "true") {
+        return;
+    }
+
+    galleryContainer.dataset.galleryClicksBound = "true";
+    galleryContainer.addEventListener("click", (e) => {
+        const link = e.target.closest(".gallery-item");
+        if (!link) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const index = parseInt(link.dataset.index, 10) || 0;
+        openFancyboxDirectly(index, items);
+    });
+}
+
+function galleryContainerForObserver() {
+    return galleryWaterfall ? galleryWaterfall.container.parentElement : null;
+}
+
+function observeScrollTargets(root) {
+    if (!scrollSpyObserver || !root) {
+        return;
+    }
+
+    const scope =
+        typeof root.querySelectorAll === "function"
+            ? root
+            : document;
+    scope.querySelectorAll('[id^="year-"], [id^="section-"]').forEach((section) => {
+        if (observedScrollTargets.has(section)) {
+            return;
+        }
+        observedScrollTargets.add(section);
+        scrollSpyObserver.observe(section);
+    });
+}
+
 function renderTimeline(container, albums) {
     const nav = document.createElement("nav");
     nav.className = "relative py-4 px-2";
@@ -1277,10 +1591,14 @@ function renderTimeline(container, albums) {
         yearGroup.appendChild(yearItem);
 
         // Month Links with improved styling
-        const photosByMonth = groupPhotosByMonth(album.photos);
-        const months = Object.keys(photosByMonth).sort((a, b) =>
-            b.localeCompare(a)
-        );
+        const months = Array.isArray(album.months) && album.months.length > 0
+            ? album.months
+                  .map((month) => (typeof month === "string" ? month : month.month))
+                  .filter(Boolean)
+                  .sort((a, b) => b.localeCompare(a))
+            : Object.keys(groupPhotosByMonth(album.photos || {})).sort((a, b) =>
+                  b.localeCompare(a)
+              );
 
         if (months.length > 0) {
             const monthList = document.createElement("div");
@@ -1589,6 +1907,11 @@ function bindImageLoadEvents() {
         checkAllImages();
     });
 
+    if (imageLoadEventsBound) {
+        return;
+    }
+    imageLoadEventsBound = true;
+
     // More frequent polling, NO limit on checks (will be stopped by window.load)
     const interval = setInterval(checkAllImages, 50);
 
@@ -1618,13 +1941,18 @@ function bindImageLoadEvents() {
 }
 
 function setupScrollSpy() {
+    if (scrollSpyObserver) {
+        observeScrollTargets(document);
+        return;
+    }
+
     const observerOptions = {
         root: null,
         rootMargin: "-20% 0px -60% 0px", // Active when element is in the middle-ish
         threshold: 0,
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    scrollSpyObserver = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
             if (entry.isIntersecting) {
                 const id = entry.target.id;
@@ -1633,12 +1961,7 @@ function setupScrollSpy() {
         });
     }, observerOptions);
 
-    // Observe all year and month sections
-    document
-        .querySelectorAll('[id^="year-"], [id^="section-"]')
-        .forEach((section) => {
-            observer.observe(section);
-        });
+    observeScrollTargets(document);
 }
 
 function activateTimelineItem(id) {

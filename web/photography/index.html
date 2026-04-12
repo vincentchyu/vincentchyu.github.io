@@ -729,7 +729,14 @@
     <script src="https://cdn-photography-img-vincent.chyu.org/static/menu.js"></script>
     <!-- 加载年份内容的脚本 -->
     <!-- <script src="dist/loadYears.js"></script> -->
-    <script src="js/gallery.js?v=20251122003"></script>
+    <script>
+      window.__PHOTO_GALLERY_DATA_MODE__ =
+        window.__PHOTO_GALLERY_DATA_MODE__ || "remote";
+      window.__PHOTO_GALLERY_REMOTE_DATA_BASE__ =
+        window.__PHOTO_GALLERY_REMOTE_DATA_BASE__ ||
+        "https://cdn-photography-img-vincent.chyu.org/pages/";
+    </script>
+    <script src="js/gallery.js?v=2026041201"></script>
     <!-- 音乐播放器按需加载 -->
     <script>
       // 音乐播放器按需加载：只在hover时加载，避免阻塞页面渲染

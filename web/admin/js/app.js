@@ -198,7 +198,10 @@ async function saveDetail() {
   setButtonLoading(btnId, true);
 
   try {
-    const response = await fetch(`/api/photos/${currentPhoto.filename}`, {
+    const resourcePath = currentPhoto.year
+      ? `/api/photos/${currentPhoto.year}/${currentPhoto.filename}`
+      : `/api/photos/${currentPhoto.filename}`;
+    const response = await fetch(resourcePath, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
@@ -240,7 +243,10 @@ async function deleteCurrentPhoto() {
   setButtonLoading(btnId, true);
 
   try {
-    const response = await fetch(`/api/photos/${currentPhoto.filename}`, {
+    const resourcePath = currentPhoto.year
+      ? `/api/photos/${currentPhoto.year}/${currentPhoto.filename}`
+      : `/api/photos/${currentPhoto.filename}`;
+    const response = await fetch(resourcePath, {
       method: "DELETE",
     });
 

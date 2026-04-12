@@ -35,11 +35,14 @@
 摄影板块采用了自动化的工作流来管理大量高画质照片：
 
 1.  **本地管理**: 照片按年份存放在 `web/photography/gallery_images/` 目录。
-2.  **自动化处理**: 使用 Go 脚本 (`scripts/update_photos.go`) 扫描目录。
+2.  **自动化处理**: 使用 Go 脚本 (`go run cmd/update-photos/main.go`) 扫描目录。
     -   自动提取 EXIF 元数据（光圈、快门、ISO 等）。
     -   自动生成 WebP 格式的高效缩略图。
     -   自动上传原图和缩略图到 Cloudflare R2 对象存储。
-3.  **数据驱动**: 脚本生成 `photos.json`，前端通过 JavaScript 动态渲染画廊，无需手动修改 HTML。
+3.  **数据驱动**: 脚本生成 `web/photography/data/photos-manifest.json` 和按年分片的 `web/photography/data/photos/*.json`，前端先加载 manifest 再按需加载年份分片，避免单个大 JSON 随照片增长而拖慢首屏。
+    -   本地 `go run cmd/static/main.go` 读取工作区内的 `web/photography/data/`。
+    -   线上发布后读取 R2/CDN 的 `https://cdn-xxx.org/pages/photos-manifest.json` 和 `https://cdn-xxx.org/pages/photos/{year}.json`。
+    -   `photos.json` 仅保留为旧版兼容读取兜底，不再由正常写入流程更新。
 
 ### 管理后台 (Admin Panel)
 
@@ -47,9 +50,9 @@
 
 -   **高性能浏览**: 引入 **虚拟滚动 (Virtual Scrolling)** 技术，轻松流畅地管理数千张照片，大幅降低内存占用。
 -   **沉浸式预览**: 支持 R2 原图预览，集成 **平移与缩放 (Pan & Zoom)** 功能，方便检查细节。
--   **实时重建**: 可视化的重建进度与实时日志输出。
+-   **实时重建**: 可视化的重建进度与实时日志输出，上传/编辑/删除会同步更新对应年份分片和 manifest。
 
-详细的脚本使用文档请参考：[scripts/README.md](scripts/README.md)
+详细的脚本使用方式请参考本文件下方的 `run.sh` 章节。
 
 ## 本地开发
 
@@ -63,13 +66,13 @@
 
 #### 1. 静态网站预览 (Static Site Preview)
 
-运行静态文件服务器，预览网站效果：
+运行静态文件服务器，预览网站效果。这个模式会把前端标记为 `local`，摄影页优先读取本地 `web/photography/data/` 下的 manifest 和分片数据，不依赖 R2：
 
 ```bash
 go run cmd/static/main.go
 ```
 
-访问 `http://localhost:3003` 即可预览。
+访问 `http://localhost:3000` 即可预览。
 
 #### 2. 照片管理后台 (Photo Admin Panel)
 

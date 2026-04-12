@@ -14,7 +14,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/vincentchyu/vincentchyu.github.io/internal/imaging"
 	"github.com/vincentchyu/vincentchyu.github.io/internal/storage"
@@ -24,7 +23,7 @@ import (
 const (
 	ProjectRoot = "../" // Assuming script is run from scripts/ directory
 	ImgDir      = "web/photography/gallery_images"
-	OutputFile  = "web/photography/photos.json"
+	OutputFile  = LegacyGalleryPath
 
 	// Path prefixes
 	WebPhotographyPrefix = "web/photography/"
@@ -121,35 +120,29 @@ func NewPhotoProcessor() (*PhotoProcessor, error) {
 	}, nil
 }
 
-// LoadExistingMetadata loads existing photos.json
-func (p *PhotoProcessor) LoadExistingMetadata() ([]byte, error) {
-	var content []byte
-	outputFilePath := filepath.Join(p.RootDir, OutputFile)
-	if _, err := os.Stat(outputFilePath); err == nil {
-		content, err = os.ReadFile(outputFilePath)
-		if err != nil {
-			return nil, err
-		}
+// LoadExistingMetadata loads the current gallery dataset so unchanged photos can preserve metadata.
+// The bool return value indicates whether the sharded manifest exists.
+func (p *PhotoProcessor) LoadExistingMetadata() ([]YearAlbum, bool, error) {
+	store := NewGalleryStore(p.RootDir, nil)
 
-		var albums []YearAlbum
-		if err := json.Unmarshal(content, &albums); err == nil {
-			for _, album := range albums {
-				for _, photo := range album.Photos {
-					// Restore Timestamp from Exif if available
-					if val, ok := photo.Exif["DateTimeOriginal"]; ok {
-						if dateStr, ok := val.(string); ok {
-							if t, err := time.Parse("2006:01:02 15:04:05", dateStr); err == nil {
-								photo.Timestamp = t.Unix()
-							}
-						}
-					}
-					p.ExistingPhotos[photo.Filename] = photo
-				}
-			}
-			log.Printf("🟢 Loaded existing metadata for %d photos.\n", len(p.ExistingPhotos))
+	albums, _, err := store.LoadAlbums()
+	if err != nil {
+		return nil, false, err
+	}
+
+	hasShardedSource := false
+	if _, _, manifestErr := store.loadFromManifest(); manifestErr == nil {
+		hasShardedSource = true
+	}
+
+	for _, album := range albums {
+		for _, photo := range album.Photos {
+			p.ExistingPhotos[photo.Filename] = photo
 		}
 	}
-	return content, nil
+	log.Printf("🟢 Loaded existing metadata for %d photos.\n", len(p.ExistingPhotos))
+
+	return albums, hasShardedSource, nil
 }
 
 // calculateFileHash calculates MD5 hash of a file
@@ -321,6 +314,11 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 	return photo, nil
 }
 
+// ProcessPhoto processes a single photo and is safe to call from other packages.
+func (p *PhotoProcessor) ProcessPhoto(path string, yearDirName string) (Photo, error) {
+	return p.processPhoto(path, yearDirName)
+}
+
 // UpdatePhotosHandler processes all photos
 func UpdatePhotosHandler(logChan chan<- string) {
 	// Helper for logging
@@ -337,9 +335,11 @@ func UpdatePhotosHandler(logChan chan<- string) {
 		logMsg("Error initializing processor: %v", err)
 		os.Exit(1)
 	}
-	var existingContent []byte
+	store := NewGalleryStore(processor.RootDir, processor.R2Client)
+	var existingAlbums []YearAlbum
+	var hasShardedSource bool
 
-	if existingContent, err = processor.LoadExistingMetadata(); err != nil {
+	if existingAlbums, hasShardedSource, err = processor.LoadExistingMetadata(); err != nil {
 		logMsg("Warning: Failed to load existing metadata: %v", err)
 	}
 
@@ -460,100 +460,19 @@ func UpdatePhotosHandler(logChan chan<- string) {
 		},
 	)
 
-	// Identify deleted photos
-	if processor.R2Client != nil {
-		newPhotosMap := make(map[string]bool)
-		for _, p := range allPhotos {
-			newPhotosMap[p.Filename] = true
-		}
-
-		var keysToDelete []string
-		for filename := range processor.ExistingPhotos {
-			if !newPhotosMap[filename] {
-				logMsg("Marking for deletion: %s", filename)
-				// Add original and thumbnail to delete list
-				keysToDelete = append(
-					keysToDelete,
-					fmt.Sprintf(
-						"%s%s%s", processor.R2Client.Config.BasePrefix, processor.R2Client.Config.OriginalPrefix,
-						filename,
-					),
-					fmt.Sprintf(
-						"%s%s%s%s", processor.R2Client.Config.BasePrefix, processor.R2Client.Config.ThumbnailPrefix,
-						strings.TrimSuffix(filename, filepath.Ext(filename)), ExtWebP,
-					),
-				)
-			}
-		}
-
-		if len(keysToDelete) > 0 {
-			logMsg("🟢 Deleting %d orphaned files from R2...", len(keysToDelete))
-			if err := processor.R2Client.DeleteObjects(keysToDelete); err != nil {
-				logMsg("Error deleting objects: %v", err)
-			} else {
-				logMsg("✓ Successfully deleted orphaned files.")
-			}
-		}
-	}
-
-	// Write output
-	jsonData, err := json.Marshal(newAlbums)
-	if err != nil {
-		logMsg("Error marshaling JSON: %v", err)
-		os.Exit(1)
-	}
-
-	outputFilePath := filepath.Join(processor.RootDir, OutputFile)
-
-	// Check if content changed (ignoring order if possible, but simple byte check is fast)
-	// Since we re-generated everything, byte comparison might fail if order changed slightly or timestamps
-	// But we should write anyway if we processed updates.
-
-	err = os.WriteFile(outputFilePath, jsonData, 0644)
-	if err != nil {
-		logMsg("Error writing output file: %v", err)
-		os.Exit(1)
-	}
-
-	// Create backup of existing file if it exists
-	if len(existingContent) > 0 {
-		backupPath := outputFilePath + "." + time.Now().Format("20060102_150405") + ".bak"
-		if err := os.WriteFile(backupPath, existingContent, 0644); err != nil {
-			logMsg("Warning: Could not create backup of %s: %v", outputFilePath, err)
-		} else {
-			logMsg("✓ Backup created: %s", backupPath)
-		}
-	}
-
-	// Check if content has changed
-	if JSONEqual(existingContent, jsonData) {
-		logMsg("✓ photos.json has not changed. Skipping backup, file write, and R2 upload.")
+	if hasShardedSource && albumsEqual(existingAlbums, newAlbums) {
+		logMsg("✓ Gallery dataset has not changed. Skipping shard writes and uploads.")
 		return
 	}
 
-	// Upload photos.json to R2
-	if processor.R2Client != nil {
-		jsonKey := fmt.Sprintf("%sphotos.json", processor.R2Client.Config.BasePrefix)
-		if err := processor.R2Client.UploadBytes(
-			jsonData, jsonKey, "application/json", "no-cache",
-		); err != nil {
-			logMsg("❌ Failed to upload photos.json: %v", err)
-		} else {
-			logMsg("✓ Uploaded photos.json to R2")
-		}
+	manifest, err := store.SaveFull(newAlbums)
+	if err != nil {
+		logMsg("Error writing gallery dataset: %v", err)
+		os.Exit(1)
 	}
 
-	if storage.CFCli != nil {
-		key := fmt.Sprintf("cache:photos:%s", "jsonValue")
-		err := storage.CfKvSetValue(fmt.Sprintf("cache:photos:%s", "jsonValue"), string(jsonData), 86400)
-		if err != nil {
-			logMsg("❌Error setting value for %s: %v", outputFilePath, err)
-		} else {
-			logMsg("✓ Uploaded photos.json to KV[%s]", key)
-		}
-	}
-
-	logMsg("Successfully updated photos.json with %d photos.", len(allPhotos))
+	logMsg("✓ Manifest updated with %d years.", len(manifest.Years))
+	logMsg("Successfully updated sharded gallery dataset with %d photos.", len(allPhotos))
 }
 
 // JSONEqual compares two JSON byte slices for equality, ignoring whitespace and key order
