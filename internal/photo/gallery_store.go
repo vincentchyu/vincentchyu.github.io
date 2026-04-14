@@ -24,6 +24,8 @@ const (
 
 	GalleryManifestKVKey = "cache:photos:manifest"
 	GalleryYearKVPrefix  = "cache:photos:year:"
+
+	GalleryDataCacheControl = "public, max-age=300, stale-while-revalidate=86400"
 )
 
 // GalleryMonthSummary summarizes the visible layout of a month in a year shard.
@@ -312,7 +314,7 @@ func (s *GalleryStore) uploadManifest(manifest GalleryManifest) error {
 		return err
 	}
 	if s.R2Client != nil {
-		if err := s.R2Client.UploadBytes(data, s.manifestR2Key(), "application/json", "no-cache"); err != nil {
+		if err := s.R2Client.UploadBytes(data, s.manifestR2Key(), "application/json", GalleryDataCacheControl); err != nil {
 			return err
 		}
 	}
@@ -332,7 +334,7 @@ func (s *GalleryStore) uploadYear(album YearAlbum) error {
 		return err
 	}
 	if s.R2Client != nil {
-		if err := s.R2Client.UploadBytes(data, s.yearR2Key(album.Year), "application/json", "no-cache"); err != nil {
+		if err := s.R2Client.UploadBytes(data, s.yearR2Key(album.Year), "application/json", GalleryDataCacheControl); err != nil {
 			return err
 		}
 	}

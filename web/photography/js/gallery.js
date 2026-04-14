@@ -11,13 +11,37 @@ let galleryManifest = null;
 let galleryLoadToken = 0;
 let galleryWaterfall = null;
 let galleryLoadedYears = new Set();
-let scrollSpyObserver = null;
-let observedScrollTargets = new WeakSet();
 let activeGalleryMode = "legacy";
 let imageLoadEventsBound = false;
+let galleryPendingYearEntries = [];
+let galleryNextYearCursor = 0;
+let galleryYearLoadPromise = Promise.resolve();
+let galleryLoadMoreObserver = null;
+let galleryLoadMoreSentinel = null;
 
 const DEFAULT_REMOTE_GALLERY_DATA_BASE =
     "https://cdn-photography-img-vincent.chyu.org/pages/";
+const INITIAL_YEAR_BATCH = 2;
+const INITIAL_PHOTO_TARGET = 72;
+const YEAR_LOAD_AHEAD_MARGIN = "300px 0px";
+const THUMBNAIL_LOAD_AHEAD_MARGIN = "800px 0px";
+const EAGER_THUMBNAIL_COUNT = 8;
+const FANCYBOX_SCRIPT_URL =
+    "https://cdn-photography-img-vincent.chyu.org/static/fancybox.umd.js";
+const FANCYBOX_STYLE_URL =
+    "https://cdn-photography-img-vincent.chyu.org/static/fancybox.css";
+const METADATA_PANEL_STYLE_URL =
+    "https://cdn-photography-img-vincent.chyu.org/static/metadata-panel.css?v=3";
+
+let fancyboxAssetsPromise = null;
+let fancyboxWarmupScheduled = false;
+let thumbnailLoadObserver = null;
+let timelineAriaObserver = null;
+let timelineTocInitialized = false;
+
+const TIMELINE_SCROLL_OFFSET = 100;
+const TIMELINE_TOC_SELECTOR = "#timeline-sidebar";
+const TIMELINE_CONTENT_SELECTOR = "#gallery-content .gallery-outline-layer";
 
 /**
  * Normalize URL immediately on page load to prevent 308 redirect cache issues
@@ -72,7 +96,104 @@ window.addEventListener("pageshow", function (event) {
 document.addEventListener("DOMContentLoaded", function () {
     loadGallery();
     setupTimelineHover();
+    scheduleFancyboxWarmup();
 });
+
+function destroyTimelineToc() {
+    if (timelineAriaObserver) {
+        timelineAriaObserver.disconnect();
+        timelineAriaObserver = null;
+    }
+
+    if (window.tocbot && timelineTocInitialized) {
+        window.tocbot.destroy();
+    }
+
+    timelineTocInitialized = false;
+}
+
+function initTimelineToc() {
+    if (!window.tocbot) {
+        console.warn("Tocbot is not available");
+        return;
+    }
+
+    const timelineSidebar = document.querySelector(TIMELINE_TOC_SELECTOR);
+    const timelineContent = document.querySelector(TIMELINE_CONTENT_SELECTOR);
+    if (!timelineSidebar || !timelineContent) {
+        console.warn("Timeline TOC containers are missing", {
+            timelineSidebar: Boolean(timelineSidebar),
+            timelineContent: Boolean(timelineContent),
+        });
+        return;
+    }
+
+    destroyTimelineToc();
+    window.tocbot.init({
+        tocSelector: TIMELINE_TOC_SELECTOR,
+        contentSelector: TIMELINE_CONTENT_SELECTOR,
+        headingSelector: "h2, h3",
+        hasInnerContainers: true,
+        collapseDepth: 0,
+        orderedList: false,
+        scrollSmooth: false,
+        headingsOffset: TIMELINE_SCROLL_OFFSET,
+        ignoreHiddenElements: false,
+    });
+    timelineTocInitialized = true;
+    if (!timelineSidebar.querySelector(".toc-list")) {
+        console.warn("Tocbot initialized but rendered an empty timeline");
+    }
+    setupTimelineAriaCurrent();
+    syncTimelineAriaCurrent();
+}
+
+function refreshTimelineToc() {
+    if (!window.tocbot || !timelineTocInitialized) {
+        return;
+    }
+
+    window.tocbot.refresh();
+    syncTimelineAriaCurrent();
+}
+
+function setupTimelineAriaCurrent() {
+    const timelineSidebar = document.getElementById("timeline-sidebar");
+    if (!timelineSidebar) {
+        return;
+    }
+
+    timelineAriaObserver = new MutationObserver(() => {
+        syncTimelineAriaCurrent();
+    });
+
+    timelineAriaObserver.observe(timelineSidebar, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["class"],
+    });
+}
+
+function syncTimelineAriaCurrent() {
+    const timelineSidebar = document.getElementById("timeline-sidebar");
+    if (!timelineSidebar) {
+        return;
+    }
+
+    timelineSidebar.querySelectorAll(".toc-link[aria-current]").forEach((link) => {
+        link.removeAttribute("aria-current");
+    });
+
+    const activeLinks = Array.from(
+        timelineSidebar.querySelectorAll(".toc-link.is-active-link")
+    );
+    const currentLink = activeLinks.length > 0
+        ? activeLinks[activeLinks.length - 1]
+        : null;
+    if (currentLink) {
+        currentLink.setAttribute("aria-current", "location");
+    }
+}
 
 /**
  * Setup timeline hover show/hide functionality
@@ -81,7 +202,19 @@ function setupTimelineHover() {
     const timelineSidebar = document.getElementById("timeline-sidebar");
     const hoverZone = document.getElementById("timeline-hover-zone");
 
-    if (!timelineSidebar || !hoverZone) {
+    if (!timelineSidebar) {
+        return;
+    }
+
+    if (timelineSidebar.classList.contains("timeline-static")) {
+        timelineSidebar.classList.add("show");
+        if (hoverZone) {
+            hoverZone.hidden = true;
+        }
+        return;
+    }
+
+    if (!hoverZone) {
         return;
     }
 
@@ -150,17 +283,25 @@ function setupTimelineHover() {
     timelineSidebar.addEventListener(
         "click",
         function (e) {
-            // Only handle timeline-specific elements, don't interfere with other clicks
-            if (
-                e.target.closest(".timeline-year, .timeline-month, .timeline-marker")
-            ) {
-                // Keep timeline visible longer after click on mobile
-                if (isMobileInteraction) {
-                    showTimeline();
-                    hideTimeline(true); // Use longer delay
-                }
-                // Stop propagation only for timeline clicks
-                e.stopPropagation();
+            const timelineLink = e.target.closest(".toc-link");
+            if (!timelineLink) {
+                return;
+            }
+
+            const sectionId = timelineLink.getAttribute("href")?.replace(/^#/, "");
+            if (!sectionId) {
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+            void scrollToSection(sectionId);
+
+            if (isMobileInteraction) {
+                showTimeline();
+                hideTimeline(true);
+            } else {
+                showTimeline();
             }
         },
         true
@@ -217,9 +358,13 @@ function getRemoteGalleryDataBase() {
     return DEFAULT_REMOTE_GALLERY_DATA_BASE;
 }
 
+function getLocalGalleryBase() {
+    return "/web/photography/";
+}
+
 function resolveGalleryManifestUrl() {
     if (getGalleryDataMode() === "local") {
-        return "data/photos-manifest.json";
+        return new URL("data/photos-manifest.json", window.location.origin + getLocalGalleryBase()).toString();
     }
 
     return new URL("photos-manifest.json", getRemoteGalleryDataBase()).toString();
@@ -227,10 +372,140 @@ function resolveGalleryManifestUrl() {
 
 function resolveGalleryShardUrl(year) {
     if (getGalleryDataMode() === "local") {
-        return `data/photos/${year}.json`;
+        return new URL(`data/photos/${year}.json`, window.location.origin + getLocalGalleryBase()).toString();
     }
 
     return new URL(`photos/${year}.json`, getRemoteGalleryDataBase()).toString();
+}
+
+function ensureStylesheetLoaded(href) {
+    return new Promise((resolve, reject) => {
+        const absoluteHref = new URL(href, window.location.href).toString();
+        const existing = Array.from(
+            document.querySelectorAll('link[rel="stylesheet"]')
+        ).find((link) => link.href === absoluteHref);
+
+        if (existing) {
+            resolve(existing);
+            return;
+        }
+
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = href;
+        link.onload = () => resolve(link);
+        link.onerror = () =>
+            reject(new Error(`Failed to load stylesheet: ${href}`));
+        document.head.appendChild(link);
+    });
+}
+
+function ensureScriptLoaded(src) {
+    return new Promise((resolve, reject) => {
+        const absoluteSrc = new URL(src, window.location.href).toString();
+        const existing = Array.from(document.querySelectorAll("script")).find(
+            (script) => script.src === absoluteSrc
+        );
+
+        if (existing) {
+            if (existing.dataset.loaded === "true") {
+                resolve(existing);
+                return;
+            }
+            existing.addEventListener("load", () => resolve(existing), {once: true});
+            existing.addEventListener(
+                "error",
+                () => reject(new Error(`Failed to load script: ${src}`)),
+                {once: true}
+            );
+            return;
+        }
+
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = () => {
+            script.dataset.loaded = "true";
+            resolve(script);
+        };
+        script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+        document.head.appendChild(script);
+    });
+}
+
+function ensureFancyboxAssets() {
+    if (typeof Fancybox !== "undefined") {
+        return Promise.resolve(Fancybox);
+    }
+
+    if (!fancyboxAssetsPromise) {
+        fancyboxAssetsPromise = Promise.all([
+            ensureStylesheetLoaded(FANCYBOX_STYLE_URL),
+            ensureStylesheetLoaded(METADATA_PANEL_STYLE_URL),
+            ensureScriptLoaded(FANCYBOX_SCRIPT_URL),
+        ]).then(() => {
+            if (typeof Fancybox === "undefined") {
+                throw new Error("Fancybox did not initialize");
+            }
+            return Fancybox;
+        }).catch((error) => {
+            fancyboxAssetsPromise = null;
+            throw error;
+        });
+    }
+
+    return fancyboxAssetsPromise;
+}
+
+function scheduleFancyboxWarmup() {
+    if (fancyboxWarmupScheduled || typeof window === "undefined") {
+        return;
+    }
+
+    fancyboxWarmupScheduled = true;
+    const warmup = () => {
+        void ensureFancyboxAssets().catch((error) => {
+            console.warn("Deferred Fancybox warmup failed:", error);
+        });
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(warmup, {timeout: 2500});
+        return;
+    }
+
+    window.setTimeout(warmup, 2000);
+}
+
+function getGalleryFetchOptions() {
+    if (getGalleryDataMode() === "local") {
+        return {cache: "no-cache"};
+    }
+    return {};
+}
+
+function getRequestedPhotoIndexFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let photoParam = urlParams.get("photo");
+
+    if (!photoParam) {
+        const fullUrl = window.location.href;
+        const match = fullUrl.match(/[?&]photo=(\d+)/);
+        if (match) {
+            photoParam = match[1];
+        }
+    }
+
+    if (!photoParam) {
+        return null;
+    }
+
+    const photoIndex = parseInt(photoParam, 10);
+    if (isNaN(photoIndex) || photoIndex < 0) {
+        return null;
+    }
+
+    return photoIndex;
 }
 
 /**
@@ -392,7 +667,7 @@ function showCopyNotification(message, isError = false) {
     // Remove after 3 seconds
     setTimeout(() => {
         notification.style.animation = "slideOut 0.3s ease-out";
-        setTimeout(() => {
+        setTimeout(async () => {
             if (notification.parentNode) {
                 notification.remove();
             }
@@ -449,16 +724,94 @@ function waitForImageLoad(img, timeout = 10000) {
     });
 }
 
-/**
- * Open Fancybox directly (fallback method)
- */
-function openFancyboxDirectly(photoIndex, galleryItems) {
-    if (typeof Fancybox === "undefined" || galleryItems.length === 0) {
+function ensureThumbnailLoadObserver() {
+    if (thumbnailLoadObserver || typeof window === "undefined") {
+        return thumbnailLoadObserver;
+    }
+
+    if (typeof IntersectionObserver !== "function") {
+        return null;
+    }
+
+    thumbnailLoadObserver = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+
+                hydrateThumbnailImage(entry.target);
+                thumbnailLoadObserver.unobserve(entry.target);
+            });
+        },
+        {
+            root: null,
+            rootMargin: THUMBNAIL_LOAD_AHEAD_MARGIN,
+            threshold: 0.01,
+        }
+    );
+
+    return thumbnailLoadObserver;
+}
+
+function bindThumbnailLoad(img) {
+    if (!img || img.dataset.thumbnailQueued === "true") {
         return;
     }
 
+    const observer = ensureThumbnailLoadObserver();
+    img.dataset.thumbnailQueued = "true";
+
+    if (!observer) {
+        hydrateThumbnailImage(img);
+        return;
+    }
+
+    observer.observe(img);
+}
+
+function hydrateThumbnailImage(img) {
+    if (!img || img.dataset.thumbLoaded === "true") {
+        return;
+    }
+
+    const src = img.dataset.src;
+    if (!src) {
+        return;
+    }
+
+    img.dataset.thumbLoaded = "true";
+    img.removeAttribute("data-src");
+    img.src = src;
+    bindImageLoadEvents(img);
+}
+
+function queueThumbnailLoads(root = document) {
+    const scope =
+        root && typeof root.querySelectorAll === "function" ? root : document;
+
+    if (root && root.tagName === "IMG") {
+        bindThumbnailLoad(root);
+        return;
+    }
+
+    scope.querySelectorAll("img[data-src]").forEach((img) => {
+        bindThumbnailLoad(img);
+    });
+}
+
+/**
+ * Open Fancybox directly (fallback method)
+ */
+async function openFancyboxDirectly(photoIndex, galleryItems) {
+    if (galleryItems.length === 0) {
+        return;
+    }
+
+    const FancyboxApi = await ensureFancyboxAssets();
+
     // Check if Fancybox is already open
-    const existingInstance = Fancybox.getInstance();
+    const existingInstance = FancyboxApi.getInstance();
     if (existingInstance) {
         // If already open, just jump to the photo
         try {
@@ -474,7 +827,7 @@ function openFancyboxDirectly(photoIndex, galleryItems) {
     }
 
     try {
-        Fancybox.show(galleryItems, {
+        FancyboxApi.show(galleryItems, {
             startIndex: photoIndex,
             groupAll: true,
             autoFocus: false,
@@ -662,46 +1015,30 @@ function parseAndOpenPhotoFromUrl(galleryItems) {
 
     // Wait for DOM to be ready
     requestAnimationFrame(() => {
-        setTimeout(() => {
+        setTimeout(async () => {
             // Check if this is a share link by checking query parameter
             const urlParams = new URLSearchParams(window.location.search);
             const isShareLink = urlParams.has("share");
 
             // Parse query parameter: ?photo=123
             // Use multiple methods to ensure we get the correct parameter even after redirects
-            let photoParam = urlParams.get("photo");
+            const photoIndex = getRequestedPhotoIndexFromUrl();
 
-            // Fallback: try parsing from full URL string if URLSearchParams didn't work
-            // This handles cases where redirects might have affected the query string
-            if (!photoParam) {
-                const fullUrl = window.location.href;
-                const match = fullUrl.match(/[?&]photo=(\d+)/);
-                if (match) {
-                    photoParam = match[1];
-                }
-            }
-
-            if (!photoParam) {
+            if (photoIndex === null) {
                 // No photo parameter found, exit silently (normal page load)
-                return;
-            }
-
-            const photoIndex = parseInt(photoParam, 10);
-
-            // Validate index - be strict about this to prevent opening wrong photo
-            if (isNaN(photoIndex)) {
-                console.warn("Invalid photo index (NaN) from URL:", photoParam);
-                return;
-            }
-
-            if (photoIndex < 0) {
-                console.warn("Invalid photo index (negative) from URL:", photoIndex);
                 return;
             }
 
             // Check if galleryItems is ready and has enough items
             if (!galleryItems || galleryItems.length === 0) {
                 console.warn("Gallery items not ready yet, will retry...");
+                if (activeGalleryMode === "sharded") {
+                    void scheduleYearLoad({
+                        token: galleryLoadToken,
+                        minYears: 0,
+                        targetPhotoIndex: photoIndex,
+                    });
+                }
                 // Retry after a short delay
                 setTimeout(() => parseAndOpenPhotoFromUrl(galleryItems), 500);
                 return;
@@ -714,11 +1051,19 @@ function parseAndOpenPhotoFromUrl(galleryItems) {
                     "max:",
                     galleryItems.length - 1
                 );
+                if (activeGalleryMode === "sharded") {
+                    void scheduleYearLoad({
+                        token: galleryLoadToken,
+                        minYears: 0,
+                        targetPhotoIndex: photoIndex,
+                    });
+                }
                 setTimeout(() => parseAndOpenPhotoFromUrl(galleryItems), 500);
                 return;
             }
 
             // Check if Fancybox is already open
+            await ensureFancyboxAssets();
             const existingInstance = Fancybox.getInstance();
             if (existingInstance) {
                 // If already open, just navigate to the photo
@@ -744,7 +1089,7 @@ function parseAndOpenPhotoFromUrl(galleryItems) {
             // Fancybox handles loading state internally
             // The isInitializingFromUrl flag will be cleared by the reveal event in openFancyboxDirectly
             try {
-                openFancyboxDirectly(photoIndex, galleryItems);
+                await openFancyboxDirectly(photoIndex, galleryItems);
 
                 // Fallback: clear flag after a longer delay in case reveal event doesn't fire
                 setTimeout(() => {
@@ -798,6 +1143,8 @@ async function loadGallery() {
     }
 
     try {
+        destroyTimelineToc();
+        disconnectGalleryLoadMoreObserver();
         activeGalleryMode = getGalleryDataMode();
         const manifest = await fetchGalleryManifest();
         if (manifest && manifest.years && manifest.years.length > 0) {
@@ -814,7 +1161,9 @@ async function loadGallery() {
         }
 
         // Legacy fallback: single large photos.json
-        const response = await fetch("photos.json");
+        const response = await fetch(
+            new URL("photos.json", window.location.origin + getLocalGalleryBase()).toString()
+        );
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -838,428 +1187,14 @@ async function loadGallery() {
         timelineContainer.innerHTML = "";
         galleryContainer.innerHTML = "";
 
-        // Render Timeline (Left Sidebar)
-        renderTimeline(timelineContainer, albums);
-
         // Render Gallery (Right Content)
         renderGallery(galleryContainer, albums, galleryItems);
 
-        // Bind Fancybox manually using event delegation
-        // This avoids issues with 'trigger' being undefined in initialPage callback
-        if (typeof Fancybox !== "undefined") {
-            // Unbind any existing bindings to be safe
-            Fancybox.unbind("[data-fancybox]");
-            Fancybox.unbind("[data-fancybox-trigger]");
-            Fancybox.unbind(".gallery-item");
-
-            // Remove existing click listener if we could (but we can't easily without storing the function)
-            // So we'll just add a new one and rely on the fact that loadGallery usually runs once or on full reload
-            // For safety in SPA-like navigation, we could attach to a persistent container or check a flag
-
-            galleryContainer.addEventListener("click", (e) => {
-                const link = e.target.closest(".gallery-item");
-                if (link) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const index = parseInt(link.dataset.index) || 0;
-
-                    // Check if Fancybox is already open
-                    const existingInstance = Fancybox.getInstance();
-                    if (existingInstance) {
-                        // If already open, just jump to the clicked photo
-                        try {
-                            existingInstance.carousel.jumpTo(index);
-                        } catch (err) {
-                            console.error("Failed to jump to photo:", err);
-                            // Fallback to show if jumpTo fails
-                            Fancybox.show(galleryItems, {
-                                startIndex: index,
-                                groupAll: true,
-                                autoFocus: false,
-                                trapFocus: false,
-                                placeFocusBack: false,
-                                Image: {
-                                    crossOrigin: "anonymous",
-                                },
-                                Toolbar: {
-                                    display: {
-                                        left: ["infobar"],
-                                        middle: [],
-                                        right: [
-                                            "info",
-                                            "share",
-                                            "zoom",
-                                            "slideshow",
-                                            "fullscreen",
-                                            "thumbs",
-                                            "close",
-                                        ],
-                                    },
-                                    items: {
-                                        info: {
-                                            tpl: `<button class="f-button" type="button" title="显示/隐藏照片信息" data-fancybox-info>
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="16" x2="12" y2="12"></line>
-                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                              </svg>
-                            </button>`,
-                                            click: (event) => {
-                                                const instance = Fancybox.getInstance();
-                                                if (instance && instance.container) {
-                                                    instance.container.classList.toggle(
-                                                        "has-metadata-panel"
-                                                    );
-                                                }
-                                                if (event && event.stopPropagation)
-                                                    event.stopPropagation();
-                                            },
-                                        },
-                                        share: {
-                                            tpl: `<button class="f-button" type="button" title="分享" data-fancybox-share>
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="18" cy="5" r="3"></circle>
-                                <circle cx="6" cy="12" r="3"></circle>
-                                <circle cx="18" cy="19" r="3"></circle>
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                              </svg>
-                            </button>`,
-                                            click: (event) => {
-                                                handleShareClick(event, galleryItems);
-                                            },
-                                        },
-                                    },
-                                },
-                                on: {
-                                    "Carousel.change": (
-                                        fancybox,
-                                        carousel,
-                                        toIndex,
-                                        fromIndex
-                                    ) => {
-                                        // Update metadata when slide changes
-                                        // Use galleryItems as the source of truth to avoid potential sync issues with carousel.slides
-                                        const item = galleryItems[toIndex];
-                                        if (!item) return;
-
-                                        const exif = item.exif;
-                                        const filename = item.filename;
-
-                                        // Log current opened image index (only the actual displayed one)
-                                        const total = carousel.slides.length;
-                                        console.log(
-                                            "Carousel.change: 当前打开的图片索引:",
-                                            toIndex
-                                        );
-                                        console.log(
-                                            "Carousel.change: 显示:",
-                                            `${toIndex + 1} / ${total}`
-                                        );
-
-                                        // Only update URL if:
-                                        // 1. Not initializing from URL parameter (isInitializingFromUrl flag)
-                                        // 2. This is a real navigation (fromIndex is a valid number >= 0)
-                                        // This prevents URL from being updated during initialization when fromIndex might be undefined
-                                        if (
-                                            !isInitializingFromUrl &&
-                                            typeof fromIndex === "number" &&
-                                            fromIndex >= 0
-                                        ) {
-                                            updateUrlQuery(toIndex);
-                                        }
-
-                                        // We need to wait for the container to be ready or just update if it exists
-                                        const container = fancybox.container;
-                                        if (!container) return;
-
-                                        try {
-                                            const existingPanel = container.querySelector(
-                                                ".fancybox__metadata"
-                                            );
-                                            if (existingPanel) existingPanel.remove();
-
-                                            if (exif) {
-                                                const metadataPanel = createMetadataPanel(
-                                                    exif,
-                                                    filename,
-                                                    item.Subject,
-                                                    item.caption
-                                                );
-                                                container.appendChild(metadataPanel);
-                                            }
-                                        } catch (e) {
-                                            console.error("Failed to update metadata panel:", e);
-                                        }
-                                    },
-                                    init: (fancybox) => {
-                                        // Initial load handling is done via Carousel.change usually,
-                                        // but let's ensure the first slide gets processed if change doesn't fire on init
-                                        // actually Carousel.change fires on init too usually, but let's be safe
-                                        // or use 'reveal' just for the first one?
-                                        // actually 'Carousel.change' is reliable for navigation.
-                                        // 'reveal' is good for initial load. Let's keep 'reveal' but make sure it doesn't conflict.
-                                        // Actually, let's just use 'Carousel.change' and trigger it manually or rely on it.
-                                        // Fancybox 4/5 'Carousel.change' fires when index changes.
-                                        // Let's also listen to 'reveal' to catch the very first load if change doesn't fire.
-                                    },
-                                    reveal: (fancybox, slide) => {
-                                        // Keep reveal for the initial open, as change might have fired before DOM was ready?
-                                        // Or just to be safe.
-
-                                        const current = fancybox.getSlide();
-
-                                        // 只处理当前正在显示的 slide
-                                        if (slide.index !== current.index) return;
-
-                                        console.log("reveal: 当前显示:", slide.filename);
-                                        const exif = slide.exif;
-                                        const filename = slide.filename;
-                                        if (!exif) return;
-
-                                        const index = slide.index;
-                                        const total = fancybox.carousel.slides.length;
-                                        console.log("reveal: 当前索引:", index);
-                                        console.log("reveal: 显示:", `${index + 1} / ${total}`);
-
-                                        try {
-                                            const existingPanel = fancybox.container.querySelector(
-                                                ".fancybox__metadata"
-                                            );
-                                            if (existingPanel) {
-                                                console.log("existingPanel.remove()");
-                                                existingPanel.remove();
-                                            }
-
-                                            if (exif) {
-                                                const metadataPanel = createMetadataPanel(
-                                                    exif,
-                                                    filename,
-                                                    slide.Subject,
-                                                    slide.caption
-                                                );
-                                                fancybox.container.appendChild(metadataPanel);
-                                            }
-                                        } catch (e) {
-                                            console.error("Failed to update metadata panel:", e);
-                                        }
-                                    },
-                                    done: (fancybox, slide) => {
-                                        //  const index = slide.index;
-                                        //  const total = fancybox.carousel.slides.length;
-                                        //  console.log('done: 当前索引:', index);
-                                        //  console.log('done: 显示:', `${index + 1} / ${total}`);
-                                        //  console.log("图片 URL:", slide.src);
-                                    },
-                                    destroy: (fancybox) => {
-                                        const current = fancybox.getSlide();
-                                        console.log("destroy: 当前显示:", current.filename);
-                                        console.log("destroy: 当前索引:", current.index);
-
-                                        const container = fancybox.container;
-                                        if (container) {
-                                            container.classList.remove("has-metadata-panel");
-                                            const metadataPanel = container.querySelector(
-                                                ".fancybox__metadata"
-                                            );
-                                            if (metadataPanel) metadataPanel.remove();
-                                        }
-                                    },
-                                },
-                            });
-                        }
-                        return;
-                    }
-
-                    Fancybox.show(galleryItems, {
-                        startIndex: index,
-                        groupAll: true,
-                        autoFocus: false,
-                        trapFocus: false,
-                        placeFocusBack: false,
-                        Image: {
-                            crossOrigin: "anonymous",
-                        },
-                        Toolbar: {
-                            display: {
-                                left: ["infobar"],
-                                middle: [],
-                                right: [
-                                    "info",
-                                    "share",
-                                    "zoom",
-                                    "slideshow",
-                                    "fullscreen",
-                                    "thumbs",
-                                    "close",
-                                ],
-                            },
-                            items: {
-                                info: {
-                                    tpl: `<button class="f-button" type="button" title="显示/隐藏照片信息" data-fancybox-info>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="16" x2="12" y2="12"></line>
-                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                          </svg>
-                        </button>`,
-                                    click: (event) => {
-                                        const instance = Fancybox.getInstance();
-                                        if (instance && instance.container) {
-                                            instance.container.classList.toggle("has-metadata-panel");
-                                        }
-                                        if (event && event.stopPropagation) event.stopPropagation();
-                                    },
-                                },
-                                share: {
-                                    tpl: `<button class="f-button" type="button" title="分享" data-fancybox-share>
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="18" cy="5" r="3"></circle>
-                            <circle cx="6" cy="12" r="3"></circle>
-                            <circle cx="18" cy="19" r="3"></circle>
-                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                          </svg>
-                        </button>`,
-                                    click: (event) => {
-                                        handleShareClick(event, galleryItems);
-                                    },
-                                },
-                            },
-                        },
-                        on: {
-                            "Carousel.change": (fancybox, carousel, toIndex, fromIndex) => {
-                                // Update metadata when slide changes
-                                // Use galleryItems as the source of truth to avoid potential sync issues with carousel.slides
-                                const item = galleryItems[toIndex];
-                                if (!item) return;
-
-                                const exif = item.exif;
-                                const filename = item.filename;
-
-                                // Log current opened image index (only the actual displayed one)
-                                const total = carousel.slides.length;
-                                console.log("Carousel.change: 当前打开的图片索引:", toIndex);
-                                console.log(
-                                    "Carousel.change: 显示:",
-                                    `${toIndex + 1} / ${total}`
-                                );
-
-                                // Only update URL if:
-                                // 1. Not initializing from URL parameter (isInitializingFromUrl flag)
-                                // 2. This is a real navigation (fromIndex is a valid number >= 0)
-                                // This prevents URL from being updated during initialization when fromIndex might be undefined
-                                if (
-                                    !isInitializingFromUrl &&
-                                    typeof fromIndex === "number" &&
-                                    fromIndex >= 0
-                                ) {
-                                    updateUrlQuery(toIndex);
-                                }
-
-                                // We need to wait for the container to be ready or just update if it exists
-                                const container = fancybox.container;
-                                if (!container) return;
-
-                                try {
-                                    const existingPanel = container.querySelector(
-                                        ".fancybox__metadata"
-                                    );
-                                    if (existingPanel) existingPanel.remove();
-
-                                    if (exif) {
-                                        const metadataPanel = createMetadataPanel(exif, filename, item.Subject, item.caption);
-                                        container.appendChild(metadataPanel);
-                                    }
-                                } catch (e) {
-                                    console.error("Failed to update metadata panel:", e);
-                                }
-                            },
-                            init: (fancybox) => {
-                                // Initial load handling is done via Carousel.change usually,
-                                // but let's ensure the first slide gets processed if change doesn't fire on init
-                                // actually Carousel.change fires on init too usually, but let's be safe
-                                // or use 'reveal' just for the first one?
-                                // actually 'Carousel.change' is reliable for navigation.
-                                // 'reveal' is good for initial load. Let's keep 'reveal' but make sure it doesn't conflict.
-                                // Actually, let's just use 'Carousel.change' and trigger it manually or rely on it.
-                                // Fancybox 4/5 'Carousel.change' fires when index changes.
-                                // Let's also listen to 'reveal' to catch the very first load if change doesn't fire.
-                            },
-                            reveal: (fancybox, slide) => {
-                                // Keep reveal for the initial open, as change might have fired before DOM was ready?
-                                // Or just to be safe.
-
-                                const current = fancybox.getSlide();
-
-                                // 只处理当前正在显示的 slide
-                                if (slide.index !== current.index) return;
-
-                                console.log("reveal: 当前显示:", slide.filename);
-                                const exif = slide.exif;
-                                const filename = slide.filename;
-                                if (!exif) return;
-
-                                const index = slide.index;
-                                const total = fancybox.carousel.slides.length;
-                                console.log("reveal: 当前索引:", index);
-                                console.log("reveal: 显示:", `${index + 1} / ${total}`);
-
-                                // Only update URL if:
-                                // 1. Not initializing from URL parameter (isInitializingFromUrl flag)
-                                // This prevents URL from being updated during initialization when fromIndex might be undefined
-                                updateUrlQuery(index);
-
-                                try {
-                                    const existingPanel = fancybox.container.querySelector(
-                                        ".fancybox__metadata"
-                                    );
-                                    if (existingPanel) {
-                                        console.log("existingPanel.remove()");
-                                        existingPanel.remove();
-                                    }
-
-                                    if (exif) {
-                                        const metadataPanel = createMetadataPanel(exif, filename, slide.Subject, slide.caption);
-                                        fancybox.container.appendChild(metadataPanel);
-                                    }
-                                } catch (e) {
-                                    console.error("Failed to update metadata panel:", e);
-                                }
-                            },
-                            done: (fancybox, slide) => {
-                                //  const index = slide.index;
-                                //  const total = fancybox.carousel.slides.length;
-                                //  console.log('done: 当前索引:', index);
-                                //  console.log('done: 显示:', `${index + 1} / ${total}`);
-                                //  console.log("图片 URL:", slide.src);
-                            },
-                            destroy: (fancybox) => {
-                                const current = fancybox.getSlide();
-                                console.log("destroy: 当前显示:", current.filename);
-                                console.log("destroy: 当前索引:", current.index);
-
-                                const container = fancybox.container;
-                                if (container) {
-                                    container.classList.remove("has-metadata-panel");
-                                    const metadataPanel = container.querySelector(
-                                        ".fancybox__metadata"
-                                    );
-                                    if (metadataPanel) metadataPanel.remove();
-                                }
-                            },
-                        },
-                    });
-                }
-            });
-        }
+        bindGalleryItemClicks(galleryContainer, galleryItems);
 
         // Bind Image Load Events
         bindImageLoadEvents();
-
-        // Setup Scroll Spy for Timeline
-        setupScrollSpy();
+        initTimelineToc();
 
         // Set current column count after successful load
         // This prevents unnecessary reloads on initial page load
@@ -1290,9 +1225,10 @@ async function loadGallery() {
 
 async function fetchGalleryManifest() {
     try {
-        const response = await fetch(resolveGalleryManifestUrl(), {
-            cache: "no-cache",
-        });
+        const response = await fetch(
+            resolveGalleryManifestUrl(),
+            getGalleryFetchOptions()
+        );
         if (!response.ok) {
             return null;
         }
@@ -1314,26 +1250,41 @@ async function loadShardedGallery(manifest, timelineContainer, galleryContainer)
     galleryManifest = manifest;
     galleryItems.length = 0;
     galleryLoadedYears = new Set();
-    observedScrollTargets = new WeakSet();
+    galleryPendingYearEntries = Array.isArray(manifest.years)
+        ? [...manifest.years]
+        : [];
+    galleryNextYearCursor = 0;
+    galleryYearLoadPromise = Promise.resolve();
 
+    destroyTimelineToc();
+    disconnectGalleryLoadMoreObserver();
     timelineContainer.innerHTML = "";
     galleryContainer.innerHTML = "";
 
-    renderTimeline(timelineContainer, manifest.years);
-    setupScrollSpy();
-
     galleryWaterfall = createWaterfallState(galleryContainer);
+    buildTimelineOutline(galleryWaterfall, manifest.years);
     currentColumnCount = galleryWaterfall.columnCount;
-    observeScrollTargets(timelineContainer);
+    ensureGalleryLoadMoreSentinel(galleryContainer);
     bindGalleryItemClicks(galleryContainer, galleryItems);
     bindImageLoadEvents();
+    initTimelineToc();
 
-    startYearLoadQueue(manifest.years, token);
+    setupGalleryLoadMoreObserver(token);
+    await scheduleYearLoad({
+        token,
+        minYears: calculateInitialYearBatch(manifest.years),
+        targetPhotoIndex: getRequestedPhotoIndexFromUrl(),
+    });
     parseAndOpenPhotoFromUrl(galleryItems);
 }
 
 function createWaterfallState(container) {
     const columnCount = getColumnCount();
+    const shell = document.createElement("div");
+    shell.className = "gallery-waterfall-shell relative";
+    const outlineLayer = document.createElement("div");
+    outlineLayer.className = "gallery-outline-layer";
+    outlineLayer.setAttribute("aria-hidden", "true");
     const waterfallContainer = document.createElement("div");
     waterfallContainer.className = "waterfall-container";
 
@@ -1346,13 +1297,133 @@ function createWaterfallState(container) {
         columns.push(column);
     }
 
-    container.appendChild(waterfallContainer);
+    shell.appendChild(outlineLayer);
+    shell.appendChild(waterfallContainer);
+    container.appendChild(shell);
     return {
         columnCount,
+        shell,
+        outlineLayer,
+        headingMap: new Map(),
         container: waterfallContainer,
         columns,
         heights,
     };
+}
+
+function getAlbumMonthEntries(album) {
+    if (Array.isArray(album.months) && album.months.length > 0) {
+        return album.months
+            .map((month) =>
+                typeof month === "string"
+                    ? {month, count: 0}
+                    : {month: month.month, count: Number(month.count) || 0}
+            )
+            .filter((month) => month.month)
+            .sort((a, b) => b.month.localeCompare(a.month));
+    }
+
+    return Object.entries(groupPhotosByMonth(album.photos || []))
+        .map(([month, photos]) => ({month, count: photos.length}))
+        .sort((a, b) => b.month.localeCompare(a.month));
+}
+
+function getAlbumMonths(album) {
+    return getAlbumMonthEntries(album).map((entry) => entry.month);
+}
+
+function formatTimelineMonth(month) {
+    return new Date(2000, parseInt(month, 10) - 1, 1).toLocaleString("default", {
+        month: "short",
+    });
+}
+
+function buildTimelineOutline(state, albums) {
+    if (!state || !state.outlineLayer) {
+        return;
+    }
+
+    state.outlineLayer.innerHTML = "";
+    state.headingMap.clear();
+
+    let placeholderTop = 0;
+    albums.forEach((album) => {
+        const monthEntries = getAlbumMonthEntries(album);
+        const estimatedYearHeight = estimateYearHeight(album, state.columnCount);
+        upsertOutlineHeading(state, {
+            id: `year-${album.year}`,
+            level: 2,
+            label: String(album.year),
+            top: placeholderTop,
+        });
+
+        let monthOffset = 48;
+        monthEntries.forEach((entry) => {
+            const estimatedMonthHeight = estimateMonthHeight(entry, state.columnCount);
+            upsertOutlineHeading(state, {
+                id: `section-${album.year}-${entry.month}`,
+                level: 3,
+                label: formatTimelineMonth(entry.month),
+                top: placeholderTop + monthOffset,
+            });
+            monthOffset += estimatedMonthHeight;
+        });
+
+        placeholderTop += estimatedYearHeight;
+    });
+}
+
+function estimateMonthHeight(monthEntry, columnCount) {
+    const photoCount = Math.max(1, Number(monthEntry?.count) || 1);
+    const estimatedRows = Math.max(1, Math.ceil(photoCount / Math.max(columnCount, 1)));
+    return estimatedRows * 220;
+}
+
+function estimateYearHeight(album, columnCount) {
+    const monthEntries = getAlbumMonthEntries(album);
+    if (monthEntries.length === 0) {
+        return 240;
+    }
+
+    const monthHeights = monthEntries.reduce(
+        (sum, monthEntry) => sum + estimateMonthHeight(monthEntry, columnCount),
+        0
+    );
+    return Math.max(320, monthHeights + 80);
+}
+
+function upsertOutlineHeading(state, {id, level, label, top}) {
+    if (!state || !state.outlineLayer || !id || !level || !label) {
+        return;
+    }
+
+    let heading = state.headingMap.get(id);
+    if (!heading) {
+        heading = document.createElement(`h${level}`);
+        heading.id = id;
+        heading.className = `gallery-outline-heading gallery-outline-heading-${level}`;
+        heading.textContent = label;
+        state.headingMap.set(id, heading);
+        state.outlineLayer.appendChild(heading);
+    }
+
+    if (typeof top === "number") {
+        heading.style.top = `${top}px`;
+    }
+}
+
+function updateOutlineHeadingPositions(state, sectionHeadings, card) {
+    if (!state || !Array.isArray(sectionHeadings) || sectionHeadings.length === 0 || !card) {
+        return;
+    }
+
+    requestAnimationFrame(() => {
+        const cardTop = card.offsetTop;
+        sectionHeadings.forEach((heading) => {
+            upsertOutlineHeading(state, {...heading, top: cardTop});
+        });
+        syncTimelineAriaCurrent();
+    });
 }
 
 function sortPhotosForRender(photos) {
@@ -1380,15 +1451,24 @@ function preparePhotosForRender(year, photos) {
             return;
         }
 
-        if (!monthPhotos[0].markers) {
-            monthPhotos[0].markers = [];
+        if (!Array.isArray(monthPhotos[0].sectionHeadings)) {
+            monthPhotos[0].sectionHeadings = [];
         }
-        monthPhotos[0].markers.push(`section-${year}-${month}`);
 
         if (isFirstYearPhoto) {
-            monthPhotos[0].markers.push(`year-${year}`);
+            monthPhotos[0].sectionHeadings.push({
+                id: `year-${year}`,
+                level: 2,
+                label: String(year),
+            });
             isFirstYearPhoto = false;
         }
+
+        monthPhotos[0].sectionHeadings.push({
+            id: `section-${year}-${month}`,
+            level: 3,
+            label: formatTimelineMonth(month),
+        });
 
         orderedPhotos.push(...monthPhotos);
     });
@@ -1396,15 +1476,123 @@ function preparePhotosForRender(year, photos) {
     return orderedPhotos;
 }
 
-async function startYearLoadQueue(yearEntries, token) {
+function calculateInitialYearBatch(yearEntries) {
+    if (!Array.isArray(yearEntries) || yearEntries.length === 0) {
+        return 0;
+    }
+
+    let yearCount = 0;
+    let photoCount = 0;
     for (const entry of yearEntries) {
-        if (token !== galleryLoadToken) {
-            return;
+        yearCount += 1;
+        photoCount += Number(entry && entry.count) || 0;
+        if (yearCount >= INITIAL_YEAR_BATCH || photoCount >= INITIAL_PHOTO_TARGET) {
+            break;
+        }
+    }
+
+    return yearCount;
+}
+
+function scheduleYearLoad({
+    token,
+    minYears = 1,
+    targetPhotoIndex = null,
+    targetYear = "",
+} = {}) {
+    const job = () =>
+        loadMoreYears({
+            token,
+            minYears,
+            targetPhotoIndex,
+            targetYear,
+        });
+    galleryYearLoadPromise = galleryYearLoadPromise.then(job, job);
+    return galleryYearLoadPromise;
+}
+
+async function loadMoreYears({
+    token,
+    minYears = 1,
+    targetPhotoIndex = null,
+    targetYear = "",
+} = {}) {
+    if (token !== galleryLoadToken) {
+        return;
+    }
+
+    let loadedYears = 0;
+    while (galleryNextYearCursor < galleryPendingYearEntries.length) {
+        const enoughYearsLoaded = loadedYears >= minYears;
+        const targetPhotoSatisfied =
+            targetPhotoIndex === null || galleryItems.length > targetPhotoIndex;
+        const targetYearSatisfied =
+            !targetYear || galleryLoadedYears.has(targetYear);
+
+        if (enoughYearsLoaded && targetPhotoSatisfied && targetYearSatisfied) {
+            break;
         }
 
+        const entry = galleryPendingYearEntries[galleryNextYearCursor++];
         await loadYearShard(entry, token);
+        loadedYears += 1;
         await new Promise((resolve) => requestAnimationFrame(resolve));
     }
+
+    updateGalleryLoadMoreSentinel();
+}
+
+function ensureGalleryLoadMoreSentinel(container) {
+    if (!container) {
+        return;
+    }
+
+    galleryLoadMoreSentinel = document.createElement("div");
+    galleryLoadMoreSentinel.id = "gallery-load-more-sentinel";
+    galleryLoadMoreSentinel.setAttribute("aria-hidden", "true");
+    galleryLoadMoreSentinel.style.width = "100%";
+    galleryLoadMoreSentinel.style.height = "1px";
+    galleryLoadMoreSentinel.style.pointerEvents = "none";
+    container.appendChild(galleryLoadMoreSentinel);
+}
+
+function disconnectGalleryLoadMoreObserver() {
+    if (galleryLoadMoreObserver) {
+        galleryLoadMoreObserver.disconnect();
+        galleryLoadMoreObserver = null;
+    }
+    galleryLoadMoreSentinel = null;
+}
+
+function setupGalleryLoadMoreObserver(token) {
+    if (!galleryLoadMoreSentinel) {
+        return;
+    }
+
+    galleryLoadMoreObserver = new IntersectionObserver(
+        (entries) => {
+            if (!entries.some((entry) => entry.isIntersecting)) {
+                return;
+            }
+            void scheduleYearLoad({token, minYears: 1});
+        },
+        {
+            root: null,
+            rootMargin: YEAR_LOAD_AHEAD_MARGIN,
+            threshold: 0,
+        }
+    );
+    galleryLoadMoreObserver.observe(galleryLoadMoreSentinel);
+    updateGalleryLoadMoreSentinel();
+}
+
+function updateGalleryLoadMoreSentinel() {
+    if (!galleryLoadMoreSentinel) {
+        return;
+    }
+
+    const hasMoreYears = galleryNextYearCursor < galleryPendingYearEntries.length;
+    galleryLoadMoreSentinel.style.display = hasMoreYears ? "block" : "none";
 }
 
 async function loadYearShard(entry, token) {
@@ -1414,7 +1602,7 @@ async function loadYearShard(entry, token) {
 
     const shardUrl = resolveGalleryShardUrl(entry.year);
     try {
-        const response = await fetch(shardUrl, {cache: "no-cache"});
+        const response = await fetch(shardUrl, getGalleryFetchOptions());
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -1426,14 +1614,14 @@ async function loadYearShard(entry, token) {
 
         const visiblePhotos = (album.photos || []).filter((photo) => !photo.is_hidden);
         if (visiblePhotos.length === 0) {
-            if (galleryWaterfall && galleryWaterfall.container) {
-                const placeholder = document.createElement("div");
-                placeholder.id = `year-${entry.year}`;
-                placeholder.className =
-                    "py-10 text-center text-sm text-gray-400 dark:text-gray-500";
-                placeholder.textContent = `${entry.year} 暂无可见照片`;
-                galleryWaterfall.container.appendChild(placeholder);
-                observeScrollTargets(placeholder.parentElement || galleryWaterfall.container);
+            if (galleryWaterfall && galleryWaterfall.outlineLayer) {
+                const currentBottom = galleryWaterfall.container.offsetHeight;
+                upsertOutlineHeading(galleryWaterfall, {
+                    id: `year-${entry.year}`,
+                    level: 2,
+                    label: String(entry.year),
+                    top: currentBottom,
+                });
             }
             galleryLoadedYears.add(entry.year);
             return;
@@ -1442,7 +1630,6 @@ async function loadYearShard(entry, token) {
         const preparedPhotos = preparePhotosForRender(entry.year, visiblePhotos);
         appendLoadedPhotos(preparedPhotos);
         galleryLoadedYears.add(entry.year);
-        observeScrollTargets(galleryContainerForObserver());
         bindImageLoadEvents();
         parseAndOpenPhotoFromUrl(galleryItems);
     } catch (error) {
@@ -1476,6 +1663,9 @@ function appendLoadedPhotos(photos) {
 
         const card = createPhotoCard(photo);
         galleryWaterfall.columns[minIndex].appendChild(card);
+        updateOutlineHeadingPositions(galleryWaterfall, photo.sectionHeadings, card);
+        queueThumbnailLoads(card);
+        bindImageLoadEvents(card);
 
         const aspectRatio =
             photo.width && photo.height ? photo.width / photo.height : 1.5;
@@ -1486,6 +1676,7 @@ function appendLoadedPhotos(photos) {
     requestAnimationFrame(() => {
         if (galleryWaterfall && galleryWaterfall.container) {
             window.dispatchEvent(new Event("resize"));
+            refreshTimelineToc();
         }
     });
 }
@@ -1504,186 +1695,60 @@ function bindGalleryItemClicks(galleryContainer, items) {
         e.stopPropagation();
 
         const index = parseInt(link.dataset.index, 10) || 0;
-        openFancyboxDirectly(index, items);
+        void openFancyboxDirectly(index, items);
     });
 }
-
-function galleryContainerForObserver() {
-    return galleryWaterfall ? galleryWaterfall.container.parentElement : null;
-}
-
-function observeScrollTargets(root) {
-    if (!scrollSpyObserver || !root) {
-        return;
-    }
-
-    const scope =
-        typeof root.querySelectorAll === "function"
-            ? root
-            : document;
-    scope.querySelectorAll('[id^="year-"], [id^="section-"]').forEach((section) => {
-        if (observedScrollTargets.has(section)) {
-            return;
-        }
-        observedScrollTargets.add(section);
-        scrollSpyObserver.observe(section);
-    });
-}
-
-function renderTimeline(container, albums) {
-    const nav = document.createElement("nav");
-    nav.className = "relative py-4 px-2";
-
-    // Continuous vertical timeline line
-    const line = document.createElement("div");
-    line.className =
-        "absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700";
-    nav.appendChild(line);
-
-    albums.forEach((album, albumIndex) => {
-        const yearGroup = document.createElement("div");
-        yearGroup.className = "mb-6 relative";
-
-        // Year Item Container
-        const yearItem = document.createElement("div");
-        yearItem.className = "relative flex items-center mb-4 group cursor-pointer";
-
-        // Year Marker (Large Dot with ring effect)
-        const yearMarkerWrapper = document.createElement("div");
-        yearMarkerWrapper.className =
-            "absolute left-0 flex items-center justify-center z-20";
-
-        const yearMarker = document.createElement("div");
-        yearMarker.className =
-            "w-5 h-5 rounded-full border-2 border-white dark:border-gray-900 bg-gray-300 dark:bg-gray-600 shadow-sm transition-all duration-300 group-hover:scale-125 group-hover:shadow-md timeline-marker";
-        yearMarker.dataset.targetMarker = `year-${album.year}`;
-
-        // Active ring effect
-        const yearRing = document.createElement("div");
-        yearRing.className =
-            "absolute w-5 h-5 rounded-full border-2 border-transparent transition-all duration-300";
-        yearMarkerWrapper.appendChild(yearRing);
-        yearMarkerWrapper.appendChild(yearMarker);
-        yearItem.appendChild(yearMarkerWrapper);
-
-        // Year Link with better styling
-        const yearLink = document.createElement("a");
-        yearLink.href = `#year-${album.year}`;
-        yearLink.className =
-            "ml-10 text-xl font-bold text-gray-400 hover:text-black dark:hover:text-white transition-all duration-300 timeline-year cursor-pointer select-none";
-        yearLink.dataset.target = `year-${album.year}`;
-        yearLink.textContent = album.year;
-
-        // Add smooth scroll on click
-        yearLink.addEventListener("click", function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log("Year link clicked:", `year-${album.year}`);
-            scrollToSection(`year-${album.year}`);
-            // Keep timeline visible after click
-            const timelineSidebar = document.getElementById("timeline-sidebar");
-            if (timelineSidebar) {
-                timelineSidebar.classList.add("show");
-            }
-        });
-
-        yearItem.appendChild(yearLink);
-        yearGroup.appendChild(yearItem);
-
-        // Month Links with improved styling
-        const months = Array.isArray(album.months) && album.months.length > 0
-            ? album.months
-                  .map((month) => (typeof month === "string" ? month : month.month))
-                  .filter(Boolean)
-                  .sort((a, b) => b.localeCompare(a))
-            : Object.keys(groupPhotosByMonth(album.photos || {})).sort((a, b) =>
-                  b.localeCompare(a)
-              );
-
-        if (months.length > 0) {
-            const monthList = document.createElement("div");
-            monthList.className = "flex flex-col space-y-2 mt-1 ml-10";
-
-            months.forEach((month, monthIndex) => {
-                const monthItem = document.createElement("div");
-                monthItem.className = "relative flex items-center group cursor-pointer";
-
-                // Month Marker (Small Dot with connecting line)
-                const monthMarkerWrapper = document.createElement("div");
-                monthMarkerWrapper.className =
-                    "absolute -left-10 flex items-center justify-center z-10";
-
-                const monthMarker = document.createElement("div");
-                monthMarker.className =
-                    "w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500 transition-all duration-300 group-hover:scale-150 group-hover:bg-gray-600 dark:group-hover:bg-gray-300 timeline-marker";
-                monthMarker.dataset.targetMarker = `section-${album.year}-${month}`;
-
-                // Connecting line from main timeline to month
-                const monthConnector = document.createElement("div");
-                monthConnector.className =
-                    "absolute left-3 w-8 h-0.5 bg-gray-300 dark:bg-gray-600";
-                monthMarkerWrapper.appendChild(monthConnector);
-                monthMarkerWrapper.appendChild(monthMarker);
-                monthItem.appendChild(monthMarkerWrapper);
-
-                const monthName = new Date(2000, parseInt(month) - 1, 1).toLocaleString(
-                    "default",
-                    {month: "short"}
-                );
-                const monthLink = document.createElement("a");
-                monthLink.href = `#section-${album.year}-${month}`;
-                monthLink.className =
-                    "text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-all duration-300 timeline-month cursor-pointer select-none";
-                monthLink.dataset.target = `section-${album.year}-${month}`;
-                monthLink.textContent = monthName;
-
-                // Add smooth scroll on click
-                monthLink.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log("Month link clicked:", `section-${album.year}-${month}`);
-                    scrollToSection(`section-${album.year}-${month}`);
-                    // Keep timeline visible after click
-                    const timelineSidebar = document.getElementById("timeline-sidebar");
-                    if (timelineSidebar) {
-                        timelineSidebar.classList.add("show");
-                    }
-                });
-
-                monthItem.appendChild(monthLink);
-                monthList.appendChild(monthItem);
-            });
-            yearGroup.appendChild(monthList);
-        }
-
-        nav.appendChild(yearGroup);
-    });
-
-    container.appendChild(nav);
-}
-
 /**
  * Smooth scroll to a section with offset for sticky header
  */
-function scrollToSection(sectionId) {
+async function scrollToSection(sectionId) {
+    const targetYear = extractYearFromSectionId(sectionId);
+    if (
+        activeGalleryMode === "sharded" &&
+        targetYear &&
+        !galleryLoadedYears.has(targetYear)
+    ) {
+        await scheduleYearLoad({
+            token: galleryLoadToken,
+            minYears: 0,
+            targetYear,
+        });
+    }
+
     const element = document.getElementById(sectionId);
     if (element) {
-        const headerOffset = 100; // Offset for sticky header
-        const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-        console.log("Scrolling to section:", sectionId, "offset:", offsetPosition);
-        window.scrollTo({
-            top: offsetPosition,
-            behavior: "smooth",
-        });
-    } else {
-        console.error("Section not found:", sectionId);
+        performScrollToSectionElement(sectionId, element);
+        return;
     }
+
+    console.error("Section not found:", sectionId);
+}
+
+function performScrollToSectionElement(sectionId, element) {
+    const headerOffset = TIMELINE_SCROLL_OFFSET;
+    const elementPosition = element.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+    console.log("Scrolling to section:", sectionId, "offset:", offsetPosition);
+    window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+    });
+}
+
+function extractYearFromSectionId(sectionId) {
+    if (!sectionId) {
+        return "";
+    }
+
+    const match = String(sectionId).match(/(?:year|section)-(\d{4})/);
+    return match ? match[1] : "";
 }
 
 function renderGallery(container, albums, galleryItems) {
     const allPhotos = [];
+    galleryWaterfall = createWaterfallState(container);
+    buildTimelineOutline(galleryWaterfall, albums);
 
     albums.forEach((album) => {
         const photosByMonth = groupPhotosByMonth(album.photos);
@@ -1697,17 +1762,24 @@ function renderGallery(container, albums, galleryItems) {
             const monthPhotos = photosByMonth[month];
 
             if (monthPhotos.length > 0) {
-                // Mark the first photo of the month
-                if (!monthPhotos[0].markers) {
-                    monthPhotos[0].markers = [];
+                if (!Array.isArray(monthPhotos[0].sectionHeadings)) {
+                    monthPhotos[0].sectionHeadings = [];
                 }
-                monthPhotos[0].markers.push(`section-${album.year}-${month}`);
 
-                // Mark the first photo of the year
                 if (isFirstYearPhoto) {
-                    monthPhotos[0].markers.push(`year-${album.year}`);
+                    monthPhotos[0].sectionHeadings.push({
+                        id: `year-${album.year}`,
+                        level: 2,
+                        label: String(album.year),
+                    });
                     isFirstYearPhoto = false;
                 }
+
+                monthPhotos[0].sectionHeadings.push({
+                    id: `section-${album.year}-${month}`,
+                    level: 3,
+                    label: formatTimelineMonth(month),
+                });
 
                 // Add all photos to the flat list
                 allPhotos.push(...monthPhotos);
@@ -1716,7 +1788,7 @@ function renderGallery(container, albums, galleryItems) {
     });
 
     // Render the single unified waterfall
-    renderWaterfallLayout(container, allPhotos, null, null, galleryItems);
+    renderWaterfallLayout(galleryWaterfall, allPhotos, galleryItems);
 }
 
 function groupPhotosByMonth(photos) {
@@ -1740,9 +1812,7 @@ function groupPhotosByMonth(photos) {
 /**
  * Render waterfall layout to container
  */
-function renderWaterfallLayout(container, photos, year, month, galleryItems) {
-    const columnCount = getColumnCount();
-
+function renderWaterfallLayout(state, photos, galleryItems) {
     // Populate galleryItems and assign global indices BEFORE creating layout
     photos.forEach((photo) => {
         // Assign global index
@@ -1759,34 +1829,28 @@ function renderWaterfallLayout(container, photos, year, month, galleryItems) {
         });
     });
 
-    const columns = createWaterfallLayout(photos, columnCount);
-
-    // Clear container
-    container.innerHTML = "";
-
-    // Create waterfall container
-    const waterfallContainer = document.createElement("div");
-    waterfallContainer.className = "waterfall-container";
+    const columns = createWaterfallLayout(photos, state.columnCount);
 
     // Create columns
     columns.forEach((columnPhotos, colIndex) => {
-        const columnDiv = document.createElement("div");
-        columnDiv.className = "waterfall-column";
+        const columnDiv = state.columns[colIndex];
 
         columnPhotos.forEach((photo) => {
-            const photoCard = createPhotoCard(photo, year, month);
+            const photoCard = createPhotoCard(photo);
             columnDiv.appendChild(photoCard);
+            updateOutlineHeadingPositions(state, photo.sectionHeadings, photoCard);
         });
-
-        waterfallContainer.appendChild(columnDiv);
     });
 
-    container.appendChild(waterfallContainer);
+    queueThumbnailLoads(state.container);
+    requestAnimationFrame(() => {
+        refreshTimelineToc();
+    });
 }
 
-function createPhotoCard(photo, year, month) {
+function createPhotoCard(photo) {
     const wrapper = document.createElement("div");
-    wrapper.className = "photo-card relative"; // Ensure relative positioning for anchors
+    wrapper.className = "photo-card relative";
     wrapper.dataset.index = photo.waterfallIndex;
 
     // Calculate aspect ratio for placeholder
@@ -1799,20 +1863,12 @@ function createPhotoCard(photo, year, month) {
 
     const exifData = photo.exif ? JSON.stringify(photo.exif) : "";
     const filename = photo.filename || "";
-
-    // Generate hidden anchors if markers exist
-    let anchorsHtml = "";
-    if (photo.markers && photo.markers.length > 0) {
-        anchorsHtml = photo.markers
-            .map(
-                (markerId) =>
-                    `<div id="${markerId}" class="absolute -top-24 left-0 w-full h-0 pointer-events-none invisible"></div>`
-            )
-            .join("");
-    }
+    const shouldEagerLoad = photo.waterfallIndex < EAGER_THUMBNAIL_COUNT;
+    const thumbnailAttributes = shouldEagerLoad
+        ? `src="${photo.thumbnail}" data-thumb-loaded="true" loading="eager" fetchpriority="high"`
+        : `data-src="${photo.thumbnail}" loading="lazy" fetchpriority="low"`;
 
     wrapper.innerHTML = `
-    ${anchorsHtml}
     <div class="overflow-hidden w-full h-full relative img-skeleton-bg rounded-lg safari-rounded-fix">
       <div class="img-skeleton absolute inset-0 z-10">
         <span class="dot"></span>
@@ -1830,7 +1886,8 @@ function createPhotoCard(photo, year, month) {
           width="${width}"
           height="${height}"
           class="block w-full h-full object-cover object-center opacity-0 animate-fade-in transition duration-300 img-hover-zoom img-loading rounded-lg"
-          src="${photo.thumbnail}"
+          decoding="async"
+          ${thumbnailAttributes}
         />
       </a>
     </div>
@@ -1839,11 +1896,23 @@ function createPhotoCard(photo, year, month) {
     return wrapper;
 }
 
-function bindImageLoadEvents() {
+function bindImageLoadEvents(root = document) {
+    const images =
+        root && root.tagName === "IMG"
+            ? [root]
+            : Array.from(
+                  (root && typeof root.querySelectorAll === "function"
+                      ? root
+                      : document
+                  ).querySelectorAll("img.img-loading")
+              );
+
     const checkAllImages = () => {
-        document.querySelectorAll("img.img-loading").forEach(function (img) {
+        images.forEach(function (img) {
             // Check if already processed to avoid redundant work
             if (img.dataset.loaded === "true") return;
+            if (img.dataset.loadBound === "true") return;
+            if (!img.currentSrc && !img.getAttribute("src")) return;
 
             let isLoaded = false;
 
@@ -1851,6 +1920,7 @@ function bindImageLoadEvents() {
                 if (isLoaded) return;
                 isLoaded = true;
                 img.dataset.loaded = "true"; // Mark as processed
+                img.dataset.loadBound = "true";
 
                 let parent = img.closest(".img-skeleton-bg");
                 let skeleton = parent ? parent.querySelector(".img-skeleton") : null;
@@ -1890,6 +1960,7 @@ function bindImageLoadEvents() {
             if (checkImageLoaded()) return;
 
             // Event listeners
+            img.dataset.loadBound = "true";
             img.addEventListener("load", hideSkeleton, {once: true});
             img.addEventListener(
                 "error",
@@ -1938,145 +2009,6 @@ function bindImageLoadEvents() {
     window.addEventListener("pageshow", () => {
         checkAllImages();
     });
-}
-
-function setupScrollSpy() {
-    if (scrollSpyObserver) {
-        observeScrollTargets(document);
-        return;
-    }
-
-    const observerOptions = {
-        root: null,
-        rootMargin: "-20% 0px -60% 0px", // Active when element is in the middle-ish
-        threshold: 0,
-    };
-
-    scrollSpyObserver = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                const id = entry.target.id;
-                activateTimelineItem(id);
-            }
-        });
-    }, observerOptions);
-
-    observeScrollTargets(document);
-}
-
-function activateTimelineItem(id) {
-    // Reset all year texts
-    document.querySelectorAll(".timeline-year").forEach((el) => {
-        el.classList.remove(
-            "text-black",
-            "dark:text-white",
-            "text-gray-800",
-            "dark:text-gray-200"
-        );
-        el.classList.add("text-gray-400");
-    });
-
-    // Reset all month texts
-    document.querySelectorAll(".timeline-month").forEach((el) => {
-        el.classList.remove(
-            "text-gray-700",
-            "dark:text-gray-200",
-            "text-black",
-            "dark:text-white",
-            "font-semibold"
-        );
-        el.classList.add("text-gray-500", "dark:text-gray-400");
-    });
-
-    // Reset all year markers
-    document.querySelectorAll(".timeline-marker").forEach((el) => {
-        if (
-            el.closest('[data-target-marker^="year-"]') ||
-            el.dataset.targetMarker?.startsWith("year-")
-        ) {
-            el.classList.remove(
-                "bg-black",
-                "dark:bg-white",
-                "scale-125",
-                "ring-2",
-                "ring-black",
-                "dark:ring-white",
-                "shadow-lg"
-            );
-            el.classList.add("bg-gray-300", "dark:bg-gray-600");
-        } else {
-            el.classList.remove(
-                "bg-black",
-                "dark:bg-white",
-                "scale-150",
-                "ring-2",
-                "ring-black",
-                "dark:ring-white"
-            );
-            el.classList.add("bg-gray-400", "dark:bg-gray-500");
-        }
-    });
-
-    // Activate current item
-    const activeLink = document.querySelector(`[data-target="${id}"]`);
-    if (activeLink) {
-        if (id.startsWith("year-")) {
-            activeLink.classList.remove("text-gray-400");
-            activeLink.classList.add("text-black", "dark:text-white");
-        } else {
-            activeLink.classList.remove("text-gray-500", "dark:text-gray-400");
-            activeLink.classList.add(
-                "text-gray-700",
-                "dark:text-gray-200",
-                "font-semibold"
-            );
-        }
-    }
-
-    // Activate current marker with enhanced styling
-    const activeMarker = document.querySelector(`[data-target-marker="${id}"]`);
-    if (activeMarker) {
-        if (id.startsWith("year-")) {
-            activeMarker.classList.remove("bg-gray-300", "dark:bg-gray-600");
-            activeMarker.classList.add(
-                "bg-black",
-                "dark:bg-white",
-                "scale-125",
-                "ring-2",
-                "ring-black",
-                "dark:ring-white",
-                "shadow-lg"
-            );
-        } else {
-            activeMarker.classList.remove("bg-gray-400", "dark:bg-gray-500");
-            activeMarker.classList.add(
-                "bg-black",
-                "dark:bg-white",
-                "scale-150",
-                "ring-2",
-                "ring-black",
-                "dark:ring-white"
-            );
-        }
-    }
-
-    // If it's a month, also highlight the parent year (subtly)
-    if (id.startsWith("section-")) {
-        const year = id.split("-")[1];
-        const yearLink = document.querySelector(`[data-target="year-${year}"]`);
-        const yearMarker = document.querySelector(
-            `[data-target-marker="year-${year}"]`
-        );
-
-        if (yearLink) {
-            yearLink.classList.remove("text-gray-400");
-            yearLink.classList.add("text-gray-800", "dark:text-gray-200");
-        }
-        if (yearMarker) {
-            yearMarker.classList.remove("bg-gray-300", "dark:bg-gray-600");
-            yearMarker.classList.add("bg-gray-500", "dark:bg-gray-400", "scale-110");
-        }
-    }
 }
 
 /**
@@ -2322,29 +2254,6 @@ function createWaterfallLayout(photos, columnCount) {
     });
 
     return columns;
-}
-
-/**
- * Generate mapping from Timeline keys to global photo indices
- */
-function generateTimelineMapping(albums) {
-    const mapping = {};
-    let globalIndex = 0;
-
-    albums.forEach((album) => {
-        const photosByMonth = groupPhotosByMonth(album.photos);
-        const months = Object.keys(photosByMonth).sort((a, b) =>
-            b.localeCompare(a)
-        );
-
-        months.forEach((month) => {
-            const key = `${album.year}-${month}`;
-            mapping[key] = globalIndex;
-            globalIndex += photosByMonth[month].length;
-        });
-    });
-
-    return mapping;
 }
 
 /**
