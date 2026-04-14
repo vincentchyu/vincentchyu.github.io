@@ -1,7 +1,7 @@
 # Vincent's Personal Website & Blog
 
 <p align="center">
-  <img alt="Logo" src="web/before/img/logo1.jpg" width="100">
+  <img alt="Logo" src="web/shared/media/logo.png" width="100">
 </p>
 
 <p align="center">
@@ -14,18 +14,20 @@
 
 ## 项目概述
 
-这是一个静态生成的个人网站，托管于 GitHub Pages。它不仅是我的技术博客，也是我的摄影作品集展示平台。
+这是一个静态生成的个人网站，托管于 GitHub Pages。它不仅是我的技术博客，也是我的摄影作品集展示平台和本地可管理的摄影后台。
 
 主要包含以下部分：
-- **Blog**: 技术文章与生活随笔。
+- **Home**: 主页入口与站点导航。
+- **Tools**: 在线开发者工具。
 - **Photography**: 摄影作品画廊，支持按年份归档、EXIF 信息展示和沉浸式预览。
-- **Timeline**: 个人时间轴。
+- **Admin**: 照片管理后台。
+- **Legacy**: 历史页面与旧站兼容内容。
 
 ## 技术栈
 
 - **前端**: 原生 HTML/CSS/JavaScript (无重型框架依赖)
 - **样式**: Material Design Lite (MDL) + 自定义 CSS
-- **交互**: jQuery, Fancybox (画廊), LazyLoad (懒加载)
+- **交互**: 原生 HTML/CSS/JavaScript，照片后台采用虚拟滚动和懒加载
 - **评论**: Valine
 - **自动化**: Go (用于照片处理和数据生成)
 - **存储**: Cloudflare R2 (图片 CDN)
@@ -84,6 +86,13 @@ go run cmd/admin/main.go
 
 访问 `http://localhost:3002` 进入管理后台。
 
+#### 3. 本地双服务联动
+
+`run.sh start` 会同时启动：
+
+- `http://localhost:3000` 的本地博客/静态预览
+- `http://localhost:3002` 的照片管理后台
+
 ## MacOS 管理脚本
 
 为了方便在 macOS 上部署和管理后台服务，项目提供了一套封装好的 Shell 脚本。
@@ -104,9 +113,9 @@ chmod +x run.sh
 
 **可用命令**:
 
--   `init`: 初始化环境。编译二进制文件并生成 macOS 的 LaunchAgent 配置文件，注册到系统服务。
--   `start`: 启动服务。通过 `launchctl` 加载并启动后台服务。
--   `stop`: 停止服务。卸载并停止后台服务。
+-   `init`: 初始化环境。编译后台和本地预览二进制，并安装两个 LaunchAgent 配置文件。
+-   `start`: 启动服务。通过 `launchctl` 同时加载并启动后台和本地博客预览。
+-   `stop`: 停止服务。卸载并停止后台和本地博客预览。
 -   `update`: 手动运行照片库更新逻辑 (执行 `cmd/update-photos`)。
 
 ### 目录结构 (`shell/`)
@@ -114,6 +123,16 @@ chmod +x run.sh
 -   `shell/script/`: 包含构建、启动和停止的具体实现脚本。
 -   `shell/launch/`: 存放 LaunchAgent 配置文件模板。
 -   `shell/bin/`: 存放编译后的二进制文件 (已添加到 `.gitignore`)。
+
+### 变更记录
+
+- 任何涉及目录重组、前后端分层、启动方式、API 契约或性能模型的大改动，建议同步更新 `CHANGELOG.md`，保证代码、约束和变更记录一致。
+
+### 前端目录
+
+- `web/` 是主站前端的 canonical 目录树。
+- `web/home/`、`web/tools/`、`web/photography/`、`web/admin/`、`web/legacy/`、`web/shared/` 各自负责不同页面和资源。
+- `web/before/` 仅保留旧入口的兼容跳转和历史资源。
 
 ## License
 

@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>在线yaml转properties-在线properties转yaml-ToYaml.com</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <meta name="keywords" content="properties转yml,properties转yaml,properties to yaml,yaml to properties,yml to properties,yml转properties,yaml转properties">
+    <meta name="description" content="在线yaml转properties工具">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
+
+    <script>
+        var timeOutEvent = setTimeout(function(){
+            window.location.href = "../../../index.html";
+        }, 6000);
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script>
+        setTimeout(function(){
+            clearTimeout(timeOutEvent);
+        }, 0)
+    </script>
+
+
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement("script");
+            hm.src = "https://hm.baidu.com/hm.js?d261b815162db1e53e4ac48b8192eda2";
+            var s = document.getElementsByTagName("script")[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+
+</head>
+<body>
+<div class="container-fluid">
+    <div class="page-header">
+        <h1>vincentch1n <small> -- Convert between Properties and YAML Online -- <a href="https://vincentch1n.top"><span>Online</span></a></small></h1>
+    </div>
+    <div class="row vertical-middle">
+        <div class="col-md-5 col-lg-5">
+            <div class="panel  panel-primary">
+                <div class="panel-body">
+                    <textarea id="from" style="font-size:19px; " rows="50" class="form-control" placeholder="properties content"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-1 col-lg-1 text-center" style="line-height: 500px;">
+            <div class="btn-group-vertical">
+                <input  class="btn btn-primary" type="button" value="to yaml>>" onclick="Base.parseYml()">
+                <input  class="btn btn-primary" style="margin-top: 10px;" type="button" value="<<to prop" onclick="Base.parseProp()">
+            </div>
+        </div>
+
+        <div class="col-md-5 col-lg-5">
+            <div class="panel  panel-primary">
+                <div class="panel-body">
+                    <textarea id="to" style="font-size:19px; " rows="50" class="form-control" placeholder="yaml content"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="loadingModal">
+        <div style="width: 200px;height:20px; z-index: 20000; position: absolute; text-align: center; left: 50%; top: 50%;margin-left:-100px;margin-top:-10px">
+            <div class="progress progress-striped active" style="margin-bottom: 0;">
+                <div class="progress-bar" style="width: 100%;"></div>
+            </div>
+
+        </div>
+    </div>
+    <footer>
+        <div class="row">
+            <div class="col-md-11 col-lg-11 text-center">
+            </div>
+        </div>
+    </footer>
+</div>
+</body>
+<script>
+    var toYamlUrl="https://toyaml.com/y";
+    var toPropUrl="https://toyaml.com/p";
+    var Base = {
+        parseYml : function () {
+            Base.showLoading();
+            $.ajax({
+                type: "post",
+                data:{"prop":$('#from').val()},
+                url: toYamlUrl,
+                dataType:"text",
+                success: function(data) {
+                    $('#to').val(data);
+                    Base.hideLoading();
+                }
+            });
+        },
+        parseProp : function () {
+            Base.showLoading();
+            $.ajax({
+                type: "post",
+                data:{"yaml":$('#to').val()},
+                url: toPropUrl,
+                dataType:"text",
+                success: function(data) {
+                    $('#from').val(data);
+                    Base.hideLoading();
+                }
+            });
+        },
+        showLoading : function () {
+            $("#loadingModal").modal('show');
+        },
+        hideLoading : function () {
+            $('#loadingModal').modal('hide');
+        }
+    }
+
+</script>
+<script src="https://toyaml.com/js/tctip.js"></script>
+
+</html>

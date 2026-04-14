@@ -1,10 +1,19 @@
 package main
 
 import (
+	"log"
+
 	"github.com/vincentchyu/vincentchyu.github.io/internal/photo"
-	_ "github.com/vincentchyu/vincentchyu.github.io/pkg/config"
+	"github.com/vincentchyu/vincentchyu.github.io/pkg/config"
 )
 
 func main() {
-	photo.UpdatePhotosHandler(nil)
+	rootDir, err := config.ResolveRootDir("")
+	if err != nil {
+		log.Fatalf("Resolve root dir error: %v", err)
+	}
+
+	if err := photo.RunUpdatePhotosWithRoot(rootDir, nil); err != nil {
+		log.Fatalf("Update photos error: %v", err)
+	}
 }

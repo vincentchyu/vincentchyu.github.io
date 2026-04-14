@@ -15,6 +15,7 @@ import (
 
 	"github.com/vincentchyu/vincentchyu.github.io/internal/photo"
 	"github.com/vincentchyu/vincentchyu.github.io/internal/storage"
+	"github.com/vincentchyu/vincentchyu.github.io/pkg/config"
 )
 
 // AdminServer manages the photo admin HTTP server
@@ -23,6 +24,7 @@ type AdminServer struct {
 	photosPath   string
 	imagesDir    string
 	galleryStore *photo.GalleryStore
+	service      *PhotoAdminService
 	mu           sync.RWMutex
 	rebuildTask  *RebuildTask
 	rebuildMutex sync.Mutex
@@ -54,10 +56,16 @@ type BatchUpdateRequest struct {
 
 // NewAdminServer creates a new admin server instance
 func NewAdminServer() (*AdminServer, error) {
-	rootDir, err := os.Getwd()
+	rootDir, err := config.ResolveRootDir("")
 	if err != nil {
-		return nil, fmt.Errorf("failed to get working directory: %w", err)
+		return nil, fmt.Errorf("resolve root dir: %w", err)
 	}
+
+	return NewAdminServerWithRoot(rootDir)
+}
+
+func NewAdminServerWithRoot(rootDir string) (*AdminServer, error) {
+	paths := config.NewPaths(rootDir)
 
 	// Initialize R2 client
 	var r2Client *storage.R2Client
@@ -73,22 +81,36 @@ func NewAdminServer() (*AdminServer, error) {
 		}
 	}
 
-	return &AdminServer{
+	galleryStore := photo.NewGalleryStore(rootDir, r2Client)
+
+	server := &AdminServer{
 		rootDir:      rootDir,
 		photosPath:   filepath.Join(rootDir, photo.LegacyGalleryPath),
-		imagesDir:    filepath.Join(rootDir, photo.ImgDir),
-		galleryStore: photo.NewGalleryStore(rootDir, r2Client),
+		imagesDir:    paths.ImagesDir,
+		galleryStore: galleryStore,
 		rebuildTask: &RebuildTask{
 			Status: "idle",
 			Logs:   []string{},
 		},
 		R2Client: r2Client,
-	}, nil
+	}
+	server.service = NewPhotoAdminService(rootDir, paths.ImagesDir, galleryStore, r2Client, photo.GetExifExtractor())
+
+	return server, nil
 }
 
 // StartAdminServer starts the HTTP server
 func StartAdminServer(addr string) error {
-	server, err := NewAdminServer()
+	rootDir, err := config.ResolveRootDir("")
+	if err != nil {
+		return err
+	}
+
+	return StartAdminServerWithRoot(addr, rootDir)
+}
+
+func StartAdminServerWithRoot(addr string, rootDir string) error {
+	server, err := NewAdminServerWithRoot(rootDir)
 	if err != nil {
 		return err
 	}
@@ -106,7 +128,7 @@ func StartAdminServer(addr string) error {
 	mux.HandleFunc("/api/proxy", loggingMiddleware(server.handleProxy))
 
 	// Static files
-	webAdminDir := filepath.Join(server.rootDir, "web", "admin")
+	webAdminDir := config.NewPaths(server.rootDir).AdminDir
 	mux.Handle("/", http.FileServer(http.Dir(webAdminDir)))
 
 	log.Printf("🚀 照片管理服务器启动在 http://localhost%s\n", addr)
@@ -128,13 +150,31 @@ func (s *AdminServer) handlePhotos(w http.ResponseWriter, r *http.Request) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	albums, _, err := s.galleryStore.LoadAlbums()
+	w.Header().Set("Content-Type", "application/json")
+
+	if shouldReturnPhotoPage(r) {
+		pageReq, err := parsePhotoPageRequest(r)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Invalid paging parameters: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		page, err := s.service.ListPhotosPage(pageReq)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to read gallery data: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(page)
+		return
+	}
+
+	albums, err := s.service.ListAlbums()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to read gallery data: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(albums)
 }
 
@@ -171,6 +211,41 @@ func splitPhotoResourcePath(path string) (year, filename string) {
 	return "", path
 }
 
+func shouldReturnPhotoPage(r *http.Request) bool {
+	query := r.URL.Query()
+	if query.Get("format") == "page" {
+		return true
+	}
+
+	keys := []string{"cursor", "limit", "search", "year", "status"}
+	for _, key := range keys {
+		if query.Get(key) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func parsePhotoPageRequest(r *http.Request) (ListPhotosPageRequest, error) {
+	query := r.URL.Query()
+	req := ListPhotosPageRequest{
+		Cursor: query.Get("cursor"),
+		Search: query.Get("search"),
+		Year:   query.Get("year"),
+		Status: query.Get("status"),
+	}
+
+	if limitStr := query.Get("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			return ListPhotosPageRequest{}, err
+		}
+		req.Limit = limit
+	}
+
+	return req, nil
+}
+
 // handlePhotoUpdate handles PUT /api/photos/:filename
 func (s *AdminServer) handlePhotoUpdate(w http.ResponseWriter, r *http.Request, year, filename string) {
 	var req PhotoUpdateRequest
@@ -179,7 +254,10 @@ func (s *AdminServer) handlePhotoUpdate(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	if err := s.updatePhoto(year, filename, req); err != nil {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.service.UpdatePhoto(year, filename, req); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update photo: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -190,7 +268,10 @@ func (s *AdminServer) handlePhotoUpdate(w http.ResponseWriter, r *http.Request, 
 
 // handlePhotoDelete handles DELETE /api/photos/:filename
 func (s *AdminServer) handlePhotoDelete(w http.ResponseWriter, r *http.Request, year, filename string) {
-	if err := s.deletePhoto(year, filename); err != nil {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.service.DeletePhoto(year, filename); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete photo: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -212,7 +293,10 @@ func (s *AdminServer) handleBatchUpdate(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := s.updatePhotosBatch(req); err != nil {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if err := s.service.UpdatePhotosBatch(req); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update photos: %v", err), http.StatusInternalServerError)
 		return
 	}
@@ -337,203 +421,6 @@ func (s *AdminServer) handleProxy(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, resp.Body)
 }
 
-// updatePhoto updates a single photo's metadata in the matching year shard.
-func (s *AdminServer) updatePhoto(year, filename string, req PhotoUpdateRequest) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if year != "" {
-		album, err := s.galleryStore.LoadYearAlbum(year)
-		if err != nil {
-			return fmt.Errorf("failed to load year shard: %w", err)
-		}
-
-		found := false
-		var updated photo.Photo
-		for i := range album.Photos {
-			if album.Photos[i].Filename != filename {
-				continue
-			}
-			updated, _ = applyPhotoUpdate(&album.Photos[i], req)
-			found = true
-			break
-		}
-		if !found {
-			return fmt.Errorf("photo not found: %s", filename)
-		}
-
-		if _, err := s.galleryStore.UpsertPhoto(updated); err != nil {
-			return fmt.Errorf("failed to persist photo update: %w", err)
-		}
-		return nil
-	}
-
-	albums, _, err := s.galleryStore.LoadAlbums()
-	if err != nil {
-		return fmt.Errorf("failed to load gallery data: %w", err)
-	}
-
-	found := false
-	for i := range albums {
-		for j := range albums[i].Photos {
-			if albums[i].Photos[j].Filename != filename {
-				continue
-			}
-			if req.Alt != nil {
-				albums[i].Photos[j].Alt = *req.Alt
-			}
-			if req.IsHidden != nil {
-				albums[i].Photos[j].IsHidden = *req.IsHidden
-			}
-			if req.Subject != nil {
-				albums[i].Photos[j].Subject = req.Subject
-			}
-			found = true
-			break
-		}
-		if found {
-			break
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("photo not found: %s", filename)
-	}
-
-	if _, err := s.galleryStore.SaveFull(albums); err != nil {
-		return fmt.Errorf("failed to persist gallery data: %w", err)
-	}
-	return nil
-}
-
-// updatePhotosBatch updates multiple photos in one pass and rewrites the sharded dataset once.
-func (s *AdminServer) updatePhotosBatch(req BatchUpdateRequest) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	albums, _, err := s.galleryStore.LoadAlbums()
-	if err != nil {
-		return fmt.Errorf("failed to load gallery data: %w", err)
-	}
-
-	updatedCount := 0
-	for _, filename := range req.Filenames {
-		for i := range albums {
-			for j := range albums[i].Photos {
-				if albums[i].Photos[j].Filename != filename {
-					continue
-				}
-				if req.Updates.Alt != nil {
-					albums[i].Photos[j].Alt = *req.Updates.Alt
-				}
-				if req.Updates.IsHidden != nil {
-					albums[i].Photos[j].IsHidden = *req.Updates.IsHidden
-				}
-				if req.Updates.Subject != nil {
-					albums[i].Photos[j].Subject = req.Updates.Subject
-				}
-				updatedCount++
-				goto nextFilename
-			}
-		}
-	nextFilename:
-	}
-
-	if updatedCount == 0 {
-		return fmt.Errorf("no matching photos found")
-	}
-
-	if _, err := s.galleryStore.SaveFull(albums); err != nil {
-		return fmt.Errorf("failed to persist gallery data: %w", err)
-	}
-	return nil
-}
-
-// deletePhoto deletes a photo from its year shard, R2, and the local filesystem.
-func (s *AdminServer) deletePhoto(year, filename string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	var targetPhoto photo.Photo
-	if year == "" {
-		foundYear, foundPhoto, err := s.findPhotoLocation(filename)
-		if err != nil {
-			return err
-		}
-		year = foundYear
-		targetPhoto = foundPhoto
-	} else {
-		album, err := s.galleryStore.LoadYearAlbum(year)
-		if err != nil {
-			return fmt.Errorf("failed to load year shard: %w", err)
-		}
-
-		found := false
-		for _, p := range album.Photos {
-			if p.Filename == filename {
-				targetPhoto = p
-				found = true
-				break
-			}
-		}
-		if !found {
-			return fmt.Errorf("photo not found: %s", filename)
-		}
-	}
-
-	if _, err := s.galleryStore.DeletePhoto(year, filename); err != nil {
-		return fmt.Errorf("failed to update gallery data: %w", err)
-	}
-
-	if s.R2Client != nil {
-		var keysToDelete []string
-		keysToDelete = append(
-			keysToDelete,
-			fmt.Sprintf("%s%s%s", s.R2Client.Config.BasePrefix, s.R2Client.Config.OriginalPrefix, filename),
-		)
-
-		filenameNoExt := strings.TrimSuffix(filename, filepath.Ext(filename))
-		keysToDelete = append(
-			keysToDelete,
-			fmt.Sprintf("%s%s%s%s", s.R2Client.Config.BasePrefix, s.R2Client.Config.ThumbnailPrefix, filenameNoExt, photo.ExtWebP),
-		)
-
-		log.Printf("🟢 Deleting files from R2 for %s...\n", filename)
-		if err := s.R2Client.DeleteObjects(keysToDelete); err != nil {
-			log.Printf("Error deleting objects from R2: %v", err)
-		} else {
-			log.Printf("✓ Deleted files from R2")
-		}
-	}
-
-	if targetPhoto.Year != "" {
-		localPath := filepath.Join(s.imagesDir, targetPhoto.Year, filename)
-		log.Printf("Deleting local file: %s\n", localPath)
-		if err := os.Remove(localPath); err != nil && !os.IsNotExist(err) {
-			log.Printf("Error deleting local file: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (s *AdminServer) findPhotoLocation(filename string) (string, photo.Photo, error) {
-	albums, _, err := s.galleryStore.LoadAlbums()
-	if err != nil {
-		return "", photo.Photo{}, err
-	}
-
-	for _, album := range albums {
-		for _, p := range album.Photos {
-			if p.Filename == filename {
-				return album.Year, p, nil
-			}
-		}
-	}
-
-	return "", photo.Photo{}, fmt.Errorf("photo not found: %s", filename)
-}
-
 func applyPhotoUpdate(existing *photo.Photo, req PhotoUpdateRequest) (photo.Photo, bool) {
 	if existing == nil {
 		return photo.Photo{}, false
@@ -565,7 +452,7 @@ func (s *AdminServer) runRebuild() {
 		}
 	}()
 
-	s.addLog("📸 调用 photo.UpdatePhotosHandler...")
+	s.addLog("📸 调用照片重建服务...")
 	s.updateProgress(10, "Processing photos...")
 
 	// Create a channel for logs
@@ -583,11 +470,22 @@ func (s *AdminServer) runRebuild() {
 	}()
 
 	// Run the update
-	photo.UpdatePhotosHandler(logChan)
+	err := s.service.RebuildGallery(logChan)
 	close(logChan)
 
 	// Wait for logging to finish
 	logWg.Wait()
+
+	if err != nil {
+		s.rebuildMutex.Lock()
+		s.rebuildTask.Status = "failed"
+		s.rebuildTask.Progress = 100
+		s.rebuildTask.Message = fmt.Sprintf("Rebuild failed: %v", err)
+		s.rebuildTask.EndTime = time.Now()
+		s.rebuildTask.Logs = append(s.rebuildTask.Logs, fmt.Sprintf("❌ 重建失败: %v", err))
+		s.rebuildMutex.Unlock()
+		return
+	}
 
 	s.rebuildMutex.Lock()
 	s.rebuildTask.Status = "completed"
@@ -635,7 +533,7 @@ func (s *AdminServer) handlePhotoUpload(w http.ResponseWriter, r *http.Request) 
 	defer file.Close()
 
 	// Extract year from EXIF or use current year
-	year := s.extractYearFromFile(file, header.Filename)
+	year := s.service.ExtractYearFromFile(file, header.Filename)
 
 	// Reset file pointer
 	file.Seek(0, 0)
@@ -661,7 +559,9 @@ func (s *AdminServer) handlePhotoUpload(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	processedPhoto, err := s.processUploadedPhoto(targetPath, year, header.Filename)
+	s.mu.Lock()
+	processedPhoto, err := s.service.ProcessUploadedPhoto(targetPath, year, header.Filename)
+	s.mu.Unlock()
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to process uploaded photo: %v", err), http.StatusInternalServerError)
 		return
@@ -677,67 +577,4 @@ func (s *AdminServer) handlePhotoUpload(w http.ResponseWriter, r *http.Request) 
 			"date":     processedPhoto.Date,
 		},
 	)
-}
-
-func (s *AdminServer) processUploadedPhoto(targetPath, year, filename string) (photo.Photo, error) {
-	processor, err := photo.NewPhotoProcessor()
-	if err != nil {
-		return photo.Photo{}, err
-	}
-	if s.R2Client != nil {
-		processor.R2Client = s.R2Client
-	}
-
-	albums, _, err := s.galleryStore.LoadAlbums()
-	if err == nil {
-		for _, album := range albums {
-			for _, item := range album.Photos {
-				processor.ExistingPhotos[item.Filename] = item
-			}
-		}
-	}
-
-	processedPhoto, err := processor.ProcessPhoto(targetPath, year)
-	if err != nil {
-		return photo.Photo{}, err
-	}
-
-	if _, err := s.galleryStore.UpsertPhoto(processedPhoto); err != nil {
-		return processedPhoto, err
-	}
-
-	log.Printf("✓ Uploaded and indexed photo: %s", filename)
-	return processedPhoto, nil
-}
-
-// extractYearFromFile extracts year from EXIF or filename
-func (s *AdminServer) extractYearFromFile(file io.ReadSeeker, filename string) string {
-	// Try to create a temporary file for EXIF extraction
-	tmpFile, err := os.CreateTemp("", "upload-*.jpg")
-	if err == nil {
-		defer os.Remove(tmpFile.Name())
-		defer tmpFile.Close()
-
-		// Copy to temp file
-		file.Seek(0, 0)
-		io.Copy(tmpFile, file)
-		tmpFile.Sync()
-
-		// Extract EXIF
-		_, _, _, dateTaken, err := photo.GetExifExtractor().Extract(tmpFile.Name())
-		if err == nil && !dateTaken.IsZero() {
-			return fmt.Sprintf("%04d", dateTaken.Year())
-		}
-	}
-
-	// Fallback: try to extract from filename (DSC_YYYY-MM-DD_*.jpg)
-	if strings.HasPrefix(filename, "DSC_") && len(filename) > 13 {
-		yearStr := filename[4:8]
-		if _, err := strconv.Atoi(yearStr); err == nil {
-			return yearStr
-		}
-	}
-
-	// Default to current year
-	return fmt.Sprintf("%04d", time.Now().Year())
 }

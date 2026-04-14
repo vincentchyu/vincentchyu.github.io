@@ -27,8 +27,17 @@ case "$1" in
   update)
     go run cmd/update-photos/main.go
     ;;
+  restart)
+    sh "$SCRIPT_DIR/stop_photograph-management.sh"
+    sh "$SCRIPT_DIR/build_photograph-management_launchctl.sh"
+    sh "$SCRIPT_DIR/start_photograph-management.sh"
+    ;;
   *)
-    echo "用法: $0 {init|start|stop|update}"
+    echo "用法: $0 {init|start|stop|update|restart}"
+    echo "  init   初始化并安装 admin + 静态预览的 LaunchAgent"
+    echo "  start  同时启动照片管理后台(:3002)和本地博客预览(:3000)"
+    echo "  stop   停止上述两个本地服务"
+    echo "  update 运行照片更新"
     exit 1
     ;;
 esac

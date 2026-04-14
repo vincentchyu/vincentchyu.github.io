@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin:/opt/homebrew/bin</string>
+	</dict>
+	<key>Label</key>
+	<string>com.vincent.site-preview.job</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>./shell/bin/site-preview</string>
+	</array>
+    <key>WorkingDirectory</key>
+    <string>/Users/vincent/Developer/code/go_code/src/github.com/vincenty1ung/vincenty1ung.github.io/</string>
+	<key>RunAtLoad</key>
+	<true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/vincent/Library/Logs/site-preview.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/vincent/Library/Logs/site-preview.log</string>
+</dict>
+</plist>

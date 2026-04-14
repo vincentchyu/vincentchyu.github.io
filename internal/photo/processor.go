@@ -17,6 +17,7 @@ import (
 
 	"github.com/vincentchyu/vincentchyu.github.io/internal/imaging"
 	"github.com/vincentchyu/vincentchyu.github.io/internal/storage"
+	"github.com/vincentchyu/vincentchyu.github.io/pkg/config"
 )
 
 // Configuration
@@ -82,9 +83,21 @@ type PhotoProcessor struct {
 
 // NewPhotoProcessor creates a new PhotoProcessor
 func NewPhotoProcessor() (*PhotoProcessor, error) {
-	rootDir, err := os.Getwd()
+	rootDir, err := config.ResolveRootDir("")
 	if err != nil {
-		return nil, fmt.Errorf("error getting current working directory: %w", err)
+		return nil, fmt.Errorf("resolve root dir: %w", err)
+	}
+
+	return NewPhotoProcessorWithRoot(rootDir)
+}
+
+func NewPhotoProcessorWithRoot(rootDir string) (*PhotoProcessor, error) {
+	if rootDir == "" {
+		var err error
+		rootDir, err = config.ResolveRootDir("")
+		if err != nil {
+			return nil, fmt.Errorf("resolve root dir: %w", err)
+		}
 	}
 
 	// Initialize R2 client
@@ -319,8 +332,8 @@ func (p *PhotoProcessor) ProcessPhoto(path string, yearDirName string) (Photo, e
 	return p.processPhoto(path, yearDirName)
 }
 
-// UpdatePhotosHandler processes all photos
-func UpdatePhotosHandler(logChan chan<- string) {
+// RunUpdatePhotosWithRoot processes all photos and returns an error to the caller.
+func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string) error {
 	// Helper for logging
 	logMsg := func(format string, v ...interface{}) {
 		msg := fmt.Sprintf(format, v...)
@@ -330,10 +343,9 @@ func UpdatePhotosHandler(logChan chan<- string) {
 		}
 	}
 
-	processor, err := NewPhotoProcessor()
+	processor, err := NewPhotoProcessorWithRoot(rootDir)
 	if err != nil {
-		logMsg("Error initializing processor: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("initialize processor: %w", err)
 	}
 	store := NewGalleryStore(processor.RootDir, processor.R2Client)
 	var existingAlbums []YearAlbum
@@ -352,8 +364,7 @@ func UpdatePhotosHandler(logChan chan<- string) {
 
 	entries, err := os.ReadDir(processor.ImgDirPath)
 	if err != nil {
-		logMsg("Error reading image directory: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("read image directory: %w", err)
 	}
 
 	for _, entry := range entries {
@@ -462,17 +473,25 @@ func UpdatePhotosHandler(logChan chan<- string) {
 
 	if hasShardedSource && albumsEqual(existingAlbums, newAlbums) {
 		logMsg("✓ Gallery dataset has not changed. Skipping shard writes and uploads.")
-		return
+		return nil
 	}
 
 	manifest, err := store.SaveFull(newAlbums)
 	if err != nil {
-		logMsg("Error writing gallery dataset: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("write gallery dataset: %w", err)
 	}
 
 	logMsg("✓ Manifest updated with %d years.", len(manifest.Years))
 	logMsg("Successfully updated sharded gallery dataset with %d photos.", len(allPhotos))
+	return nil
+}
+
+// UpdatePhotosHandler processes all photos.
+func UpdatePhotosHandler(logChan chan<- string) {
+	if err := RunUpdatePhotosWithRoot("", logChan); err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
 }
 
 // JSONEqual compares two JSON byte slices for equality, ignoring whitespace and key order

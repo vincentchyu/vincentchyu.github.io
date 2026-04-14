@@ -52,16 +52,23 @@ type GalleryManifest struct {
 
 // GalleryStore reads and writes the sharded photography dataset.
 type GalleryStore struct {
-	RootDir  string
-	R2Client *storage.R2Client
+	RootDir      string
+	R2Client     *storage.R2Client
+	repository   GalleryRepository
+	legacyReader LegacyGalleryReader
+	publisher    GalleryPublisher
 }
 
 // NewGalleryStore builds a store rooted at the current workspace.
 func NewGalleryStore(rootDir string, r2Client *storage.R2Client) *GalleryStore {
-	return &GalleryStore{
+	store := &GalleryStore{
 		RootDir:  rootDir,
 		R2Client: r2Client,
 	}
+	store.legacyReader = &galleryLegacyReader{store: store}
+	store.repository = &galleryRepository{store: store}
+	store.publisher = &galleryPublisher{store: store}
+	return store
 }
 
 func (s *GalleryStore) manifestLocalPath() string {
@@ -109,17 +116,7 @@ func (s *GalleryStore) manifestKVKey() string {
 
 // LoadAlbums loads the current dataset from the sharded manifest, falling back to the legacy aggregate.
 func (s *GalleryStore) LoadAlbums() ([]YearAlbum, *GalleryManifest, error) {
-	if manifest, albums, err := s.loadFromManifest(); err == nil {
-		return albums, &manifest, nil
-	}
-
-	albums, err := s.loadFromLegacy()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	manifest := buildManifest(albums)
-	return albums, &manifest, nil
+	return s.repository.LoadAlbums()
 }
 
 func (s *GalleryStore) loadFromManifest() (GalleryManifest, []YearAlbum, error) {
@@ -152,22 +149,7 @@ func (s *GalleryStore) loadFromManifest() (GalleryManifest, []YearAlbum, error) 
 
 // LoadYearAlbum loads a single year shard, falling back to the legacy export if needed.
 func (s *GalleryStore) LoadYearAlbum(year string) (YearAlbum, error) {
-	if album, err := s.loadYearAlbum(year); err == nil {
-		return album, nil
-	}
-
-	albums, err := s.loadFromLegacy()
-	if err != nil {
-		return YearAlbum{}, err
-	}
-
-	for _, album := range albums {
-		if album.Year == year {
-			return album, nil
-		}
-	}
-
-	return YearAlbum{Year: year}, fmt.Errorf("year not found: %s", year)
+	return s.repository.LoadYearAlbum(year)
 }
 
 func (s *GalleryStore) loadYearAlbum(year string) (YearAlbum, error) {
@@ -206,130 +188,17 @@ func (s *GalleryStore) loadFromLegacy() ([]YearAlbum, error) {
 
 // SaveFull writes all shards, refreshes the manifest and publishes the dataset.
 func (s *GalleryStore) SaveFull(albums []YearAlbum) (GalleryManifest, error) {
-	normalizeAlbums(albums)
-
-	if err := os.MkdirAll(filepath.Join(s.RootDir, GalleryYearsDir), 0o755); err != nil {
-		return GalleryManifest{}, err
-	}
-
-	manifest := buildManifest(albums)
-	if err := s.writeAlbums(albums); err != nil {
-		return GalleryManifest{}, err
-	}
-	if err := s.writeManifest(manifest); err != nil {
-		return GalleryManifest{}, err
-	}
-	if err := s.uploadManifestAndAlbums(manifest, albums); err != nil {
-		return GalleryManifest{}, err
-	}
-
-	return manifest, nil
+	return s.repository.SaveFull(albums)
 }
 
 // UpsertPhoto updates or inserts one photo inside its year shard and refreshes the manifest.
 func (s *GalleryStore) UpsertPhoto(photo Photo) (GalleryManifest, error) {
-	if photo.Year == "" {
-		photo.Year = time.Now().Format("2006")
-	}
-
-	album, err := s.loadYearAlbumIfExists(photo.Year)
-	if err != nil {
-		return GalleryManifest{}, err
-	}
-
-	replaced := false
-	for i := range album.Photos {
-		if album.Photos[i].Filename == photo.Filename {
-			album.Photos[i] = photo
-			replaced = true
-			break
-		}
-	}
-	if !replaced {
-		album.Photos = append(album.Photos, photo)
-	}
-
-	normalizeYearAlbum(&album)
-	if err := s.writeAlbum(album); err != nil {
-		return GalleryManifest{}, err
-	}
-
-	manifest, err := s.loadManifestForMutation()
-	if err != nil {
-		return GalleryManifest{}, err
-	}
-	manifest = upsertManifestYear(manifest, album)
-	if err := s.writeManifest(manifest); err != nil {
-		return GalleryManifest{}, err
-	}
-	if err := s.uploadYear(album); err != nil {
-		return GalleryManifest{}, err
-	}
-	if err := s.uploadManifest(manifest); err != nil {
-		return GalleryManifest{}, err
-	}
-
-	return manifest, nil
+	return s.repository.UpsertPhoto(photo)
 }
 
 // DeletePhoto removes a photo from the given year shard and refreshes the manifest.
 func (s *GalleryStore) DeletePhoto(year, filename string) (GalleryManifest, error) {
-	if year == "" {
-		return GalleryManifest{}, fmt.Errorf("year is required for delete")
-	}
-
-	album, err := s.loadYearAlbumIfExists(year)
-	if err != nil {
-		return GalleryManifest{}, err
-	}
-
-	newPhotos := make([]Photo, 0, len(album.Photos))
-	removed := false
-	for _, p := range album.Photos {
-		if p.Filename == filename {
-			removed = true
-			continue
-		}
-		newPhotos = append(newPhotos, p)
-	}
-	if !removed {
-		return GalleryManifest{}, fmt.Errorf("photo not found: %s", filename)
-	}
-
-	album.Photos = newPhotos
-	normalizeYearAlbum(&album)
-
-	manifest, err := s.loadManifestForMutation()
-	if err != nil {
-		return GalleryManifest{}, err
-	}
-
-	if len(album.Photos) == 0 {
-		if err := s.deleteAlbumFiles(year); err != nil {
-			return GalleryManifest{}, err
-		}
-		manifest = removeManifestYear(manifest, year)
-		if err := s.deleteYearR2(year); err != nil {
-			return GalleryManifest{}, err
-		}
-	} else {
-		if err := s.writeAlbum(album); err != nil {
-			return GalleryManifest{}, err
-		}
-		manifest = upsertManifestYear(manifest, album)
-		if err := s.uploadYear(album); err != nil {
-			return GalleryManifest{}, err
-		}
-	}
-
-	if err := s.writeManifest(manifest); err != nil {
-		return GalleryManifest{}, err
-	}
-	if err := s.uploadManifest(manifest); err != nil {
-		return GalleryManifest{}, err
-	}
-
-	return manifest, nil
+	return s.repository.DeletePhoto(year, filename)
 }
 
 func (s *GalleryStore) loadManifestForMutation() (GalleryManifest, error) {

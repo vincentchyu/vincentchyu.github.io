@@ -1,0 +1,16 @@
+export const state = {
+  allPhotos: [],
+  filteredPhotos: [],
+  photosByFilename: new Map(),
+  selectedPhotos: new Set(),
+  totalPhotoCount: 0,
+  hiddenPhotoCount: 0,
+  availableYears: [],
+  nextCursor: "",
+  hasMorePhotos: true,
+  isLoadingPhotos: false,
+  currentPhoto: null,
+  isZoomLocked: false,
+  isZoomed: false,
+  panOffset: { x: 0, y: 0 },
+};

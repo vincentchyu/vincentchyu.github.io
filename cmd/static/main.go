@@ -7,22 +7,23 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/vincentchyu/vincentchyu.github.io/pkg/config"
 )
 
 func main() {
-	// Get current working directory
-	cwd, err := os.Getwd()
+	rootDir, err := config.ResolveRootDir("")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		serveStaticWithLocalTag(w, r, cwd)
+		serveStaticWithLocalTag(w, r, rootDir)
 	})
 
 	port := "3000"
 	log.Printf("Starting local server at http://localhost:%s\n", port)
-	log.Printf("Serving files from: %s\n", cwd)
+	log.Printf("Serving files from: %s\n", rootDir)
 	log.Println("Press Ctrl+C to stop")
 
 	err = http.ListenAndServe(":"+port, nil)
