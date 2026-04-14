@@ -95,9 +95,15 @@ window.addEventListener("pageshow", function (event) {
 
 document.addEventListener("DOMContentLoaded", function () {
     loadGallery();
-    setupTimelineHover();
+    if (isTimelineEnabled()) {
+        setupTimelineHover();
+    }
     scheduleFancyboxWarmup();
 });
+
+function isTimelineEnabled() {
+    return window.matchMedia("(min-width: 1181px)").matches;
+}
 
 function destroyTimelineToc() {
     if (timelineAriaObserver) {
@@ -113,6 +119,11 @@ function destroyTimelineToc() {
 }
 
 function initTimelineToc() {
+    if (!isTimelineEnabled()) {
+        destroyTimelineToc();
+        return;
+    }
+
     if (!window.tocbot) {
         console.warn("Tocbot is not available");
         return;
@@ -149,7 +160,7 @@ function initTimelineToc() {
 }
 
 function refreshTimelineToc() {
-    if (!window.tocbot || !timelineTocInitialized) {
+    if (!isTimelineEnabled() || !window.tocbot || !timelineTocInitialized) {
         return;
     }
 
@@ -203,6 +214,14 @@ function setupTimelineHover() {
     const hoverZone = document.getElementById("timeline-hover-zone");
 
     if (!timelineSidebar) {
+        return;
+    }
+
+    if (!isTimelineEnabled()) {
+        timelineSidebar.hidden = true;
+        if (hoverZone) {
+            hoverZone.hidden = true;
+        }
         return;
     }
 
