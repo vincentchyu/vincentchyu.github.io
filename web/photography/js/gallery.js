@@ -7,12 +7,12 @@
 // This prevents Carousel.change events during initialization from updating URL incorrectly
 let isInitializingFromUrl = false;
 let galleryItems = [];
+let galleryPhotoRecords = [];
 let galleryManifest = null;
 let galleryLoadToken = 0;
 let galleryWaterfall = null;
 let galleryLoadedYears = new Set();
 let activeGalleryMode = "legacy";
-let imageLoadEventsBound = false;
 let galleryPendingYearEntries = [];
 let galleryNextYearCursor = 0;
 let galleryYearLoadPromise = Promise.resolve();
@@ -36,8 +36,10 @@ const METADATA_PANEL_STYLE_URL =
 let fancyboxAssetsPromise = null;
 let fancyboxWarmupScheduled = false;
 let thumbnailLoadObserver = null;
-let timelineAriaObserver = null;
 let timelineTocInitialized = false;
+let timelineScrollHandler = null;
+let timelineScrollTicking = false;
+let activeTimelineId = "";
 
 const TIMELINE_SCROLL_OFFSET = 100;
 const TIMELINE_TOC_SELECTOR = "#timeline-sidebar";
@@ -106,15 +108,17 @@ function isTimelineEnabled() {
 }
 
 function destroyTimelineToc() {
-    if (timelineAriaObserver) {
-        timelineAriaObserver.disconnect();
-        timelineAriaObserver = null;
+    if (timelineScrollHandler) {
+        window.removeEventListener("scroll", timelineScrollHandler);
+        timelineScrollHandler = null;
     }
 
     if (window.tocbot && timelineTocInitialized) {
         window.tocbot.destroy();
     }
 
+    timelineScrollTicking = false;
+    activeTimelineId = "";
     timelineTocInitialized = false;
 }
 
@@ -148,6 +152,7 @@ function initTimelineToc() {
         collapseDepth: 0,
         orderedList: false,
         scrollSmooth: false,
+        disableTocScrollSync: true,
         headingsOffset: TIMELINE_SCROLL_OFFSET,
         ignoreHiddenElements: false,
     });
@@ -155,7 +160,7 @@ function initTimelineToc() {
     if (!timelineSidebar.querySelector(".toc-list")) {
         console.warn("Tocbot initialized but rendered an empty timeline");
     }
-    setupTimelineAriaCurrent();
+    bindTimelineScrollSync();
     syncTimelineAriaCurrent();
 }
 
@@ -168,21 +173,24 @@ function refreshTimelineToc() {
     syncTimelineAriaCurrent();
 }
 
-function setupTimelineAriaCurrent() {
-    const timelineSidebar = document.getElementById("timeline-sidebar");
-    if (!timelineSidebar) {
-        return;
+function bindTimelineScrollSync() {
+    if (timelineScrollHandler) {
+        window.removeEventListener("scroll", timelineScrollHandler);
     }
 
-    timelineAriaObserver = new MutationObserver(() => {
-        syncTimelineAriaCurrent();
-    });
+    timelineScrollHandler = () => {
+        if (timelineScrollTicking) {
+            return;
+        }
 
-    timelineAriaObserver.observe(timelineSidebar, {
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["class"],
-    });
+        timelineScrollTicking = true;
+        requestAnimationFrame(() => {
+            timelineScrollTicking = false;
+            syncTimelineAriaCurrent();
+        });
+    };
+
+    window.addEventListener("scroll", timelineScrollHandler, {passive: true});
 }
 
 function syncTimelineAriaCurrent() {
@@ -191,18 +199,111 @@ function syncTimelineAriaCurrent() {
         return;
     }
 
-    timelineSidebar.querySelectorAll(".toc-link[aria-current]").forEach((link) => {
+    const outlineLayer = document.querySelector(TIMELINE_CONTENT_SELECTOR);
+    if (!outlineLayer) {
+        return;
+    }
+
+    const headings = Array.from(
+        outlineLayer.querySelectorAll(".gallery-outline-heading[id]")
+    )
+        .map((heading) => ({
+            id: heading.id,
+            level: Number(heading.tagName?.replace(/^H/i, "")) || 0,
+            top: heading.getBoundingClientRect().top + window.scrollY,
+        }))
+        .sort((a, b) => a.top - b.top);
+
+    if (headings.length === 0) {
+        return;
+    }
+
+    const probeTop = window.scrollY + TIMELINE_SCROLL_OFFSET + 24;
+    const yearHeadings = headings.filter((heading) => heading.level === 2);
+    const monthHeadings = headings.filter((heading) => heading.level === 3);
+
+    let activeYearId = yearHeadings[0]?.id || "";
+    for (const heading of yearHeadings) {
+        if (heading.top <= probeTop) {
+            activeYearId = heading.id;
+        } else {
+            break;
+        }
+    }
+
+    const activeYearIndex = yearHeadings.findIndex((heading) => heading.id === activeYearId);
+    const activeYearTop = activeYearIndex >= 0 ? yearHeadings[activeYearIndex].top : -Infinity;
+    const nextYearTop =
+        activeYearIndex >= 0 && activeYearIndex + 1 < yearHeadings.length
+            ? yearHeadings[activeYearIndex + 1].top
+            : Infinity;
+
+    let activeMonthId = "";
+    for (const heading of monthHeadings) {
+        if (heading.top < activeYearTop || heading.top >= nextYearTop) {
+            continue;
+        }
+
+        if (heading.top <= probeTop) {
+            activeMonthId = heading.id;
+        } else {
+            break;
+        }
+    }
+
+    const nextActiveId = activeMonthId || activeYearId;
+    if (nextActiveId !== activeTimelineId) {
+        activeTimelineId = nextActiveId;
+        applyTimelineActiveState(activeYearId, activeMonthId);
+    }
+}
+
+function applyTimelineActiveState(yearId, monthId = "") {
+    const timelineSidebar = document.getElementById("timeline-sidebar");
+    if (!timelineSidebar) {
+        return;
+    }
+
+    timelineSidebar.querySelectorAll(".toc-link.is-active-link").forEach((link) => {
+        link.classList.remove("is-active-link");
         link.removeAttribute("aria-current");
     });
+    timelineSidebar.querySelectorAll(".toc-list-item.is-active-li").forEach((item) => {
+        item.classList.remove("is-active-li");
+    });
 
-    const activeLinks = Array.from(
-        timelineSidebar.querySelectorAll(".toc-link.is-active-link")
-    );
-    const currentLink = activeLinks.length > 0
-        ? activeLinks[activeLinks.length - 1]
-        : null;
-    if (currentLink) {
-        currentLink.setAttribute("aria-current", "location");
+    if (yearId) {
+        const yearLink = timelineSidebar.querySelector(
+            `.toc-link[href="#${CSS.escape(yearId)}"]`
+        );
+        if (yearLink) {
+            yearLink.classList.add("is-active-link");
+            const yearItem = yearLink.closest(".toc-list-item");
+            if (yearItem) {
+                yearItem.classList.add("is-active-li");
+            }
+        }
+    }
+
+    if (monthId) {
+        const monthLink = timelineSidebar.querySelector(
+            `.toc-link[href="#${CSS.escape(monthId)}"]`
+        );
+        if (monthLink) {
+            monthLink.classList.add("is-active-link");
+            monthLink.setAttribute("aria-current", "location");
+            const monthItem = monthLink.closest(".toc-list-item");
+            if (monthItem) {
+                monthItem.classList.add("is-active-li");
+            }
+        }
+    } else if (yearId) {
+        const yearLink = timelineSidebar.querySelector(
+            `.toc-link[href="#${CSS.escape(yearId)}"]`
+        );
+        if (yearLink) {
+            yearLink.setAttribute("aria-current", "location");
+        }
     }
 }
 
@@ -1165,6 +1266,9 @@ async function loadGallery() {
         destroyTimelineToc();
         disconnectGalleryLoadMoreObserver();
         activeGalleryMode = getGalleryDataMode();
+        galleryItems = [];
+        galleryPhotoRecords = [];
+        galleryManifest = null;
         const manifest = await fetchGalleryManifest();
         if (manifest && manifest.years && manifest.years.length > 0) {
             await loadShardedGallery(
@@ -1200,8 +1304,6 @@ async function loadGallery() {
         });
 
         // Global gallery state
-        const galleryItems = [];
-
         // Clear containers before re-rendering (important for orientation changes)
         timelineContainer.innerHTML = "";
         galleryContainer.innerHTML = "";
@@ -1220,18 +1322,6 @@ async function loadGallery() {
         if (typeof currentColumnCount !== "undefined") {
             currentColumnCount = getColumnCount();
         }
-
-        // Force layout recalculation to fix flex width issue
-        // This solves the problem where images have 0px width on initial load
-        requestAnimationFrame(() => {
-            const container = document.getElementById("gallery-content");
-            if (container) {
-                // Force reflow
-                void container.offsetHeight;
-                // Trigger resize event to recalculate flex layout
-                window.dispatchEvent(new Event("resize"));
-            }
-        });
 
         // Parse URL hash parameter and open corresponding photo
         parseAndOpenPhotoFromUrl(galleryItems);
@@ -1267,7 +1357,8 @@ async function loadShardedGallery(manifest, timelineContainer, galleryContainer)
     const token = ++galleryLoadToken;
     activeGalleryMode = "sharded";
     galleryManifest = manifest;
-    galleryItems.length = 0;
+    galleryItems = [];
+    galleryPhotoRecords = [];
     galleryLoadedYears = new Set();
     galleryPendingYearEntries = Array.isArray(manifest.years)
         ? [...manifest.years]
@@ -1662,6 +1753,7 @@ function appendLoadedPhotos(photos) {
     }
 
     photos.forEach((photo) => {
+        galleryPhotoRecords.push(photo);
         photo.waterfallIndex = galleryItems.length;
         galleryItems.push({
             src: photo.path,
@@ -1693,10 +1785,7 @@ function appendLoadedPhotos(photos) {
     });
 
     requestAnimationFrame(() => {
-        if (galleryWaterfall && galleryWaterfall.container) {
-            window.dispatchEvent(new Event("resize"));
-            refreshTimelineToc();
-        }
+        refreshTimelineToc();
     });
 }
 
@@ -1806,6 +1895,7 @@ function renderGallery(container, albums, galleryItems) {
         });
     });
 
+    galleryPhotoRecords = allPhotos;
     // Render the single unified waterfall
     renderWaterfallLayout(galleryWaterfall, allPhotos, galleryItems);
 }
@@ -1832,6 +1922,8 @@ function groupPhotosByMonth(photos) {
  * Render waterfall layout to container
  */
 function renderWaterfallLayout(state, photos, galleryItems) {
+    galleryItems.length = 0;
+
     // Populate galleryItems and assign global indices BEFORE creating layout
     photos.forEach((photo) => {
         // Assign global index
@@ -1865,6 +1957,72 @@ function renderWaterfallLayout(state, photos, galleryItems) {
     requestAnimationFrame(() => {
         refreshTimelineToc();
     });
+}
+
+function buildOutlineAlbumsFromLoadedPhotos(photos) {
+    const years = new Map();
+
+    photos.forEach((photo) => {
+        const year = String(photo.year || extractYearFromDate(photo.date) || "");
+        const month = String(photo.month || "").padStart(2, "0");
+        if (!year || !month) {
+            return;
+        }
+
+        if (!years.has(year)) {
+            years.set(year, {year, months: []});
+        }
+
+        const entry = years.get(year);
+        if (!entry.months.some((item) => item.month === month)) {
+            entry.months.push({month, count: 0});
+        }
+    });
+
+    return Array.from(years.values())
+        .sort((a, b) => String(b.year).localeCompare(String(a.year)))
+        .map((entry) => ({
+            year: entry.year,
+            months: entry.months.sort((a, b) => String(b.month).localeCompare(String(a.month))),
+        }));
+}
+
+function extractYearFromDate(date) {
+    if (!date) {
+        return "";
+    }
+    const match = String(date).match(/^(\d{4})/);
+    return match ? match[1] : "";
+}
+
+function rerenderCurrentGalleryLayout() {
+    const galleryContainer = document.getElementById("gallery-content");
+    if (!galleryContainer || !Array.isArray(galleryPhotoRecords) || galleryPhotoRecords.length === 0) {
+        return false;
+    }
+
+    galleryContainer.innerHTML = "";
+    galleryWaterfall = createWaterfallState(galleryContainer);
+
+    if (activeGalleryMode === "sharded" && galleryManifest && Array.isArray(galleryManifest.years)) {
+        buildTimelineOutline(galleryWaterfall, galleryManifest.years);
+    } else {
+        buildTimelineOutline(
+            galleryWaterfall,
+            buildOutlineAlbumsFromLoadedPhotos(galleryPhotoRecords)
+        );
+    }
+
+    renderWaterfallLayout(galleryWaterfall, galleryPhotoRecords, galleryItems);
+    bindGalleryItemClicks(galleryContainer, galleryItems);
+    bindImageLoadEvents(galleryContainer);
+    if (isTimelineEnabled()) {
+        initTimelineToc();
+    } else {
+        destroyTimelineToc();
+    }
+
+    return true;
 }
 
 function createPhotoCard(photo) {
@@ -1926,107 +2084,43 @@ function bindImageLoadEvents(root = document) {
                   ).querySelectorAll("img.img-loading")
               );
 
-    const checkAllImages = () => {
-        images.forEach(function (img) {
-            // Check if already processed to avoid redundant work
-            if (img.dataset.loaded === "true") return;
-            if (img.dataset.loadBound === "true") return;
-            if (!img.currentSrc && !img.getAttribute("src")) return;
-
-            let isLoaded = false;
-
-            function hideSkeleton() {
-                if (isLoaded) return;
-                isLoaded = true;
-                img.dataset.loaded = "true"; // Mark as processed
-                img.dataset.loadBound = "true";
-
-                let parent = img.closest(".img-skeleton-bg");
-                let skeleton = parent ? parent.querySelector(".img-skeleton") : null;
-
-                // Force reflow
-                void img.offsetWidth;
-
-                requestAnimationFrame(() => {
-                    // Remove transition temporarily to force immediate render if needed
-                    // img.style.transition = 'none';
-
-                    img.classList.remove("img-loading");
-                    img.classList.remove("opacity-0");
-
-                    // Force styles directly
-                    img.style.opacity = "1";
-                    img.style.visibility = "visible";
-
-                    if (skeleton) {
-                        skeleton.remove();
-                    }
-                });
-            }
-
-            function checkImageLoaded() {
-                // More lenient check: if complete and has dimensions, it's loaded
-                if (img.complete) {
-                    if (img.naturalWidth > 0 || img.naturalHeight > 0) {
-                        hideSkeleton();
-                        return true;
-                    }
-                }
-                return false;
-            }
-
-            // Immediate check
-            if (checkImageLoaded()) return;
-
-            // Event listeners
-            img.dataset.loadBound = "true";
-            img.addEventListener("load", hideSkeleton, {once: true});
-            img.addEventListener(
-                "error",
-                () => {
-                    console.warn("Image failed to load:", img.src);
-                    hideSkeleton(); // Even on error, remove skeleton to avoid permanent loading state
-                },
-                {once: true}
-            );
-        });
-    };
-
-    // Use requestAnimationFrame to ensure DOM is ready before first check
-    requestAnimationFrame(() => {
-        checkAllImages();
-    });
-
-    if (imageLoadEventsBound) {
-        return;
-    }
-    imageLoadEventsBound = true;
-
-    // More frequent polling, NO limit on checks (will be stopped by window.load)
-    const interval = setInterval(checkAllImages, 50);
-
-    // Stop polling and do final check after window load
-    window.addEventListener(
-        "load",
-        () => {
-            setTimeout(() => {
-                checkAllImages();
-                clearInterval(interval);
-            }, 100);
-        },
-        {once: true}
-    );
-
-    // Re-check on visibility change (fixes tab switch issue)
-    document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") {
-            checkAllImages();
+    images.forEach((img) => {
+        if (img.dataset.loaded === "true" || img.dataset.loadBound === "true") {
+            return;
         }
-    });
+        if (!img.currentSrc && !img.getAttribute("src")) {
+            return;
+        }
 
-    // Re-check on page show (fixes back/forward cache issues)
-    window.addEventListener("pageshow", () => {
-        checkAllImages();
+        const hideSkeleton = () => {
+            if (img.dataset.loaded === "true") {
+                return;
+            }
+
+            img.dataset.loaded = "true";
+            img.dataset.loadBound = "true";
+
+            const parent = img.closest(".img-skeleton-bg");
+            const skeleton = parent ? parent.querySelector(".img-skeleton") : null;
+
+            img.classList.remove("img-loading");
+            img.classList.remove("opacity-0");
+            img.style.opacity = "1";
+            img.style.visibility = "visible";
+
+            if (skeleton) {
+                skeleton.remove();
+            }
+        };
+
+        if (img.complete && (img.naturalWidth > 0 || img.naturalHeight > 0)) {
+            hideSkeleton();
+            return;
+        }
+
+        img.dataset.loadBound = "true";
+        img.addEventListener("load", hideSkeleton, {once: true});
+        img.addEventListener("error", hideSkeleton, {once: true});
     });
 }
 
@@ -2314,7 +2408,9 @@ function handleLayoutChange() {
 
     if (newColumnCount !== currentColumnCount) {
         currentColumnCount = newColumnCount;
-        loadGallery();
+        if (!rerenderCurrentGalleryLayout()) {
+            loadGallery();
+        }
     }
 }
 

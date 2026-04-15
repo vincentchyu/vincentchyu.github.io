@@ -776,13 +776,13 @@
       }
 
       #timeline-sidebar {
-        --timeline-line: rgba(255, 255, 255, 0.14);
-        --timeline-year-dot: rgba(255, 255, 255, 0.26);
-        --timeline-month-dot: rgba(255, 255, 255, 0.16);
-        --timeline-year-active: rgba(255, 255, 255, 0.96);
-        --timeline-month-active: rgba(255, 255, 255, 0.84);
-        --timeline-link: rgba(255, 255, 255, 0.48);
-        --timeline-link-subtle: rgba(255, 255, 255, 0.34);
+        --timeline-line: rgba(17, 24, 39, 0.16);
+        --timeline-year-dot: rgba(17, 24, 39, 0.3);
+        --timeline-month-dot: rgba(17, 24, 39, 0.2);
+        --timeline-year-active: rgba(17, 24, 39, 0.96);
+        --timeline-month-active: rgba(31, 41, 55, 0.82);
+        --timeline-link: rgba(17, 24, 39, 0.56);
+        --timeline-link-subtle: rgba(55, 65, 81, 0.44);
         position: relative;
         padding: 0.25rem 0 0.25rem 0;
         font-family: "Signika", ui-sans-serif, system-ui, sans-serif;
@@ -835,7 +835,7 @@
         text-decoration: none;
         transition: color 0.2s ease, opacity 0.2s ease;
         outline: none;
-        opacity: 0.92;
+        opacity: 1;
       }
 
       #timeline-sidebar .toc-link::before,
@@ -888,36 +888,36 @@
         top: 0.57rem;
         width: 0.36rem;
         height: 1px;
-        background: rgba(255, 255, 255, 0.11);
+        background: rgba(17, 24, 39, 0.12);
       }
 
       #timeline-sidebar .toc-list-item.is-active-li > .node-name--H2 {
-        color: var(--timeline-month-active);
+        color: var(--timeline-link);
       }
 
       #timeline-sidebar .toc-link.is-active-link,
       #timeline-sidebar .toc-link[aria-current="location"] {
-        color: var(--timeline-year-active);
+        color: var(--timeline-link);
         opacity: 1;
       }
 
       #timeline-sidebar .node-name--H2.is-active-link::before,
       #timeline-sidebar .node-name--H2[aria-current="location"]::before {
-        background: var(--timeline-year-active);
-        transform: scale(1.65);
+        background: var(--timeline-year-dot);
+        transform: none;
       }
 
       #timeline-sidebar .node-name--H3.is-active-link,
       #timeline-sidebar .node-name--H3[aria-current="location"] {
-        color: var(--timeline-month-active);
-        font-weight: 500;
+        color: var(--timeline-link-subtle);
+        font-weight: 400;
         opacity: 1;
       }
 
       #timeline-sidebar .node-name--H3.is-active-link::before,
       #timeline-sidebar .node-name--H3[aria-current="location"]::before {
-        background: var(--timeline-year-active);
-        transform: scale(1.5);
+        background: var(--timeline-month-dot);
+        transform: none;
       }
 
       #timeline-sidebar {
@@ -927,6 +927,22 @@
       @media (max-width: 1180px) {
         .timeline-hover-container.timeline-static {
           display: none !important;
+        }
+      }
+
+      @media (prefers-color-scheme: dark) {
+        #timeline-sidebar {
+          --timeline-line: rgba(255, 255, 255, 0.14);
+          --timeline-year-dot: rgba(255, 255, 255, 0.26);
+          --timeline-month-dot: rgba(255, 255, 255, 0.16);
+          --timeline-year-active: rgba(255, 255, 255, 0.96);
+          --timeline-month-active: rgba(255, 255, 255, 0.84);
+          --timeline-link: rgba(255, 255, 255, 0.48);
+          --timeline-link-subtle: rgba(255, 255, 255, 0.34);
+        }
+
+        #timeline-sidebar .node-name--H3::after {
+          background: rgba(255, 255, 255, 0.11);
         }
       }
     /* Music Player Tooltip Styles */
