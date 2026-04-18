@@ -73,8 +73,8 @@ type YearAlbum struct {
 type PhotoProcessor struct {
 	RootDir        string
 	ImgDirPath     string
-	R2Client       *storage.R2Client
-	ThumbnailBase  string
+	Publishers     *storage.PublisherRegistry
+	Layout         storage.ObjectLayout
 	ExistingPhotos map[string]Photo // Key: Filename
 	NewPhotos      []Photo
 	Mutex          sync.Mutex
@@ -100,34 +100,20 @@ func NewPhotoProcessorWithRoot(rootDir string) (*PhotoProcessor, error) {
 		}
 	}
 
-	// Initialize R2 client
-	var r2Client *storage.R2Client
-	var thumbnailBase string
-
-	r2Config, err := storage.LoadR2Config()
-	if err != nil {
-		log.Printf("⚠ Warning: R2 configuration load failed: %v\n", err)
-		log.Println("Using default/empty configuration...")
-	} else {
-		thumbnailBase = fmt.Sprintf(
-			"%s/%s%s",
-			strings.TrimRight(r2Config.CDNUrl, "/"),
-			r2Config.BasePrefix,
-			r2Config.ThumbnailPrefix,
-		)
-		r2Client, err = storage.NewR2Client(r2Config)
-		if err != nil {
-			log.Printf("⚠ Warning: Failed to create R2 client: %v\n", err)
-		} else {
-			log.Println("✓ R2 client initialized successfully")
+	publishers := storage.LoadPublisherRegistryFromEnv()
+	for _, provider := range storage.RequiredProviders {
+		if err := publishers.LoadError(provider); err != nil {
+			log.Printf("⚠ Warning: %s configuration load failed: %v\n", provider, err)
+		} else if publishers.IsConfigured(provider) {
+			log.Printf("✓ %s client initialized successfully\n", strings.ToUpper(string(provider)))
 		}
 	}
 
 	return &PhotoProcessor{
 		RootDir:        rootDir,
 		ImgDirPath:     filepath.Join(rootDir, ImgDir),
-		R2Client:       r2Client,
-		ThumbnailBase:  thumbnailBase,
+		Publishers:     publishers,
+		Layout:         publishers.Layout(),
 		ExistingPhotos: make(map[string]Photo),
 		DateRegex:      regexp.MustCompile(`DSC_(\d{4})-(\d{2})-(\d{2})`),
 	}, nil
@@ -179,8 +165,8 @@ func calculateFileHash(filePath string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
-// processPhoto processes a single photo
-func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, error) {
+// processPhoto processes a single photo.
+func (p *PhotoProcessor) processPhoto(path string, yearDirName string, force bool) (Photo, error) {
 	filename := filepath.Base(path)
 	filenameNoExt := strings.TrimSuffix(filename, filepath.Ext(filename))
 
@@ -190,64 +176,38 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 		return Photo{}, fmt.Errorf("failed to calculate hash: %w", err)
 	}
 
-	// Check if photo exists and hash matches
-	if existing, ok := p.ExistingPhotos[filename]; ok {
-		if existing.Hash == hash {
-			// Photo hasn't changed, return existing data with all custom fields preserved
-			// fmt.Printf("Skipping unchanged photo: %s\n", filename)
-			return existing, nil
+	// Skip unchanged photos unless the caller explicitly requests a full rebuild.
+	if !force {
+		if existing, ok := p.ExistingPhotos[filename]; ok {
+			if existing.Hash == hash {
+				return existing, nil
+			}
 		}
 	}
 
 	// New or modified photo
 	log.Printf("🟢 Processing %s...\n", filename)
 
-	relPath, _ := filepath.Rel(p.RootDir, path)
-	webPath := strings.ReplaceAll(relPath, "\\", "/")
-	if after, ok := strings.CutPrefix(webPath, WebPhotographyPrefix); ok {
-		webPath = after
+	originalKey := p.Layout.OriginalKey(filename)
+	thumbnailKey := p.Layout.ThumbnailKey(filenameNoExt)
+
+	thumbnailData, err := imaging.GenerateThumbnail(path, imaging.DefaultThumbnailConfig())
+	if err != nil {
+		log.Printf("❌ Failed to generate thumbnail for %s: %v\n", filename, err)
+		return Photo{}, fmt.Errorf("failed to generate thumbnail %s: %w", filename, err)
 	}
 
-	var finalPath, finalThumbnail string
-
-	// R2 Upload Logic
-	if p.R2Client != nil {
-		// 1. Upload Original
-		originalKey := fmt.Sprintf("%s%s%s", p.R2Client.Config.BasePrefix, p.R2Client.Config.OriginalPrefix, filename)
-		// We could check existence, but since hash changed or it's new, we should probably upload
-		// Or we can check if it exists to avoid re-uploading if only local metadata changed?
-		// For simplicity/safety, if hash changed, we upload.
-
-		if err := p.R2Client.UploadFile(path, originalKey, "public, max-age=31536000"); err != nil {
+	if p.Publishers != nil {
+		if err := p.Publishers.UploadFileToAll(path, originalKey, "public, max-age=31536000"); err != nil {
 			log.Printf("❌ Failed to upload original %s: %v\n", filename, err)
-			finalPath = webPath
 			return Photo{}, fmt.Errorf("failed to upload original %s: %w", filename, err)
-		} else {
-			finalPath = p.R2Client.GetCDNUrl(originalKey)
 		}
-
-		// 2. Upload Thumbnail
-		thumbnailKey := fmt.Sprintf(
-			"%s%s%s%s", p.R2Client.Config.BasePrefix, p.R2Client.Config.ThumbnailPrefix, filenameNoExt, ExtWebP,
-		)
-		thumbnailData, err := imaging.GenerateThumbnail(path, imaging.DefaultThumbnailConfig())
-		if err != nil {
-			log.Printf("❌ Failed to generate thumbnail for %s: %v\n", filename, err)
-			finalThumbnail = p.ThumbnailBase + filenameNoExt + ".webp"
+		if err := p.Publishers.UploadBytesToAll(
+			thumbnailData, thumbnailKey, "image/webp", "public, max-age=31536000",
+		); err != nil {
+			log.Printf("❌ Failed to upload thumbnail for %s: %v\n", filename, err)
 			return Photo{}, fmt.Errorf("failed to upload thumbnail %s: %w", filename, err)
-		} else {
-			if err := p.R2Client.UploadBytes(
-				thumbnailData, thumbnailKey, "image/webp", "public, max-age=31536000",
-			); err != nil {
-				log.Printf("❌ Failed to upload thumbnail for %s: %v\n", filename, err)
-				finalThumbnail = p.ThumbnailBase + filenameNoExt + ".webp"
-			} else {
-				finalThumbnail = p.R2Client.GetCDNUrl(thumbnailKey)
-			}
 		}
-	} else {
-		finalPath = webPath
-		finalThumbnail = p.ThumbnailBase + filenameNoExt + ".webp"
 	}
 
 	// Extract EXIF using configured extractor
@@ -281,8 +241,8 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 	// Create Photo struct
 	photo := Photo{
 		Filename:  filename,
-		Path:      finalPath,
-		Thumbnail: finalThumbnail,
+		Path:      originalKey,
+		Thumbnail: thumbnailKey,
 		Alt:       "", // Preserve alt if exists?
 		Year:      photoYear,
 		Month:     month,
@@ -329,11 +289,11 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string) (Photo, e
 
 // ProcessPhoto processes a single photo and is safe to call from other packages.
 func (p *PhotoProcessor) ProcessPhoto(path string, yearDirName string) (Photo, error) {
-	return p.processPhoto(path, yearDirName)
+	return p.processPhoto(path, yearDirName, false)
 }
 
 // RunUpdatePhotosWithRoot processes all photos and returns an error to the caller.
-func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string) error {
+func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string, force bool) error {
 	// Helper for logging
 	logMsg := func(format string, v ...interface{}) {
 		msg := fmt.Sprintf(format, v...)
@@ -347,7 +307,7 @@ func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string) error {
 	if err != nil {
 		return fmt.Errorf("initialize processor: %w", err)
 	}
-	store := NewGalleryStore(processor.RootDir, processor.R2Client)
+	store := NewGalleryStore(processor.RootDir, processor.Publishers)
 	var existingAlbums []YearAlbum
 	var hasShardedSource bool
 
@@ -408,7 +368,7 @@ func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string) error {
 		go func() {
 			defer wg.Done()
 			for job := range jobsChan {
-				photo, err := processor.processPhoto(job.Path, job.YearDir)
+				photo, err := processor.processPhoto(job.Path, job.YearDir, force)
 				if err != nil {
 					logMsg("Error processing %s: %v", filepath.Base(job.Path), err)
 					continue
@@ -471,7 +431,7 @@ func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string) error {
 		},
 	)
 
-	if hasShardedSource && albumsEqual(existingAlbums, newAlbums) {
+	if !force && hasShardedSource && albumsEqual(existingAlbums, newAlbums) {
 		logMsg("✓ Gallery dataset has not changed. Skipping shard writes and uploads.")
 		return nil
 	}
@@ -488,7 +448,7 @@ func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string) error {
 
 // UpdatePhotosHandler processes all photos.
 func UpdatePhotosHandler(logChan chan<- string) {
-	if err := RunUpdatePhotosWithRoot("", logChan); err != nil {
+	if err := RunUpdatePhotosWithRoot("", logChan, false); err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}

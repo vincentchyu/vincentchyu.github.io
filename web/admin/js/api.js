@@ -68,14 +68,29 @@ export async function batchUpdatePhotos(filenames, updates) {
   return parseJSON(response, "Failed to batch update");
 }
 
-export async function startRebuild() {
-  const response = await fetch("/api/rebuild", { method: "POST" });
+export async function startRebuild(force = false) {
+  const url = force ? "/api/rebuild?force=true" : "/api/rebuild";
+  const response = await fetch(url, { method: "POST" });
   return parseJSON(response, "Failed to start rebuild");
 }
 
 export async function fetchRebuildStatus() {
   const response = await fetch("/api/rebuild/status");
   return parseJSON(response, "Failed to fetch rebuild status");
+}
+
+export async function fetchGallerySource() {
+  const response = await fetch("/api/gallery-source");
+  return parseJSON(response, "Failed to fetch gallery source");
+}
+
+export async function updateGallerySource(activeSource) {
+  const response = await fetch("/api/gallery-source", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ active_source: activeSource }),
+  });
+  return parseJSON(response, "Failed to update gallery source");
 }
 
 export async function uploadPhoto(file) {

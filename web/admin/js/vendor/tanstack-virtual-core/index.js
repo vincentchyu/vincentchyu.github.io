@@ -932,4 +932,3 @@ export {
   observeWindowRect,
   windowScroll
 };
-//# sourceMappingURL=index.js.map

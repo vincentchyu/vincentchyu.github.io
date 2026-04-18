@@ -20,11 +20,11 @@
     <meta property="og:site_name" content="VINCENT CHYU Portfolio" />
     <meta
       property="og:image"
-      content="https://cdn-photography-img-vincent.chyu.org/pages/thumbnails/DSC_2025-05-24_049702.webp"
+      content="https://photography.tos-cn-guangzhou.volces.com/pages/thumbnails/DSC_2025-05-24_049702.webp"
     />
     <meta
       property="og:image:secure_url"
-      content="https://cdn-photography-img-vincent.chyu.org/pages/thumbnails/DSC_2025-05-24_049702.webp"
+      content="https://photography.tos-cn-guangzhou.volces.com/pages/thumbnails/DSC_2025-05-24_049702.webp"
     />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
@@ -39,7 +39,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://cdn-photography-img-vincent.chyu.org/pages/thumbnails/DSC_2025-05-24_049702.webp"
+      content="https://photography.tos-cn-guangzhou.volces.com/pages/thumbnails/DSC_2025-05-24_049702.webp"
     />
     <meta name="twitter:card" content="summary_large_image" />
 
@@ -51,7 +51,7 @@
     />
     <meta
       itemprop="image"
-      content="https://cdn-photography-img-vincent.chyu.org/pages/thumbnails/DSC_2025-05-24_049702.webp"
+      content="https://photography.tos-cn-guangzhou.volces.com/pages/thumbnails/DSC_2025-05-24_049702.webp"
     />
 
     <!-- 微信小程序 / 微信浏览器 -->
@@ -62,7 +62,7 @@
     />
     <meta
       name="wechat:image"
-      content="https://cdn-photography-img-vincent.chyu.org/pages/thumbnails/DSC_2025-05-24_049702.webp"
+      content="https://photography.tos-cn-guangzhou.volces.com/pages/thumbnails/DSC_2025-05-24_049702.webp"
     />
     <!-- og -->
     <!-- Favicon -->
@@ -76,32 +76,32 @@
     <link rel="apple-touch-icon-precomposed" href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png">
     <link
       rel="preload"
-      href="https://cdn-photography-img-vincent.chyu.org/static/output.css"
+      href="/web/photography/dist/output.css"
       as="style"
     />
     <link
       rel="stylesheet"
-      href="https://cdn-photography-img-vincent.chyu.org/static/output.css"
+      href="/web/photography/dist/output.css"
       media="print"
       onload="this.media='all'"
     />
     <link
       rel="preload"
-      href="https://cdn-photography-img-vincent.chyu.org/static/waterfall.css?v=2"
+      href="/web/photography/css/waterfall.css?v=2"
       as="style"
     />
     <link
       rel="stylesheet"
-      href="https://cdn-photography-img-vincent.chyu.org/static/waterfall.css?v=2"
+      href="/web/photography/css/waterfall.css?v=2"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
-      <link rel="stylesheet" href="https://cdn-photography-img-vincent.chyu.org/static/output.css" />
-      <link rel="stylesheet" href="https://cdn-photography-img-vincent.chyu.org/static/waterfall.css?v=2" />
+      <link rel="stylesheet" href="/web/photography/dist/output.css" />
+      <link rel="stylesheet" href="/web/photography/css/waterfall.css?v=2" />
     </noscript>
     <!-- Alpine.js -->
-    <script defer src="https://cdn-photography-img-vincent.chyu.org/static/cdn.min.js"></script>
+    <script defer src="/web/photography/dist/cdn.min.js"></script>
     <!-- Start - Fonts -->
     <link rel="preconnect" href="https://gstatic.loli.net" crossorigin />
     <link
@@ -691,12 +691,18 @@
         }
       }
       /* Timeline */
+      :root {
+        --timeline-sidebar-left: clamp(0.45rem, 1.25vw, 1.4rem);
+        --timeline-sidebar-width: clamp(3.8rem, 7vw, 8.5rem);
+        --timeline-sidebar-gap: clamp(0.4rem, 1vw, 1.2rem);
+      }
+
       .timeline-hover-container {
         position: fixed !important;
-        left: 1.4rem !important;
+        left: var(--timeline-sidebar-left) !important;
         top: 9.75rem !important;
         bottom: 2.25rem !important;
-        width: 8.5rem !important;
+        width: var(--timeline-sidebar-width) !important;
         max-height: calc(100vh - 12rem) !important;
         padding: 0.15rem 0 0.15rem 0;
         overflow-y: auto;
@@ -755,6 +761,11 @@
 
       .gallery-waterfall-shell {
         position: relative;
+      }
+
+      #gallery-content {
+        width: 100%;
+        min-width: 0;
       }
 
       .gallery-outline-layer {
@@ -924,9 +935,50 @@
         scrollbar-width: none;
       }
 
+      @media (min-width: 1181px) {
+        #gallery-content {
+          padding-left: calc(
+            var(--timeline-sidebar-left) + var(--timeline-sidebar-width) +
+              var(--timeline-sidebar-gap)
+          );
+        }
+      }
+
+      @media (min-width: 1181px) and (max-width: 1440px) {
+        #timeline-sidebar .node-name--H2 {
+          margin-left: 1.7rem;
+          font-size: 0.74rem;
+          letter-spacing: 0.08em;
+        }
+
+        #timeline-sidebar .node-name--H2::before {
+          left: -1.15rem;
+        }
+
+        #timeline-sidebar .toc-list .toc-list {
+          padding-left: 1.75rem;
+        }
+
+        #timeline-sidebar .node-name--H3 {
+          font-size: 0.68rem;
+        }
+
+        #timeline-sidebar .node-name--H3::before {
+          left: -0.92rem;
+        }
+
+        #timeline-sidebar .node-name--H3::after {
+          left: -0.67rem;
+        }
+      }
+
       @media (max-width: 1180px) {
         .timeline-hover-container.timeline-static {
           display: none !important;
+        }
+
+        #gallery-content {
+          padding-left: 0;
         }
       }
 
@@ -1336,9 +1388,14 @@
     <script>
       window.__PHOTO_GALLERY_DATA_MODE__ =
         window.__PHOTO_GALLERY_DATA_MODE__ || "remote";
-      window.__PHOTO_GALLERY_REMOTE_DATA_BASE__ =
-        window.__PHOTO_GALLERY_REMOTE_DATA_BASE__ ||
-        "https://cdn-photography-img-vincent.chyu.org/pages/";
+      window.__PHOTO_GALLERY_SOURCES__ = window.__PHOTO_GALLERY_SOURCES__ || {
+        tos: {
+          public_base: "https://photography.tos-cn-guangzhou.volces.com",
+        },
+        r2: {
+          public_base: "https://cdn-photography-img-vincent.chyu.org",
+        },
+      };
     </script>
     <script src="/web/photography/js/vendor/tocbot.min.js"></script>
     <script src="/web/photography/js/gallery.js?v=2026041402"></script>
@@ -1385,7 +1442,7 @@
           cplayerLoaded = true;
           
           const script = document.createElement('script');
-          script.src = 'https://cdn-photography-img-vincent.chyu.org/static/cplayer.min.js';
+          script.src = '/web/photography/dist/cplayer.min.js';
           script.onload = function() {
             initMusicPlayer();
           };

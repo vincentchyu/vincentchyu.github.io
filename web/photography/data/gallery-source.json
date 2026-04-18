@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "active_source": "tos",
+  "sources": {
+    "r2": {
+      "public_base": "https://cdn-photography-img-vincent.chyu.org"
+    },
+    "tos": {
+      "public_base": "https://photography.tos-cn-guangzhou.volces.com"
+    }
+  },
+  "updated_at": "2026-04-18T07:34:57Z"
+}

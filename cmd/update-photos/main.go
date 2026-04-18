@@ -13,7 +13,7 @@ func main() {
 		log.Fatalf("Resolve root dir error: %v", err)
 	}
 
-	if err := photo.RunUpdatePhotosWithRoot(rootDir, nil); err != nil {
+	if err := photo.RunUpdatePhotosWithRoot(rootDir, nil, false); err != nil {
 		log.Fatalf("Update photos error: %v", err)
 	}
 }

@@ -113,6 +113,9 @@ func (r *galleryRepository) SaveFull(albums []YearAlbum) (GalleryManifest, error
 	if err := r.store.publisher.PublishManifestAndAlbums(manifest, albums); err != nil {
 		return GalleryManifest{}, err
 	}
+	if err := r.store.EnsureSourceConfigPublished(); err != nil {
+		return GalleryManifest{}, err
+	}
 
 	return manifest, nil
 }
@@ -156,6 +159,9 @@ func (r *galleryRepository) UpsertPhoto(photo Photo) (GalleryManifest, error) {
 		return GalleryManifest{}, err
 	}
 	if err := r.store.publisher.PublishManifest(manifest); err != nil {
+		return GalleryManifest{}, err
+	}
+	if err := r.store.EnsureSourceConfigPublished(); err != nil {
 		return GalleryManifest{}, err
 	}
 
@@ -215,6 +221,9 @@ func (r *galleryRepository) DeletePhoto(year, filename string) (GalleryManifest,
 		return GalleryManifest{}, err
 	}
 	if err := r.store.publisher.PublishManifest(manifest); err != nil {
+		return GalleryManifest{}, err
+	}
+	if err := r.store.EnsureSourceConfigPublished(); err != nil {
 		return GalleryManifest{}, err
 	}
 

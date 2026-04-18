@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-04-18
+
+### 重构
+
+- 摄影站图片与分片数据发布链路升级为 `R2 + TOS` 双目标发布，并引入统一对象发布器抽象，支持后续扩展新的对象存储提供方
+- 摄影站公开 JSON 改为中立对象 key 结构，移除 `path`、`thumbnail`、`cover` 中写死的远端绝对 URL，为运行时切换国内外源做准备
+- 新增 `web/photography/data/gallery-source.json` 与后台 `/api/gallery-source` 接口，支持在管理后台查看当前摄影数据源、校验目标源健康并切换 `R2/TOS`
+- 管理后台列表接口新增 `source_urls.r2` / `source_urls.tos` 预览地址，详情预览从 R2-only 语义调整为多源资源预览
+- 摄影首页运行时改为先读取 `gallery-source.json` 决定当前远端提供方，并兼容旧版绝对 URL JSON
+- 摄影首页首屏 `output.css`、`waterfall.css`、`fancybox`、`metadata panel`、`cplayer` 等静态依赖改为站点同源加载，减少中国访问时对 Cloudflare 的首屏依赖
+
 ## 2026-04-14
 
 ### 重构

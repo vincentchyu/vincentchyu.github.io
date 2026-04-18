@@ -25,10 +25,10 @@ type AdminServer struct {
 	imagesDir    string
 	galleryStore *photo.GalleryStore
 	service      *PhotoAdminService
+	publishers   *storage.PublisherRegistry
 	mu           sync.RWMutex
 	rebuildTask  *RebuildTask
 	rebuildMutex sync.Mutex
-	R2Client     *storage.R2Client
 }
 
 // RebuildTask tracks the status of a rebuild operation
@@ -66,35 +66,21 @@ func NewAdminServer() (*AdminServer, error) {
 
 func NewAdminServerWithRoot(rootDir string) (*AdminServer, error) {
 	paths := config.NewPaths(rootDir)
-
-	// Initialize R2 client
-	var r2Client *storage.R2Client
-	r2Config, err := storage.LoadR2Config()
-	if err != nil {
-		log.Printf("⚠ Warning: R2 configuration load failed: %v\n", err)
-	} else {
-		r2Client, err = storage.NewR2Client(r2Config)
-		if err != nil {
-			log.Printf("⚠ Warning: Failed to create R2 client: %v\n", err)
-		} else {
-			log.Println("✓ R2 client initialized successfully")
-		}
-	}
-
-	galleryStore := photo.NewGalleryStore(rootDir, r2Client)
+	publishers := storage.LoadPublisherRegistryFromEnv()
+	galleryStore := photo.NewGalleryStore(rootDir, publishers)
 
 	server := &AdminServer{
 		rootDir:      rootDir,
 		photosPath:   filepath.Join(rootDir, photo.LegacyGalleryPath),
 		imagesDir:    paths.ImagesDir,
 		galleryStore: galleryStore,
+		publishers:   publishers,
 		rebuildTask: &RebuildTask{
 			Status: "idle",
 			Logs:   []string{},
 		},
-		R2Client: r2Client,
 	}
-	server.service = NewPhotoAdminService(rootDir, paths.ImagesDir, galleryStore, r2Client, photo.GetExifExtractor())
+	server.service = NewPhotoAdminService(rootDir, paths.ImagesDir, galleryStore, publishers, photo.GetExifExtractor())
 
 	return server, nil
 }
@@ -124,6 +110,7 @@ func StartAdminServerWithRoot(addr string, rootDir string) error {
 	mux.HandleFunc("/api/photos/upload", loggingMiddleware(server.handlePhotoUpload))
 	mux.HandleFunc("/api/rebuild", loggingMiddleware(server.handleRebuild))
 	mux.HandleFunc("/api/rebuild/status", loggingMiddleware(server.handleRebuildStatus))
+	mux.HandleFunc("/api/gallery-source", loggingMiddleware(server.handleGallerySource))
 	mux.HandleFunc("/api/images/", loggingMiddleware(server.handleImageServe))
 	mux.HandleFunc("/api/proxy", loggingMiddleware(server.handleProxy))
 
@@ -312,6 +299,8 @@ func (s *AdminServer) handleRebuild(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	force := r.URL.Query().Get("force") == "true"
+
 	s.rebuildMutex.Lock()
 	if s.rebuildTask.Status == "running" {
 		s.rebuildMutex.Unlock()
@@ -330,7 +319,7 @@ func (s *AdminServer) handleRebuild(w http.ResponseWriter, r *http.Request) {
 	s.rebuildMutex.Unlock()
 
 	// Run rebuild in background
-	go s.runRebuild()
+	go s.runRebuild(force)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "started"})
@@ -349,6 +338,51 @@ func (s *AdminServer) handleRebuildStatus(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(task)
+}
+
+func (s *AdminServer) handleGallerySource(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		s.handleGallerySourceGet(w, r)
+	case http.MethodPut:
+		s.handleGallerySourceUpdate(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (s *AdminServer) handleGallerySourceGet(w http.ResponseWriter, r *http.Request) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	response, err := s.service.GetGallerySource()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to load gallery source: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (s *AdminServer) handleGallerySourceUpdate(w http.ResponseWriter, r *http.Request) {
+	var req GallerySourceUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	response, err := s.service.UpdateGallerySource(req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to update gallery source: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // handleImageServe handles GET /api/images/:year/:filename
@@ -440,7 +474,7 @@ func applyPhotoUpdate(existing *photo.Photo, req PhotoUpdateRequest) (photo.Phot
 }
 
 // runRebuild executes the rebuild process
-func (s *AdminServer) runRebuild() {
+func (s *AdminServer) runRebuild(force bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			s.rebuildMutex.Lock()
@@ -470,7 +504,7 @@ func (s *AdminServer) runRebuild() {
 	}()
 
 	// Run the update
-	err := s.service.RebuildGallery(logChan)
+	err := s.service.RebuildGallery(logChan, force)
 	close(logChan)
 
 	// Wait for logging to finish

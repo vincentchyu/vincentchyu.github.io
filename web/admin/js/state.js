@@ -13,4 +13,6 @@ export const state = {
   isZoomLocked: false,
   isZoomed: false,
   panOffset: { x: 0, y: 0 },
+  gallerySourceConfig: null,
+  gallerySourceStatuses: [],
 };

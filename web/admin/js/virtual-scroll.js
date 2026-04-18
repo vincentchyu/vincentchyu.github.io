@@ -218,10 +218,10 @@ class VirtualPhotoGrid {
           </div>
         </div>
         <div class="photo-actions">
-          <button class="btn btn-small btn-preview-r2" data-filename="${
+          <button class="btn btn-small btn-preview-remote" data-filename="${
             photo.filename
           }">
-            预览 R2
+            预览缩略图
           </button>
         </div>
       </div>
@@ -283,7 +283,7 @@ class VirtualPhotoGrid {
       metaParts[1].textContent = `${photo.width}×${photo.height}`;
     }
 
-    const previewButton = card.querySelector(".btn-preview-r2");
+    const previewButton = card.querySelector(".btn-preview-remote");
     if (previewButton) {
       previewButton.dataset.filename = photo.filename;
     }

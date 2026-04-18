@@ -17,9 +17,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		serveStaticWithLocalTag(w, r, rootDir)
-	})
+	http.HandleFunc(
+		"/", func(w http.ResponseWriter, r *http.Request) {
+			serveStaticWithLocalTag(w, r, rootDir)
+		},
+	)
 
 	port := "3000"
 	log.Printf("Starting local server at http://localhost:%s\n", port)
@@ -32,6 +34,12 @@ func main() {
 	}
 }
 
+/*
+const localGalleryModeScript = `<script>
+window.__PHOTO_GALLERY_DATA_MODE__ = "remote";
+</script>
+`
+*/
 const localGalleryModeScript = `<script>
 window.__PHOTO_GALLERY_DATA_MODE__ = "local";
 </script>

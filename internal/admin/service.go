@@ -20,14 +20,19 @@ type galleryStore interface {
 	SaveFull(albums []photo.YearAlbum) (photo.GalleryManifest, error)
 	UpsertPhoto(photo photo.Photo) (photo.GalleryManifest, error)
 	DeletePhoto(year, filename string) (photo.GalleryManifest, error)
+	LoadSourceConfig() (photo.GallerySourceConfig, error)
+	SaveSourceConfig(cfg photo.GallerySourceConfig) error
+	BuildSourceStatuses(manifest photo.GalleryManifest) []photo.GallerySourceStatus
+	ValidateSourceHealth(source photo.GallerySource, manifest photo.GalleryManifest) error
+	ResolvePublicURL(source photo.GallerySource, asset string) string
 }
 
 type PhotoAdminService struct {
-	rootDir   string
-	imagesDir string
-	store     galleryStore
-	r2Client  *storage.R2Client
-	extractor photo.ExifExtractor
+	rootDir    string
+	imagesDir  string
+	store      galleryStore
+	publishers *storage.PublisherRegistry
+	extractor  photo.ExifExtractor
 }
 
 type ListPhotosPageRequest struct {
@@ -39,17 +44,18 @@ type ListPhotosPageRequest struct {
 }
 
 type PhotoListItem struct {
-	Filename  string   `json:"filename"`
-	Path      string   `json:"path"`
-	Thumbnail string   `json:"thumbnail"`
-	Alt       string   `json:"alt"`
-	Year      string   `json:"year"`
-	Month     string   `json:"month"`
-	Date      string   `json:"date"`
-	Width     int      `json:"width,omitempty"`
-	Height    int      `json:"height,omitempty"`
-	IsHidden  bool     `json:"is_hidden"`
-	Subject   []string `json:"Subject,omitempty"`
+	Filename   string          `json:"filename"`
+	Path       string          `json:"path"`
+	Thumbnail  string          `json:"thumbnail"`
+	Alt        string          `json:"alt"`
+	Year       string          `json:"year"`
+	Month      string          `json:"month"`
+	Date       string          `json:"date"`
+	Width      int             `json:"width,omitempty"`
+	Height     int             `json:"height,omitempty"`
+	IsHidden   bool            `json:"is_hidden"`
+	Subject    []string        `json:"Subject,omitempty"`
+	SourceURLs PhotoSourceURLs `json:"source_urls"`
 }
 
 type PhotoListPage struct {
@@ -61,11 +67,30 @@ type PhotoListPage struct {
 	Years       []string        `json:"years"`
 }
 
+type PhotoSourceURL struct {
+	Path      string `json:"path"`
+	Thumbnail string `json:"thumbnail"`
+}
+
+type PhotoSourceURLs struct {
+	R2  PhotoSourceURL `json:"r2"`
+	TOS PhotoSourceURL `json:"tos"`
+}
+
+type GallerySourceResponse struct {
+	Config   photo.GallerySourceConfig   `json:"config"`
+	Statuses []photo.GallerySourceStatus `json:"statuses"`
+}
+
+type GallerySourceUpdateRequest struct {
+	ActiveSource photo.GallerySource `json:"active_source"`
+}
+
 func NewPhotoAdminService(
 	rootDir string,
 	imagesDir string,
 	store galleryStore,
-	r2Client *storage.R2Client,
+	publishers *storage.PublisherRegistry,
 	extractor photo.ExifExtractor,
 ) *PhotoAdminService {
 	if extractor == nil {
@@ -73,11 +98,11 @@ func NewPhotoAdminService(
 	}
 
 	return &PhotoAdminService{
-		rootDir:   rootDir,
-		imagesDir: imagesDir,
-		store:     store,
-		r2Client:  r2Client,
-		extractor: extractor,
+		rootDir:    rootDir,
+		imagesDir:  imagesDir,
+		store:      store,
+		publishers: publishers,
+		extractor:  extractor,
 	}
 }
 
@@ -90,6 +115,11 @@ func (s *PhotoAdminService) ListPhotosPage(req ListPhotosPageRequest) (PhotoList
 	albums, _, err := s.store.LoadAlbums()
 	if err != nil {
 		return PhotoListPage{}, err
+	}
+
+	sourceConfig, err := s.store.LoadSourceConfig()
+	if err != nil {
+		return PhotoListPage{}, fmt.Errorf("load gallery source config: %w", err)
 	}
 
 	years := collectYears(albums)
@@ -131,7 +161,7 @@ func (s *PhotoAdminService) ListPhotosPage(req ListPhotosPageRequest) (PhotoList
 
 	items := make([]PhotoListItem, 0, end-offset)
 	for _, item := range filtered[offset:end] {
-		items = append(items, toPhotoListItem(item))
+		items = append(items, s.toPhotoListItem(item, sourceConfig.ActiveSource))
 	}
 
 	page := PhotoListPage{
@@ -144,7 +174,6 @@ func (s *PhotoAdminService) ListPhotosPage(req ListPhotosPageRequest) (PhotoList
 	if page.HasMore {
 		page.NextCursor = encodeCursor(end)
 	}
-
 	return page, nil
 }
 
@@ -284,22 +313,18 @@ func (s *PhotoAdminService) DeletePhoto(year, filename string) error {
 		return fmt.Errorf("failed to update gallery data: %w", err)
 	}
 
-	if s.r2Client != nil {
+	if s.publishers != nil {
+		filenameNoExt := strings.TrimSuffix(filename, filepath.Ext(filename))
 		keysToDelete := []string{
-			fmt.Sprintf("%s%s%s", s.r2Client.Config.BasePrefix, s.r2Client.Config.OriginalPrefix, filename),
+			s.publishers.Layout().OriginalKey(filename),
+			s.publishers.Layout().ThumbnailKey(filenameNoExt),
 		}
 
-		filenameNoExt := strings.TrimSuffix(filename, filepath.Ext(filename))
-		keysToDelete = append(
-			keysToDelete,
-			fmt.Sprintf("%s%s%s%s", s.r2Client.Config.BasePrefix, s.r2Client.Config.ThumbnailPrefix, filenameNoExt, photo.ExtWebP),
-		)
-
-		log.Printf("🟢 Deleting files from R2 for %s...\n", filename)
-		if err := s.r2Client.DeleteObjects(keysToDelete); err != nil {
-			log.Printf("Error deleting objects from R2: %v", err)
+		log.Printf("🟢 Deleting files from remote storage for %s...\n", filename)
+		if err := s.publishers.DeleteObjectsFromAll(keysToDelete); err != nil {
+			log.Printf("Error deleting remote objects: %v", err)
 		} else {
-			log.Printf("✓ Deleted files from R2")
+			log.Printf("✓ Deleted files from remote storage")
 		}
 	}
 
@@ -314,8 +339,61 @@ func (s *PhotoAdminService) DeletePhoto(year, filename string) error {
 	return nil
 }
 
-func (s *PhotoAdminService) RebuildGallery(logChan chan<- string) error {
-	return photo.RunUpdatePhotosWithRoot(s.rootDir, logChan)
+func (s *PhotoAdminService) RebuildGallery(logChan chan<- string, force bool) error {
+	return photo.RunUpdatePhotosWithRoot(s.rootDir, logChan, force)
+}
+
+func (s *PhotoAdminService) GetGallerySource() (GallerySourceResponse, error) {
+	config, err := s.store.LoadSourceConfig()
+	if err != nil {
+		return GallerySourceResponse{}, err
+	}
+
+	_, manifest, err := s.store.LoadAlbums()
+	if err != nil {
+		return GallerySourceResponse{}, err
+	}
+
+	response := GallerySourceResponse{
+		Config: config,
+	}
+	if manifest != nil {
+		response.Statuses = s.store.BuildSourceStatuses(*manifest)
+		for i := range response.Statuses {
+			if response.Statuses[i].PublicBase == "" {
+				response.Statuses[i].PublicBase = config.Sources[response.Statuses[i].Provider].PublicBase
+			}
+		}
+	}
+	return response, nil
+}
+
+func (s *PhotoAdminService) UpdateGallerySource(req GallerySourceUpdateRequest) (GallerySourceResponse, error) {
+	if req.ActiveSource != photo.GallerySourceR2 && req.ActiveSource != photo.GallerySourceTOS {
+		return GallerySourceResponse{}, fmt.Errorf("unsupported source: %s", req.ActiveSource)
+	}
+
+	_, manifest, err := s.store.LoadAlbums()
+	if err != nil {
+		return GallerySourceResponse{}, err
+	}
+	if manifest == nil {
+		manifest = &photo.GalleryManifest{}
+	}
+	if err := s.store.ValidateSourceHealth(req.ActiveSource, *manifest); err != nil {
+		return GallerySourceResponse{}, err
+	}
+
+	cfg, err := s.store.LoadSourceConfig()
+	if err != nil {
+		return GallerySourceResponse{}, err
+	}
+	cfg.ActiveSource = req.ActiveSource
+	if err := s.store.SaveSourceConfig(cfg); err != nil {
+		return GallerySourceResponse{}, err
+	}
+
+	return s.GetGallerySource()
 }
 
 func (s *PhotoAdminService) ExtractYearFromFile(file io.ReadSeeker, filename string) string {
@@ -349,8 +427,9 @@ func (s *PhotoAdminService) ProcessUploadedPhoto(targetPath, year, filename stri
 	if err != nil {
 		return photo.Photo{}, err
 	}
-	if s.r2Client != nil {
-		processor.R2Client = s.r2Client
+	if s.publishers != nil {
+		processor.Publishers = s.publishers
+		processor.Layout = s.publishers.Layout()
 	}
 
 	albums, _, err := s.store.LoadAlbums()
@@ -393,19 +472,42 @@ func matchesPhotoFilters(item photo.Photo, searchTerm, year, status string) bool
 	}
 }
 
-func toPhotoListItem(item photo.Photo) PhotoListItem {
+func (s *PhotoAdminService) toPhotoListItem(item photo.Photo, activeSource photo.GallerySource) PhotoListItem {
+	sourceURLs := PhotoSourceURLs{
+		R2: PhotoSourceURL{
+			Path:      s.store.ResolvePublicURL(photo.GallerySourceR2, item.Path),
+			Thumbnail: s.store.ResolvePublicURL(photo.GallerySourceR2, item.Thumbnail),
+		},
+		TOS: PhotoSourceURL{
+			Path:      s.store.ResolvePublicURL(photo.GallerySourceTOS, item.Path),
+			Thumbnail: s.store.ResolvePublicURL(photo.GallerySourceTOS, item.Thumbnail),
+		},
+	}
+
+	resolvedPath := item.Path
+	resolvedThumbnail := item.Thumbnail
+	switch activeSource {
+	case photo.GallerySourceR2:
+		resolvedPath = sourceURLs.R2.Path
+		resolvedThumbnail = sourceURLs.R2.Thumbnail
+	case photo.GallerySourceTOS:
+		resolvedPath = sourceURLs.TOS.Path
+		resolvedThumbnail = sourceURLs.TOS.Thumbnail
+	}
+
 	return PhotoListItem{
-		Filename:  item.Filename,
-		Path:      item.Path,
-		Thumbnail: item.Thumbnail,
-		Alt:       item.Alt,
-		Year:      item.Year,
-		Month:     item.Month,
-		Date:      item.Date,
-		Width:     item.Width,
-		Height:    item.Height,
-		IsHidden:  item.IsHidden,
-		Subject:   item.Subject,
+		Filename:   item.Filename,
+		Path:       resolvedPath,
+		Thumbnail:  resolvedThumbnail,
+		Alt:        item.Alt,
+		Year:       item.Year,
+		Month:      item.Month,
+		Date:       item.Date,
+		Width:      item.Width,
+		Height:     item.Height,
+		IsHidden:   item.IsHidden,
+		Subject:    item.Subject,
+		SourceURLs: sourceURLs,
 	}
 }
 

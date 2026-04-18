@@ -2,7 +2,6 @@ package photo
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -18,7 +17,6 @@ const (
 	GalleryYearsDir         = "web/photography/data/photos"
 	GalleryManifestPathName = "web/photography/data/photos-manifest.json"
 	LegacyGalleryPath       = "web/photography/photos.json"
-	GalleryRemoteDataPrefix = "pages/"
 
 	GalleryManifestVersion = "1"
 
@@ -55,17 +53,17 @@ type GalleryManifest struct {
 // GalleryStore reads and writes the sharded photography dataset.
 type GalleryStore struct {
 	RootDir      string
-	R2Client     *storage.R2Client
+	Publishers   *storage.PublisherRegistry
 	repository   GalleryRepository
 	legacyReader LegacyGalleryReader
 	publisher    GalleryPublisher
 }
 
 // NewGalleryStore builds a store rooted at the current workspace.
-func NewGalleryStore(rootDir string, r2Client *storage.R2Client) *GalleryStore {
+func NewGalleryStore(rootDir string, publishers *storage.PublisherRegistry) *GalleryStore {
 	store := &GalleryStore{
-		RootDir:  rootDir,
-		R2Client: r2Client,
+		RootDir:    rootDir,
+		Publishers: publishers,
 	}
 	store.legacyReader = &galleryLegacyReader{store: store}
 	store.repository = &galleryRepository{store: store}
@@ -83,29 +81,6 @@ func (s *GalleryStore) yearLocalPath(year string) string {
 
 func (s *GalleryStore) legacyLocalPath() string {
 	return filepath.Join(s.RootDir, LegacyGalleryPath)
-}
-
-func (s *GalleryStore) manifestPublicPath() string {
-	return filepath.ToSlash(filepath.Join(GalleryRemoteDataPrefix, "photos-manifest.json"))
-}
-
-func (s *GalleryStore) yearPublicPath(year string) string {
-	return filepath.ToSlash(filepath.Join(GalleryRemoteDataPrefix, "photos", year+".json"))
-}
-
-func (s *GalleryStore) manifestR2Key() string {
-	return filepath.ToSlash(filepath.Join(GalleryRemoteDataPrefix, "photos-manifest.json"))
-}
-
-func (s *GalleryStore) yearR2Key(year string) string {
-	return filepath.ToSlash(filepath.Join(GalleryRemoteDataPrefix, "photos", year+".json"))
-}
-
-func (s *GalleryStore) legacyR2Key() string {
-	if s.R2Client == nil {
-		return ""
-	}
-	return fmt.Sprintf("%sphotos.json", s.R2Client.Config.BasePrefix)
 }
 
 func (s *GalleryStore) yearKVKey(year string) string {
@@ -313,8 +288,10 @@ func (s *GalleryStore) uploadManifest(manifest GalleryManifest) error {
 	if err != nil {
 		return err
 	}
-	if s.R2Client != nil {
-		if err := s.R2Client.UploadBytes(data, s.manifestR2Key(), "application/json", GalleryDataCacheControl); err != nil {
+	if s.Publishers != nil {
+		if err := s.Publishers.UploadBytesToAll(
+			data, s.Publishers.Layout().ManifestKey(), "application/json", GalleryDataCacheControl,
+		); err != nil {
 			return err
 		}
 	}
@@ -333,8 +310,10 @@ func (s *GalleryStore) uploadYear(album YearAlbum) error {
 	if err != nil {
 		return err
 	}
-	if s.R2Client != nil {
-		if err := s.R2Client.UploadBytes(data, s.yearR2Key(album.Year), "application/json", GalleryDataCacheControl); err != nil {
+	if s.Publishers != nil {
+		if err := s.Publishers.UploadBytesToAll(
+			data, s.Publishers.Layout().YearKey(album.Year), "application/json", GalleryDataCacheControl,
+		); err != nil {
 			return err
 		}
 	}
@@ -349,11 +328,11 @@ func (s *GalleryStore) uploadYear(album YearAlbum) error {
 }
 
 func (s *GalleryStore) deleteYearR2(year string) error {
-	if s.R2Client == nil {
+	if s.Publishers == nil {
 		return nil
 	}
 
-	return s.R2Client.DeleteObject(s.yearR2Key(year))
+	return s.Publishers.DeleteObjectFromAll(s.Publishers.Layout().YearKey(year))
 }
 
 func buildManifest(albums []YearAlbum) GalleryManifest {
@@ -574,7 +553,7 @@ func restorePhotoState(photo *Photo) {
 }
 
 func publicYearPath(year string) string {
-	return filepath.ToSlash(filepath.Join(GalleryRemoteDataPrefix, "photos", year+".json"))
+	return storage.DefaultObjectLayout().YearKey(year)
 }
 
 func albumsEqual(a, b []YearAlbum) bool {

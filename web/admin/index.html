@@ -19,7 +19,7 @@
                 </button>
                 <button id="rebuildBtn" class="btn btn-primary">
                     <span class="icon">🔄</span>
-                    重建并上传
+                    重建方式
                 </button>
             </div>
         </header>
@@ -39,6 +39,23 @@
                 <span class="stat-value" id="selectedPhotos">0</span>
             </div>
         </div>
+
+        <section class="source-panel">
+            <div class="source-panel-main">
+                <div class="source-panel-header">
+                    <span class="source-title">摄影数据源</span>
+                    <span class="source-active" id="gallerySourceActive">加载中...</span>
+                </div>
+                <div class="source-meta">
+                    <span id="gallerySourceUpdated">最近切换时间: -</span>
+                </div>
+            </div>
+            <div id="gallerySourceStatusList" class="source-status-list" aria-label="摄影数据源状态"></div>
+            <div class="source-actions">
+                <button id="switchToTosBtn" class="btn btn-secondary">切到 TOS</button>
+                <button id="switchToR2Btn" class="btn btn-secondary">切到 R2</button>
+            </div>
+        </section>
 
         <!-- Toolbar -->
         <div class="toolbar">
@@ -76,8 +93,8 @@
                 <div class="detail-preview">
                     <img id="detailImage" src="" alt="" />
                     <div class="preview-actions">
-                        <button id="viewR2ThumbBtn" class="btn btn-small">查看 R2 缩略图</button>
-                        <button id="viewR2OriginalBtn" class="btn btn-small">查看 R2 原图</button>
+                        <button id="viewThumbBtn" class="btn btn-small">查看缩略图</button>
+                        <button id="viewOriginalBtn" class="btn btn-small">查看原图</button>
                     </div>
                 </div>
                 <div class="detail-form">
@@ -120,15 +137,40 @@
         <div id="rebuildModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>重建进度</h2>
+                    <h2 id="rebuildModalTitle">重建并上传</h2>
                     <button id="closeRebuildBtn" class="btn-close">×</button>
                 </div>
                 <div class="modal-body">
-                    <div class="progress-bar">
-                        <div id="progressFill" class="progress-fill"></div>
-                    </div>
-                    <p id="rebuildMessage">准备中...</p>
-                    <div id="rebuildLogs" class="logs"></div>
+                    <section id="rebuildChoicePanel" class="rebuild-choice-panel">
+                        <p class="rebuild-intro">
+                            先选一种方式。普通重建只处理当前有变化的照片和 JSON；强制重建会重新覆盖上传当前本地全集，适合首次初始化 TOS 或修复两边不一致。
+                        </p>
+                        <div class="rebuild-mode-grid">
+                            <button id="rebuildNormalBtn" class="rebuild-mode-card" type="button">
+                                <span class="rebuild-mode-name">普通重建</span>
+                                <span class="rebuild-mode-desc">扫描本地 `gallery_images/`，只上传发生变化的照片与索引。</span>
+                            </button>
+                            <button id="rebuildForceBtn" class="rebuild-mode-card rebuild-mode-card-primary" type="button">
+                                <span class="rebuild-mode-name">强制重建</span>
+                                <span class="rebuild-mode-desc">重新覆盖上传当前本地全集，即使内容没变也会同步到 R2 + TOS。</span>
+                            </button>
+                        </div>
+                        <div class="rebuild-notes">
+                            <span>普通重建适合日常同步。</span>
+                            <span>强制重建适合首次初始化或修复远端缺数据。</span>
+                        </div>
+                    </section>
+                    <section id="rebuildProgressPanel" class="rebuild-progress-panel is-hidden">
+                        <div class="rebuild-progress-head">
+                            <span id="rebuildModeBadge" class="rebuild-mode-badge">普通重建</span>
+                            <span class="rebuild-progress-note">执行中请保持页面打开。</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                        <p id="rebuildMessage">准备中...</p>
+                        <div id="rebuildLogs" class="logs"></div>
+                    </section>
                 </div>
             </div>
         </div>
@@ -137,7 +179,7 @@
         <div id="r2Modal" class="modal">
             <div class="modal-content modal-large">
                 <div class="modal-header">
-                    <h2 id="r2ModalTitle">R2 预览</h2>
+                    <h2 id="r2ModalTitle">资源预览</h2>
                     <button id="closeR2Btn" class="btn-close">×</button>
                 </div>
                 <div class="modal-body">

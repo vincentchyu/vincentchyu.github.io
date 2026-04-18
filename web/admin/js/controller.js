@@ -1,10 +1,12 @@
 import {
   batchUpdatePhotos,
   deletePhoto,
+  fetchGallerySource,
   fetchPhotoPage,
   fetchRebuildStatus,
   savePhoto,
   startRebuild,
+  updateGallerySource,
   uploadPhoto,
 } from "./api.js";
 import { state } from "./state.js";
@@ -21,7 +23,9 @@ import {
   setButtonLoading,
   showDetail as renderDetail,
   showLoadError,
-  showR2Preview as renderR2Preview,
+  showRebuildProgressPanel,
+  showRemotePreview as renderRemotePreview,
+  renderGallerySource,
   syncPhotoCards,
   updateBatchButtons,
   updateStats,
@@ -45,10 +49,11 @@ let pendingReset = false;
 export function initAdminApp() {
   bindViewActions({
     showDetail,
-    showR2Preview,
+    showRemotePreview,
     toggleSelection,
   });
 
+  loadGallerySource();
   loadPhotos({ reset: true });
   setupEventListeners();
   setupInfiniteScroll();
@@ -137,8 +142,8 @@ function showDetail(filename) {
   renderDetail(filename);
 }
 
-function showR2Preview(filename, type = "thumbnail") {
-  renderR2Preview(filename, type);
+function showRemotePreview(filename, type = "thumbnail", provider = "active") {
+  renderRemotePreview(filename, type, provider);
 }
 
 function toggleSelection(filename, selected) {
@@ -208,7 +213,7 @@ async function deleteCurrentPhoto() {
 
   if (
     !confirm(
-      `确定要删除照片 ${state.currentPhoto.filename} 吗？\n此操作将删除本地文件和 R2 上的文件，且无法恢复！`
+      `确定要删除照片 ${state.currentPhoto.filename} 吗？\n此操作将删除本地文件和远端对象存储中的文件，且无法恢复！`
     )
   ) {
     return;
@@ -307,11 +312,15 @@ function filterPhotos() {
   loadPhotos({ reset: true });
 }
 
-async function rebuild() {
+function openRebuildChooser() {
   resetRebuildModal();
+}
+
+async function executeRebuild(force) {
+  showRebuildProgressPanel(force);
 
   try {
-    await startRebuild();
+    await startRebuild(force);
     pollRebuildStatus();
   } catch (error) {
     console.error("Error starting rebuild:", error);
@@ -334,6 +343,7 @@ async function pollRebuildStatus() {
       setTimeout(() => {
         elements.rebuildModal.classList.remove("active");
         clearPhotoPageCache();
+        loadGallerySource();
         loadPhotos({ reset: true });
       }, 2000);
       return;
@@ -380,11 +390,37 @@ async function handlePhotoUpload(event) {
     clearPhotoPageCache();
     setTimeout(async () => {
       elements.uploadModal.classList.remove("active");
-      await rebuild();
+      await executeRebuild(false);
     }, 2000);
   }
 
   event.target.value = "";
+}
+
+async function loadGallerySource() {
+  try {
+    const response = await fetchGallerySource();
+    renderGallerySource(response);
+  } catch (error) {
+    console.error("Error loading gallery source:", error);
+  }
+}
+
+async function switchGallerySource(activeSource) {
+  const btnId = activeSource === "tos" ? "switchToTosBtn" : "switchToR2Btn";
+  setButtonLoading(btnId, true);
+
+  try {
+    const response = await updateGallerySource(activeSource);
+    renderGallerySource(response);
+    clearPhotoPageCache();
+    await loadPhotos({ reset: true });
+  } catch (error) {
+    console.error("Error switching gallery source:", error);
+    alert(`切换数据源失败: ${error.message}`);
+  } finally {
+    setButtonLoading(btnId, false);
+  }
 }
 
 function setupEventListeners() {
@@ -393,19 +429,32 @@ function setupEventListeners() {
   document.getElementById("cancelDetailBtn").addEventListener("click", hideDetail);
   document.getElementById("deletePhotoBtn").addEventListener("click", deleteCurrentPhoto);
 
-  document.getElementById("viewR2ThumbBtn").addEventListener("click", () => {
+  document.getElementById("viewThumbBtn").addEventListener("click", () => {
     if (state.currentPhoto) {
-      showR2Preview(state.currentPhoto.filename, "thumbnail");
+      showRemotePreview(state.currentPhoto.filename, "thumbnail");
     }
   });
 
-  document.getElementById("viewR2OriginalBtn").addEventListener("click", () => {
+  document.getElementById("viewOriginalBtn").addEventListener("click", () => {
     if (state.currentPhoto) {
-      showR2Preview(state.currentPhoto.filename, "original");
+      showRemotePreview(state.currentPhoto.filename, "original");
     }
   });
 
-  document.getElementById("rebuildBtn").addEventListener("click", rebuild);
+  document
+    .getElementById("switchToTosBtn")
+    .addEventListener("click", () => switchGallerySource("tos"));
+  document
+    .getElementById("switchToR2Btn")
+    .addEventListener("click", () => switchGallerySource("r2"));
+
+  document.getElementById("rebuildBtn").addEventListener("click", openRebuildChooser);
+  document.getElementById("rebuildNormalBtn").addEventListener("click", () => {
+    executeRebuild(false);
+  });
+  document.getElementById("rebuildForceBtn").addEventListener("click", () => {
+    executeRebuild(true);
+  });
   document.getElementById("closeRebuildBtn").addEventListener("click", () => {
     elements.rebuildModal.classList.remove("active");
   });

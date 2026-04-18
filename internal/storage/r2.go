@@ -39,6 +39,17 @@ type R2Client struct {
 	Config R2Config
 }
 
+func (r *R2Client) Provider() Provider {
+	return ProviderR2
+}
+
+func (r *R2Client) BaseURL() string {
+	if r.Config.CDNUrl != "" {
+		return strings.TrimRight(r.Config.CDNUrl, "/")
+	}
+	return strings.TrimRight(fmt.Sprintf("%s/%s", r.Config.Endpoint, r.Config.Bucket), "/")
+}
+
 // LoadR2Config loads R2 configuration from .env file
 func LoadR2Config() (*R2Config, error) {
 	// Read configuration from environment variables
@@ -119,6 +130,10 @@ func NewR2Client(config *R2Config) (*R2Client, error) {
 
 // CheckFileExists checks if a file exists in R2
 func (r *R2Client) CheckFileExists(key string) bool {
+	return r.HeadObject(key) == nil
+}
+
+func (r *R2Client) HeadObject(key string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), R2RequestTimeout)
 	defer cancel()
 
@@ -128,7 +143,10 @@ func (r *R2Client) CheckFileExists(key string) bool {
 			Key:    aws.String(key),
 		},
 	)
-	return err == nil
+	if err != nil {
+		return fmt.Errorf("head object %s on R2: %w", key, err)
+	}
+	return nil
 }
 
 // UploadFile uploads a file to R2
@@ -287,11 +305,11 @@ func (r *R2Client) DeleteObjects(keys []string) error {
 
 // GetCDNUrl returns the CDN URL for a given key
 func (r *R2Client) GetCDNUrl(key string) string {
-	if r.Config.CDNUrl != "" {
-		return fmt.Sprintf("%s/%s", r.Config.CDNUrl, key)
-	}
-	// Fallback to direct R2 URL
-	return fmt.Sprintf("%s/%s/%s", r.Config.Endpoint, r.Config.Bucket, key)
+	return r.PublicURL(key)
+}
+
+func (r *R2Client) PublicURL(key string) string {
+	return fmt.Sprintf("%s/%s", r.BaseURL(), strings.TrimLeft(key, "/"))
 }
 
 // getContentType determines the content type based on file extension

@@ -18,20 +18,26 @@ let galleryNextYearCursor = 0;
 let galleryYearLoadPromise = Promise.resolve();
 let galleryLoadMoreObserver = null;
 let galleryLoadMoreSentinel = null;
+let gallerySourceConfig = null;
 
-const DEFAULT_REMOTE_GALLERY_DATA_BASE =
-    "https://cdn-photography-img-vincent.chyu.org/pages/";
+const DEFAULT_GALLERY_SOURCES = {
+    tos: {
+        public_base: "https://photography.tos-cn-guangzhou.volces.com",
+    },
+    r2: {
+        public_base: "https://cdn-photography-img-vincent.chyu.org",
+    },
+};
+const GALLERY_SOURCE_CONFIG_KEY = "pages/gallery-source.json";
+const GALLERY_MANIFEST_KEY = "pages/photos-manifest.json";
 const INITIAL_YEAR_BATCH = 2;
 const INITIAL_PHOTO_TARGET = 72;
 const YEAR_LOAD_AHEAD_MARGIN = "300px 0px";
 const THUMBNAIL_LOAD_AHEAD_MARGIN = "800px 0px";
 const EAGER_THUMBNAIL_COUNT = 8;
-const FANCYBOX_SCRIPT_URL =
-    "https://cdn-photography-img-vincent.chyu.org/static/fancybox.umd.js";
-const FANCYBOX_STYLE_URL =
-    "https://cdn-photography-img-vincent.chyu.org/static/fancybox.css";
-const METADATA_PANEL_STYLE_URL =
-    "https://cdn-photography-img-vincent.chyu.org/static/metadata-panel.css?v=3";
+const FANCYBOX_SCRIPT_URL = "/web/photography/dist/fancybox.umd.js";
+const FANCYBOX_STYLE_URL = "/web/photography/dist/fancybox.css";
+const METADATA_PANEL_STYLE_URL = "/web/photography/css/metadata-panel.css?v=3";
 
 let fancyboxAssetsPromise = null;
 let fancyboxWarmupScheduled = false;
@@ -467,19 +473,105 @@ function getGalleryDataMode() {
     return "remote";
 }
 
-function getRemoteGalleryDataBase() {
-    const configuredBase = window.__PHOTO_GALLERY_REMOTE_DATA_BASE__;
-    if (typeof configuredBase === "string" && configuredBase.trim()) {
-        return configuredBase.endsWith("/")
-            ? configuredBase
-            : `${configuredBase}/`;
-    }
-
-    return DEFAULT_REMOTE_GALLERY_DATA_BASE;
-}
-
 function getLocalGalleryBase() {
     return "/web/photography/";
+}
+
+function getConfiguredSources() {
+    const configured = window.__PHOTO_GALLERY_SOURCES__;
+    if (!configured || typeof configured !== "object") {
+        return DEFAULT_GALLERY_SOURCES;
+    }
+
+    return {
+        tos: {
+            public_base:
+                configured.tos?.public_base || DEFAULT_GALLERY_SOURCES.tos.public_base,
+        },
+        r2: {
+            public_base:
+                configured.r2?.public_base || DEFAULT_GALLERY_SOURCES.r2.public_base,
+        },
+    };
+}
+
+function joinPublicUrl(base, key) {
+    const normalizedBase = String(base || "").replace(/\/+$/, "");
+    const normalizedKey = String(key || "").replace(/^\/+/, "");
+    if (!normalizedBase) {
+        return normalizedKey;
+    }
+    if (!normalizedKey) {
+        return normalizedBase;
+    }
+    return `${normalizedBase}/${normalizedKey}`;
+}
+
+function isAbsoluteUrl(value) {
+    if (typeof value !== "string" || !value) {
+        return false;
+    }
+
+    try {
+        return new URL(value).protocol.startsWith("http");
+    } catch (error) {
+        return false;
+    }
+}
+
+function getRemoteGallerySourceConfigUrls() {
+    const sources = getConfiguredSources();
+    return [
+        joinPublicUrl(sources.tos.public_base, GALLERY_SOURCE_CONFIG_KEY),
+        joinPublicUrl(sources.r2.public_base, GALLERY_SOURCE_CONFIG_KEY),
+    ];
+}
+
+async function ensureRemoteGallerySourceConfig() {
+    if (getGalleryDataMode() === "local") {
+        gallerySourceConfig = null;
+        return null;
+    }
+
+    for (const url of getRemoteGallerySourceConfigUrls()) {
+        try {
+            const response = await fetch(url, getGalleryFetchOptions());
+            if (!response.ok) {
+                continue;
+            }
+
+            const config = await response.json();
+            if (!config || typeof config !== "object") {
+                continue;
+            }
+            gallerySourceConfig = config;
+            return gallerySourceConfig;
+        } catch (error) {
+            console.warn("Failed to load gallery source config from", url, error);
+        }
+    }
+
+    gallerySourceConfig = {
+        version: "1",
+        active_source: "tos",
+        sources: getConfiguredSources(),
+    };
+    return gallerySourceConfig;
+}
+
+function getActiveRemoteSource() {
+    const source = gallerySourceConfig?.active_source;
+    if (source === "r2" || source === "tos") {
+        return source;
+    }
+    return "tos";
+}
+
+function getRemotePublicBase(source = getActiveRemoteSource()) {
+    const configuredSources = getConfiguredSources();
+    const configSources = gallerySourceConfig?.sources || {};
+    const sourceConfig = configSources[source] || configuredSources[source] || {};
+    return sourceConfig.public_base || configuredSources[source]?.public_base || "";
 }
 
 function resolveGalleryManifestUrl() {
@@ -487,7 +579,7 @@ function resolveGalleryManifestUrl() {
         return new URL("data/photos-manifest.json", window.location.origin + getLocalGalleryBase()).toString();
     }
 
-    return new URL("photos-manifest.json", getRemoteGalleryDataBase()).toString();
+    return joinPublicUrl(getRemotePublicBase(), GALLERY_MANIFEST_KEY);
 }
 
 function resolveGalleryShardUrl(year) {
@@ -495,7 +587,38 @@ function resolveGalleryShardUrl(year) {
         return new URL(`data/photos/${year}.json`, window.location.origin + getLocalGalleryBase()).toString();
     }
 
-    return new URL(`photos/${year}.json`, getRemoteGalleryDataBase()).toString();
+    return joinPublicUrl(getRemotePublicBase(), `pages/photos/${year}.json`);
+}
+
+function resolveRemoteAssetUrl(asset) {
+    if (isAbsoluteUrl(asset)) {
+        return asset;
+    }
+    return joinPublicUrl(getRemotePublicBase(), asset);
+}
+
+function resolveLocalOriginalUrl(photo) {
+    return new URL(
+        `gallery_images/${photo.year}/${photo.filename}`,
+        window.location.origin + getLocalGalleryBase()
+    ).toString();
+}
+
+function normalizeGalleryPhoto(photo) {
+    if (!photo || typeof photo !== "object") {
+        return photo;
+    }
+
+    const normalized = {...photo};
+    if (getGalleryDataMode() === "local") {
+        normalized.path = resolveLocalOriginalUrl(normalized);
+        normalized.thumbnail = normalized.path;
+        return normalized;
+    }
+
+    normalized.path = resolveRemoteAssetUrl(normalized.path);
+    normalized.thumbnail = resolveRemoteAssetUrl(normalized.thumbnail);
+    return normalized;
 }
 
 function ensureStylesheetLoaded(href) {
@@ -1269,6 +1392,9 @@ async function loadGallery() {
         galleryItems = [];
         galleryPhotoRecords = [];
         galleryManifest = null;
+        if (activeGalleryMode !== "local") {
+            await ensureRemoteGallerySourceConfig();
+        }
         const manifest = await fetchGalleryManifest();
         if (manifest && manifest.years && manifest.years.length > 0) {
             await loadShardedGallery(
@@ -1297,7 +1423,9 @@ async function loadGallery() {
             if (album.photos) {
                 return {
                     ...album,
-                    photos: album.photos.filter((photo) => !photo.is_hidden),
+                    photos: album.photos
+                        .filter((photo) => !photo.is_hidden)
+                        .map((photo) => normalizeGalleryPhoto(photo)),
                 };
             }
             return album;
@@ -1722,7 +1850,9 @@ async function loadYearShard(entry, token) {
             return;
         }
 
-        const visiblePhotos = (album.photos || []).filter((photo) => !photo.is_hidden);
+        const visiblePhotos = (album.photos || [])
+            .filter((photo) => !photo.is_hidden)
+            .map((photo) => normalizeGalleryPhoto(photo));
         if (visiblePhotos.length === 0) {
             if (galleryWaterfall && galleryWaterfall.outlineLayer) {
                 const currentBottom = galleryWaterfall.container.offsetHeight;
