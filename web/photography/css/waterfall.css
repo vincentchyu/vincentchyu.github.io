@@ -18,6 +18,7 @@
   width: 100%;
   flex: 0 0 auto;
   pointer-events: none;
+  overflow-anchor: none;
 }
 
 .photo-card {

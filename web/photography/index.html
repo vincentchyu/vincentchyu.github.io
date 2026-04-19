@@ -87,18 +87,18 @@
     />
     <link
       rel="preload"
-      href="/web/photography/css/waterfall.css?v=3"
+      href="/web/photography/css/waterfall.css?v=2026041904"
       as="style"
     />
     <link
       rel="stylesheet"
-      href="/web/photography/css/waterfall.css?v=3"
+      href="/web/photography/css/waterfall.css?v=2026041904"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link rel="stylesheet" href="/web/photography/dist/output.css" />
-      <link rel="stylesheet" href="/web/photography/css/waterfall.css?v=3" />
+      <link rel="stylesheet" href="/web/photography/css/waterfall.css?v=2026041904" />
     </noscript>
     <!-- Alpine.js -->
     <script defer src="/web/photography/dist/cdn.min.js"></script>
@@ -722,6 +722,11 @@
         box-shadow: none;
       }
 
+      html,
+      body {
+        overflow-anchor: none;
+      }
+
       .timeline-hover-zone {
         display: none !important;
       }
@@ -755,12 +760,14 @@
 
       .gallery-waterfall-shell {
         position: relative;
+        overflow-anchor: none;
       }
 
       .gallery-outline-layer {
         position: absolute;
         inset: 0 0 auto 0;
         pointer-events: none;
+        overflow-anchor: none;
       }
 
       .gallery-outline-heading {
@@ -773,6 +780,7 @@
         clip: rect(0, 0, 0, 0);
         clip-path: inset(50%);
         white-space: nowrap;
+        overflow-anchor: none;
       }
 
       #timeline-sidebar {
@@ -1418,7 +1426,7 @@
       };
     </script>
     <script src="/web/photography/js/vendor/tocbot.min.js"></script>
-    <script src="/web/photography/js/gallery.js?v=2026041901"></script>
+    <script src="/web/photography/js/gallery.js?v=2026041904"></script>
     <!-- 音乐播放器按需加载 -->
     <script>
       // 音乐播放器按需加载：只在hover时加载，避免阻塞页面渲染

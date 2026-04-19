@@ -1791,6 +1791,7 @@ function ensureGalleryLoadMoreSentinel(container) {
     galleryLoadMoreSentinel.style.width = "100%";
     galleryLoadMoreSentinel.style.height = "1px";
     galleryLoadMoreSentinel.style.pointerEvents = "none";
+    galleryLoadMoreSentinel.style.overflowAnchor = "none";
     container.appendChild(galleryLoadMoreSentinel);
 }
 
@@ -1868,9 +1869,16 @@ async function loadYearShard(entry, token) {
         }
 
         const preparedPhotos = preparePhotosForRender(entry.year, visiblePhotos);
-        appendLoadedPhotos(preparedPhotos);
+        const viewportAnchor = captureVisiblePhotoAnchor();
+        galleryPhotoRecords.push(...preparedPhotos);
+        rerenderCurrentGalleryLayout();
         galleryLoadedYears.add(entry.year);
-        bindImageLoadEvents();
+        requestAnimationFrame(() => {
+            restoreVisiblePhotoAnchor(viewportAnchor);
+            requestAnimationFrame(() => {
+                restoreVisiblePhotoAnchor(viewportAnchor);
+            });
+        });
         parseAndOpenPhotoFromUrl(galleryItems);
     } catch (error) {
         console.warn(`Failed to load shard ${entry.year}:`, error);
@@ -1882,9 +1890,9 @@ function appendLoadedPhotos(photos) {
         return;
     }
 
-    const baselineHeight = normalizeWaterfallColumnBaselines(galleryWaterfall);
+    const viewportAnchor = captureVisiblePhotoAnchor();
     const columnWidth = galleryWaterfall.columns[0]?.clientWidth || 320;
-    const columnHeights = galleryWaterfall.columns.map(() => baselineHeight);
+    const columnHeights = normalizeWaterfallColumnBaselines(galleryWaterfall);
 
     photos.forEach((photo) => {
         galleryPhotoRecords.push(photo);
@@ -1914,8 +1922,14 @@ function appendLoadedPhotos(photos) {
         columnHeights[minIndex] += calculatePhotoHeight(photo, columnWidth) + 8;
     });
 
+    galleryWaterfall.heights = [...columnHeights];
+
     requestAnimationFrame(() => {
+        restoreVisiblePhotoAnchor(viewportAnchor);
         refreshTimelineToc();
+        requestAnimationFrame(() => {
+            restoreVisiblePhotoAnchor(viewportAnchor);
+        });
     });
 }
 
@@ -2131,6 +2145,10 @@ function rerenderCurrentGalleryLayout() {
         return false;
     }
 
+    if (activeGalleryMode === "sharded") {
+        disconnectGalleryLoadMoreObserver();
+    }
+
     galleryContainer.innerHTML = "";
     galleryWaterfall = createWaterfallState(galleryContainer);
 
@@ -2150,6 +2168,11 @@ function rerenderCurrentGalleryLayout() {
         initTimelineToc();
     } else {
         destroyTimelineToc();
+    }
+
+    if (activeGalleryMode === "sharded") {
+        ensureGalleryLoadMoreSentinel(galleryContainer);
+        setupGalleryLoadMoreObserver(galleryLoadToken);
     }
 
     return true;
@@ -2458,16 +2481,73 @@ function calculatePhotoHeight(photo, columnWidth) {
     return columnWidth / aspectRatio;
 }
 
-function normalizeWaterfallColumnBaselines(state) {
-    if (!state || !Array.isArray(state.columns) || state.columns.length === 0) {
-        return 0;
+function captureVisiblePhotoAnchor() {
+    if (!galleryWaterfall || !galleryWaterfall.container) {
+        return null;
     }
 
-    const columnHeights = state.columns.map((column) => column.offsetHeight || 0);
-    const baselineHeight = Math.max(...columnHeights, 0);
+    const cards = Array.from(
+        galleryWaterfall.container.querySelectorAll(".photo-card[data-index]")
+    );
+    if (cards.length === 0) {
+        return null;
+    }
+
+    const viewportTop = TIMELINE_SCROLL_OFFSET + 8;
+    const viewportBottom = window.innerHeight || document.documentElement.clientHeight || 0;
+
+    const anchorCard =
+        cards.find((card) => {
+            const rect = card.getBoundingClientRect();
+            return rect.bottom > viewportTop && rect.top < viewportBottom;
+        }) || cards[0];
+
+    const anchorIndex = Number.parseInt(anchorCard.dataset.index || "", 10);
+    if (!Number.isFinite(anchorIndex)) {
+        return null;
+    }
+
+    return {
+        index: anchorIndex,
+        top: anchorCard.getBoundingClientRect().top,
+    };
+}
+
+function restoreVisiblePhotoAnchor(anchor) {
+    if (!anchor || !galleryWaterfall || !galleryWaterfall.container) {
+        return;
+    }
+
+    const anchorCard = galleryWaterfall.container.querySelector(
+        `.photo-card[data-index="${anchor.index}"]`
+    );
+    if (!anchorCard) {
+        return;
+    }
+
+    const currentTop = anchorCard.getBoundingClientRect().top;
+    const delta = currentTop - anchor.top;
+    if (Math.abs(delta) <= 1) {
+        return;
+    }
+
+    window.scrollTo({
+        top: Math.max(0, window.scrollY + delta),
+        behavior: "auto",
+    });
+}
+
+function normalizeWaterfallColumnBaselines(state) {
+    if (!state || !Array.isArray(state.columns) || state.columns.length === 0) {
+        return [];
+    }
+
+    const measuredHeights = state.columns.map((column) => column.offsetHeight || 0);
+    const baselineHeight = Math.max(...measuredHeights, 0);
+    const normalizedHeights = measuredHeights.map(() => baselineHeight);
 
     state.columns.forEach((column, index) => {
-        const gap = baselineHeight - columnHeights[index];
+        const gap = baselineHeight - measuredHeights[index];
         if (gap <= 1) {
             return;
         }
@@ -2479,7 +2559,7 @@ function normalizeWaterfallColumnBaselines(state) {
         column.appendChild(spacer);
     });
 
-    return baselineHeight;
+    return normalizedHeights;
 }
 
 /**
