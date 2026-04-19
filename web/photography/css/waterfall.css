@@ -14,6 +14,12 @@
   width: 100%; /* Ensure column has width */
 }
 
+.waterfall-column-spacer {
+  width: 100%;
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
 .photo-card {
   width: 100%;
   break-inside: avoid;

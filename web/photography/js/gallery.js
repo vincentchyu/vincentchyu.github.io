@@ -1882,6 +1882,10 @@ function appendLoadedPhotos(photos) {
         return;
     }
 
+    const baselineHeight = normalizeWaterfallColumnBaselines(galleryWaterfall);
+    const columnWidth = galleryWaterfall.columns[0]?.clientWidth || 320;
+    const columnHeights = galleryWaterfall.columns.map(() => baselineHeight);
+
     photos.forEach((photo) => {
         galleryPhotoRecords.push(photo);
         photo.waterfallIndex = galleryItems.length;
@@ -1894,10 +1898,9 @@ function appendLoadedPhotos(photos) {
             Subject: photo.Subject || [],
         });
 
-        const columnCount = galleryWaterfall.columnCount;
         let minIndex = 0;
-        for (let i = 1; i < columnCount; i++) {
-            if (galleryWaterfall.heights[i] < galleryWaterfall.heights[minIndex]) {
+        for (let i = 1; i < columnHeights.length; i++) {
+            if (columnHeights[i] < columnHeights[minIndex]) {
                 minIndex = i;
             }
         }
@@ -1908,10 +1911,7 @@ function appendLoadedPhotos(photos) {
         queueThumbnailLoads(card);
         bindImageLoadEvents(card);
 
-        const aspectRatio =
-            photo.width && photo.height ? photo.width / photo.height : 1.5;
-        const relativeHeight = 1000 / aspectRatio;
-        galleryWaterfall.heights[minIndex] += relativeHeight + 8;
+        columnHeights[minIndex] += calculatePhotoHeight(photo, columnWidth) + 8;
     });
 
     requestAnimationFrame(() => {
@@ -2456,6 +2456,30 @@ function calculatePhotoHeight(photo, columnWidth) {
     if (!photo.width || !photo.height) return 200; // Default fallback
     const aspectRatio = photo.width / photo.height;
     return columnWidth / aspectRatio;
+}
+
+function normalizeWaterfallColumnBaselines(state) {
+    if (!state || !Array.isArray(state.columns) || state.columns.length === 0) {
+        return 0;
+    }
+
+    const columnHeights = state.columns.map((column) => column.offsetHeight || 0);
+    const baselineHeight = Math.max(...columnHeights, 0);
+
+    state.columns.forEach((column, index) => {
+        const gap = baselineHeight - columnHeights[index];
+        if (gap <= 1) {
+            return;
+        }
+
+        const spacer = document.createElement("div");
+        spacer.className = "waterfall-column-spacer";
+        spacer.setAttribute("aria-hidden", "true");
+        spacer.style.height = `${gap}px`;
+        column.appendChild(spacer);
+    });
+
+    return baselineHeight;
 }
 
 /**
