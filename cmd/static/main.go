@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/vincentchyu/vincentchyu.github.io/pkg/config"
@@ -44,6 +45,19 @@ const localGalleryModeScript = `<script>
 window.__PHOTO_GALLERY_DATA_MODE__ = "local";
 </script>
 `
+
+const localGallerySourceScripts = `<script src="/web/photography/js/gallery.metadata.js"></script>
+<script src="/web/photography/js/gallery.thumbnail.js"></script>
+<script src="/web/photography/js/gallery.data.js"></script>
+<script src="/web/photography/js/gallery.lightbox.js"></script>
+<script src="/web/photography/js/gallery.timeline.js"></script>
+<script src="/web/photography/js/gallery.layout.js"></script>
+<script src="/web/photography/js/gallery.loader.js"></script>
+<script src="/web/photography/js/gallery.js"></script>`
+
+var galleryBundleScriptPattern = regexp.MustCompile(
+	`<script\s+src="/web/photography/dist/gallery\.bundle\.min\.js(?:\?[^"]*)?"></script>`,
+)
 
 func serveStaticWithLocalTag(w http.ResponseWriter, r *http.Request, root string) {
 	requestPath := filepath.Clean("/" + r.URL.Path)
@@ -95,10 +109,13 @@ func serveHTMLWithLocalTag(w http.ResponseWriter, path string) {
 func injectLocalGalleryMode(html []byte) []byte {
 	marker := []byte("</head>")
 	snippet := []byte(localGalleryModeScript)
+	body := html
 
-	if idx := bytes.Index(bytes.ToLower(html), marker); idx >= 0 {
-		return append(html[:idx], append(snippet, html[idx:]...)...)
+	if idx := bytes.Index(bytes.ToLower(body), marker); idx >= 0 {
+		body = append(body[:idx], append(snippet, body[idx:]...)...)
+	} else {
+		body = append(snippet, body...)
 	}
 
-	return append(snippet, html...)
+	return galleryBundleScriptPattern.ReplaceAll(body, []byte(localGallerySourceScripts))
 }

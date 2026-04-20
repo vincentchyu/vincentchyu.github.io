@@ -45,6 +45,7 @@
     -   本地 `go run cmd/static/main.go` 读取工作区内的 `web/photography/data/`。
     -   线上发布后读取 R2/CDN 的 `https://cdn-xxx.org/pages/photos-manifest.json` 和 `https://cdn-xxx.org/pages/photos/{year}.json`。
     -   `photos.json` 仅保留为旧版兼容读取兜底，不再由正常写入流程更新。
+4.  **前端发布产物**: 摄影页业务脚本源码保留在 `web/photography/js/`，线上发布前使用 `go run ./cmd/build-photography-assets` 生成 `web/photography/dist/gallery.bundle.min.js`，减少线上业务脚本请求数并压缩体积。
 
 ### 管理后台 (Admin Panel)
 
@@ -75,6 +76,8 @@ go run cmd/static/main.go
 ```
 
 访问 `http://localhost:3000` 即可预览。
+
+本地预览会自动把摄影页切回源码脚本顺序加载，因此修改 `web/photography/js/` 后无需先手动重打 bundle。
 
 #### 2. 照片管理后台 (Photo Admin Panel)
 

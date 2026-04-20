@@ -19,6 +19,7 @@ case "$1" in
     sh "$SCRIPT_DIR/build_photograph-management_launchctl.sh"
     ;;
   start)
+    go run ./cmd/build-photography-assets
     sh "$SCRIPT_DIR/start_photograph-management.sh"
     ;;
   stop)
@@ -28,6 +29,7 @@ case "$1" in
     go run cmd/update-photos/main.go
     ;;
   restart)
+    go run ./cmd/build-photography-assets
     sh "$SCRIPT_DIR/stop_photograph-management.sh"
     sh "$SCRIPT_DIR/build_photograph-management_launchctl.sh"
     sh "$SCRIPT_DIR/start_photograph-management.sh"
