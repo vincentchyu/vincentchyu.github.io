@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -26,6 +27,9 @@ var galleryBundleInputs = []string{
 }
 
 func main() {
+	checkOnly := flag.Bool("check", false, "verify the checked-in gallery bundle is up to date")
+	flag.Parse()
+
 	rootDir, err := config.ResolveRootDir("")
 	if err != nil {
 		log.Fatal(err)
@@ -35,6 +39,20 @@ func main() {
 	bundle, err := buildGalleryBundle(rootDir, galleryBundleInputs)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if *checkOnly {
+		existing, err := os.ReadFile(outputPath)
+		if err != nil {
+			log.Fatalf("read existing bundle: %v", err)
+		}
+
+		if !bytes.Equal(existing, bundle) {
+			log.Fatalf("%s is stale; run `go run ./cmd/build-photography-assets` and commit the regenerated bundle", outputPath)
+		}
+
+		log.Printf("Verified %s is up to date (%d bytes)\n", outputPath, len(bundle))
+		return
 	}
 
 	if err := os.MkdirAll(filepath.Dir(outputPath), 0o755); err != nil {

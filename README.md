@@ -46,6 +46,7 @@
     -   线上发布后读取 R2/CDN 的 `https://cdn-xxx.org/pages/photos-manifest.json` 和 `https://cdn-xxx.org/pages/photos/{year}.json`。
     -   `photos.json` 仅保留为旧版兼容读取兜底，不再由正常写入流程更新。
 4.  **前端发布产物**: 摄影页业务脚本源码保留在 `web/photography/js/`，线上发布前使用 `go run ./cmd/build-photography-assets` 生成 `web/photography/dist/gallery.bundle.min.js`，减少线上业务脚本请求数并压缩体积。
+    -   仓库内置 `go run ./cmd/build-photography-assets --check` 校验模式，可用于发布前或 CI 中检查 bundle 是否已同步更新。
 
 ### 管理后台 (Admin Panel)
 
@@ -120,6 +121,7 @@ chmod +x run.sh
 -   `start`: 启动服务。通过 `launchctl` 同时加载并启动后台和本地博客预览。
 -   `stop`: 停止服务。卸载并停止后台和本地博客预览。
 -   `update`: 手动运行照片库更新逻辑 (执行 `cmd/update-photos`)。
+-   `verify`: 校验摄影页 bundle 是否为最新构建结果，并运行 `go test ./...`。
 
 ### 目录结构 (`shell/`)
 
@@ -130,6 +132,11 @@ chmod +x run.sh
 ### 变更记录
 
 - 任何涉及目录重组、前后端分层、启动方式、API 契约或性能模型的大改动，建议同步更新 `CHANGELOG.md`，保证代码、约束和变更记录一致。
+
+## 发布与压缩
+
+- 摄影页业务 JS 的发布前校验已接入仓库工作流：本地可运行 `./run.sh verify`，CI 会执行 `go run ./cmd/build-photography-assets --check`，避免源码更新后漏提 `gallery.bundle.min.js`。
+- 当前仓库里与摄影页 JS 压缩直接相关、且真正可控的优化仍然是：bundle、minify、合理缓存。托管/CDN 侧压缩策略暂不在仓库内管理。
 
 ### 前端目录
 

@@ -10,6 +10,7 @@
 - 摄影页继续将瀑布流布局、outline heading、卡片渲染与视口锚点恢复逻辑拆入 `gallery.layout.js`，为后续收敛 loader 状态机做准备
 - 摄影页谨慎将 `loadGallery / loadShardedGallery / scheduleYearLoad / loadMoreYears / loadYearShard` 收口到 `gallery.loader.js`，主控脚本保留状态与桥接包装，降低加载状态机的扩散面
 - 新增 `go run ./cmd/build-photography-assets` 静态构建命令，将摄影页业务脚本输出为单个压缩产物 `web/photography/dist/gallery.bundle.min.js`
+- 新增 `go run ./cmd/build-photography-assets --check`、`./run.sh verify` 与 GitHub Actions 校验流程，把摄影页 bundle 新鲜度检查接入发布前流程
 - 摄影首页线上入口改为引用单个 gallery bundle，减少业务脚本请求数；本地 `cmd/static` 预览会自动回退为源码脚本顺序加载，继续直接维护源码
 - 摄影页 JS 瘦身策略明确为 bundle + minify + 版本参数缓存失效，不默认引入强混淆
 

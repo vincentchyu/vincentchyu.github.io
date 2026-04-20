@@ -1,0 +1,44 @@
+name: Photography Assets
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/photography-assets.yml"
+      - "cmd/build-photography-assets/**"
+      - "cmd/static/**"
+      - "go.mod"
+      - "go.sum"
+      - "run.sh"
+      - "web/photography/index.html"
+      - "web/photography/js/**"
+      - "web/photography/dist/gallery.bundle.min.js"
+  push:
+    paths:
+      - ".github/workflows/photography-assets.yml"
+      - "cmd/build-photography-assets/**"
+      - "cmd/static/**"
+      - "go.mod"
+      - "go.sum"
+      - "run.sh"
+      - "web/photography/index.html"
+      - "web/photography/js/**"
+      - "web/photography/dist/gallery.bundle.min.js"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Verify photography bundle is current
+        run: go run ./cmd/build-photography-assets --check
+
+      - name: Run Go tests
+        run: go test ./...
