@@ -1,6 +1,6 @@
 module github.com/vincentchyu/vincentchyu.github.io
 
-go 1.25.1
+go 1.26.2
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.40.0
@@ -11,6 +11,8 @@ require (
 	github.com/dsoprea/go-exif/v3 v3.0.1
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.11.1
+	github.com/tdewolff/minify/v2 v2.24.12
+	github.com/volcengine/ve-tos-golang-sdk/v2 v2.9.2
 	golang.org/x/image v0.33.0
 )
 
@@ -31,13 +33,11 @@ require (
 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
-	github.com/tdewolff/minify/v2 v2.24.12 // indirect
 	github.com/tdewolff/parse/v2 v2.8.11 // indirect
 	github.com/tidwall/gjson v1.14.4 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	github.com/volcengine/ve-tos-golang-sdk/v2 v2.9.2 // indirect
 	golang.org/x/net v0.0.0-20221002022538-bcab6841153b // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
