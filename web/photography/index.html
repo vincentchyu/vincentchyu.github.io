@@ -79,6 +79,7 @@
       href="/web/photography/dist/output.css"
       as="style"
     />
+    <link rel="stylesheet" href="/web/shared/styles/site-shell.css?v=2026071724" />
     <link
       rel="stylesheet"
       href="/web/photography/dist/output.css"
@@ -102,6 +103,7 @@
     </noscript>
     <!-- Alpine.js -->
     <script defer src="/web/photography/dist/cdn.min.js"></script>
+    <script defer src="/web/shared/scripts/site-shell.js?v=2026071724"></script>
     <!-- Start - Fonts -->
     <link rel="preconnect" href="https://gstatic.loli.net" crossorigin />
     <link
@@ -1120,100 +1122,7 @@
   <body
     class="dark:bg-black bg-white min-h-screen text-black dark:text-white px-5 md:px-20 opacity-0 animate-fade-in transition duration-500"
   >
-    <!-- Navbar -->
-    <header class="flex w-full overflow-hidden pt-10 pb-1">
-      <!-- Navbar -->
-      <nav id="nav" x-data="{ open: false }" role="navigation" class="w-full">
-        <div
-          class="container mx-auto flex flex-wrap items-center md:flex-no-wrap"
-        >
-          <div class="mr-4 md:mr-8">
-            <a href="../../index.html" class="text-2xl font-signika font-bold"
-              >VINCENT CHYU</a
-            >
-          </div>
-          <div class="ml-auto md:hidden flex items-center justify-start">
-            <button
-              onclick="menuToggle()"
-              @click="open = !open"
-              class="tap-highlight-transparent text-black dark:text-white w-5 h-5 relative focus:outline-none"
-              @click="open = !open"
-            >
-              <span class="sr-only">Open main menu</span>
-              <div
-                class="block w-5 absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2"
-              >
-                <span
-                  aria-hidden="true"
-                  class="block absolute h-0.5 w-5 bg-current transform transition duration-500 ease-in-out"
-                  :class="{'rotate-45': open,' -translate-y-1.5': !open }"
-                ></span>
-                <span
-                  aria-hidden="true"
-                  class="block absolute h-0.5 w-5 bg-current transform transition duration-500 ease-in-out"
-                  :class="{'opacity-0': open } "
-                ></span>
-                <span
-                  aria-hidden="true"
-                  class="block absolute h-0.5 w-5 bg-current transform transition duration-500 ease-in-out"
-                  :class="{'-rotate-45': open, ' translate-y-1.5': !open}"
-                ></span>
-              </div>
-            </button>
-          </div>
-          <div
-            id="menu"
-            class="w-full h-0 transition-all ease-out duration-500 md:transition-none md:w-auto md:flex-grow md:flex md:items-center"
-          >
-            <ul
-              id="ulMenu"
-              class="flex flex-col duration-300 ease-out md:space-x-5 sm:transition-none mt-5 md:flex-row md:items-center md:ml-auto md:mt-0 md:pt-0 md:border-0"
-            >
-              <li class="group transition duration-300">
-                <a
-                  href="index.html"
-                  class="font-signika text-2xl tap-highlight-transparent"
-                  >PORTFOLIO
-                  <span
-                    class="hidden md:block h-0.5 bg-black dark:bg-white"
-                  ></span>
-                </a>
-              </li>
-              <li class="group transition duration-300">
-                <a
-                  href="dist/about_me.html"
-                  class="font-signika text-2xl tap-highlight-transparent"
-                  >ABOUT ME
-                  <span
-                    class="hidden md:block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-black dark:bg-white"
-                  ></span>
-                </a>
-              </li>
-              <li class="group transition duration-300">
-                <a
-                  href="dist/contact.html"
-                  class="font-signika text-2xl tap-highlight-transparent"
-                  >CONTACT
-                  <span
-                    class="hidden md:block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-black dark:bg-white"
-                  ></span>
-                </a>
-              </li>
-              <li class="group transition duration-300">
-                <a
-                  href="../sonic-lens/index.html"
-                  class="font-signika text-2xl tap-highlight-transparent"
-                  >SONIC LENS
-                  <span
-                    class="hidden md:block max-w-0 group-hover:max-w-full transition-all duration-500 h-0.5 bg-black dark:bg-white"
-                  ></span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-    </header>
+    <header data-site-shell data-site-root="../../" data-site-active="portfolio"></header>
     <!-- Content -->
     <div class="container mx-auto">
       <div class="portfolio-header-container pt-10 pb-8">

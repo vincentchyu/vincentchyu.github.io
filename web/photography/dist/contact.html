@@ -16,9 +16,11 @@
       href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png"
     />
     <link rel="stylesheet" href="output.css" />
+    <link rel="stylesheet" href="/web/shared/styles/site-shell.css?v=2026071724" />
     <link rel="stylesheet" href="styles.css" />
     <!-- Alpine.js -->
     <script defer src="cdn.min.js"></script>
+    <script defer src="/web/shared/scripts/site-shell.js?v=2026071724"></script>
     <!-- Start - Fonts -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://fonts.loli.net" />
@@ -27,13 +29,19 @@
       rel="stylesheet"
     />
     <!-- End - Fonts -->
+    <style>
+      .legacy-site-nav {
+        display: none;
+      }
+    </style>
   </head>
 
   <body
     class="dark:bg-black bg-white h-screen text-black dark:text-white px-5 md:px-20 opacity-0 animate-fade-in transition duration-500"
   >
+    <header data-site-shell data-site-root="../../../" data-site-active="contact"></header>
     <!-- Navbar -->
-    <header class="flex w-full overflow-hidden pt-10 pb-1">
+    <header class="legacy-site-nav flex w-full overflow-hidden pt-10 pb-1">
       <nav id="nav" x-data="{ open: false }" role="navigation" class="w-full">
         <div
           class="container mx-auto flex flex-wrap items-center md:flex-no-wrap"

@@ -1,0 +1,226 @@
+@font-face {
+  font-family: "SiteSignika";
+  src: url("/web/shared/fonts/Roboto-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --site-shell-bg: #fff;
+  --site-shell-text: #000;
+  --site-shell-muted: rgb(75 85 99);
+  --site-shell-border: rgba(0, 0, 0, 0.12);
+  --site-shell-surface: rgba(255, 255, 255, 0.88);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --site-shell-bg: #000;
+    --site-shell-text: #fff;
+    --site-shell-muted: rgb(209 213 219);
+    --site-shell-border: rgba(255, 255, 255, 0.18);
+    --site-shell-surface: rgba(0, 0, 0, 0.82);
+  }
+}
+
+.site-shell-page {
+  margin: 0;
+  background: var(--site-shell-bg);
+  color: var(--site-shell-text);
+}
+
+.site-shell-header {
+  --site-shell-content-max: 1536px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 2.5rem 1.25rem 0.25rem;
+  color: var(--site-shell-text);
+  font-family: SiteSignika, Signika, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  position: relative;
+  z-index: 3000;
+}
+
+.site-shell-header[data-site-shell-theme="overlay"] {
+  --site-shell-text: #fff;
+  --site-shell-muted: rgba(255, 255, 255, 0.78);
+  --site-shell-border: rgba(255, 255, 255, 0.52);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.28);
+}
+
+.site-shell-inner {
+  width: 100%;
+  max-width: var(--site-shell-content-max);
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  column-gap: 1.5rem;
+  row-gap: 1rem;
+}
+
+.site-shell-brand {
+  color: currentColor;
+  text-decoration: none;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin-right: 0;
+  white-space: nowrap;
+}
+
+.site-shell-toggle {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 0;
+  margin-left: auto;
+  color: currentColor;
+  background: transparent;
+  padding: 0;
+  display: none;
+  position: relative;
+  cursor: pointer;
+}
+
+.site-shell-toggle-line {
+  position: absolute;
+  left: 0.125rem;
+  right: 0.125rem;
+  top: 50%;
+  height: 2px;
+  background: currentColor;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.site-shell-toggle-line:nth-child(1) {
+  transform: translateY(-0.42rem);
+}
+
+.site-shell-toggle-line:nth-child(3) {
+  transform: translateY(0.42rem);
+}
+
+.site-shell-header.is-open .site-shell-toggle-line:nth-child(1) {
+  transform: rotate(45deg);
+}
+
+.site-shell-header.is-open .site-shell-toggle-line:nth-child(2) {
+  opacity: 0;
+}
+
+.site-shell-header.is-open .site-shell-toggle-line:nth-child(3) {
+  transform: rotate(-45deg);
+}
+
+.site-shell-menu {
+  margin-left: auto;
+  min-width: 0;
+}
+
+.site-shell-menu ul {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.65rem, 1vw, 1rem);
+  padding: 0;
+  margin: 0;
+}
+
+.site-shell-menu a {
+  color: currentColor;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  position: relative;
+  white-space: nowrap;
+}
+
+.site-shell-menu a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.08rem;
+  height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.28s ease;
+}
+
+.site-shell-menu a:hover::after,
+.site-shell-menu a.is-active::after,
+.site-shell-menu a[aria-current="page"]::after {
+  transform: scaleX(1);
+}
+
+.site-shell-main {
+  width: min(100% - 2.5rem, 1536px);
+  margin: 0 auto;
+}
+
+body[class*="md:px-20"] > .site-shell-header {
+  --site-shell-content-max: 1536px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (min-width: 768px) {
+  .site-shell-header {
+    padding-left: 5rem;
+    padding-right: 5rem;
+  }
+
+  .site-shell-main {
+    width: min(100% - 10rem, 1536px);
+  }
+
+}
+
+@media (max-width: 1320px) {
+  .site-shell-inner {
+    flex-wrap: wrap;
+  }
+
+  .site-shell-toggle {
+    display: block;
+  }
+
+  .site-shell-menu {
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.28s ease;
+    margin-left: 0;
+  }
+
+  .site-shell-header.is-open .site-shell-menu {
+    max-height: 22rem;
+  }
+
+  .site-shell-menu ul {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    padding-top: 1.25rem;
+  }
+
+  .site-shell-menu a {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .site-shell-header[data-site-shell-theme="overlay"].is-open {
+    background: rgba(0, 0, 0, 0.62);
+    backdrop-filter: blur(18px);
+  }
+}

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-17
+
+### 新功能
+
+- 新增 `MEDIA JOURNAL` 页面，读取 `web/media/data/{book,movie,tv,music,game,podcast}.json` 并按 NeoDB 分类展示书影音封面墙、评分、记录日期和个人评论
+- 新增 `cmd/update-neodb` 数据契约约束与 `.github/workflows/neodb-refresh.yml`，支持每日拉取 NeoDB 记录并在数据变化时提交静态 JSON
+
+### 重构
+
+- 抽出 `web/shared/styles/site-shell.css` 与 `web/shared/scripts/site-shell.js` 作为公开页面统一的 `VINCENT CHYU` 基础导航框架
+- 将 HOME、PORTFOLIO、SONIC LENS、DEVELOPER TOOLS、ABOUT ME、CONTACT 接入共享导航，SonicLens 原浮动导航降级为页面二级入口
+
 ## 2026-04-20
 
 ### 重构

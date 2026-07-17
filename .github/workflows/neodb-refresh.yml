@@ -1,0 +1,49 @@
+name: NeoDB Refresh
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "18 18 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: neodb-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      NEODB_API_TOKEN: ${{ secrets.NEODB_API_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Fetch NeoDB records
+        if: ${{ env.NEODB_API_TOKEN != '' }}
+        run: go run cmd/update-neodb/main.go
+
+      - name: Configure Git
+        if: ${{ env.NEODB_API_TOKEN != '' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit changed NeoDB data
+        if: ${{ env.NEODB_API_TOKEN != '' }}
+        run: |
+          if git diff --quiet -- web/media/data; then
+            echo "NeoDB data unchanged"
+            exit 0
+          fi
+          git add web/media/data
+          git commit -m "chore: refresh neodb media data"
+          git push

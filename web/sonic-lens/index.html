@@ -65,23 +65,25 @@
     <!-- og -->
     <link rel="icon" type="image/svg+xml" href="./static/logo_black.svg" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/svg+xml" href="./static/logo.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="/web/shared/styles/site-shell.css?v=2026071724" />
+    <script defer src="/web/shared/scripts/site-shell.js?v=2026071724"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
       :root {
-        --primary-color: #3498db;
-        --secondary-color: #2ecc71;
-        --background-color: #f8f9fa;
-        --accent-color: #e74c3c;
-        --text-primary: #2c3e50;
-        --text-secondary: #7f8c8d;
-        --card-bg: rgba(255, 255, 255, 0.45);
-        --glass-border: rgba(255, 255, 255, 0.6);
-        --border-color: rgba(255, 255, 255, 0.4);
+        --primary-color: #000;
+        --secondary-color: #111827;
+        --background-color: #fff;
+        --accent-color: #000;
+        --text-primary: #000;
+        --text-secondary: rgb(75 85 99);
+        --card-bg: #fff;
+        --glass-border: rgba(0, 0, 0, 0.12);
+        --border-color: rgba(0, 0, 0, 0.12);
         /* 播放渠道颜色 */
-        --source-applemusic: #e74c3c; /* 红色 */
-        --source-audirvana: #9b59b6; /* 紫色 */
-        --source-roon: #7f8c8d; /* 灰色 */
+        --source-applemusic: #000;
+        --source-audirvana: #374151;
+        --source-roon: #6b7280;
       }
 
       /* 夜间模式 */
@@ -176,8 +178,9 @@
       }
 
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background-color: transparent;
+        font-family: ui-sans-serif, system-ui, -apple-system,
+          BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background-color: #fff;
         color: var(--text-primary);
         line-height: 1.6;
         min-height: 100vh;
@@ -249,9 +252,41 @@
       }
 
       .container {
-        max-width: 1400px;
+        width: min(100% - 2.5rem, 1536px);
+        max-width: none;
         margin: 0 auto;
-        padding: 20px;
+        padding: 0 0 5rem;
+      }
+
+      .sonic-mode-nav {
+        width: min(100% - 2.5rem, 1536px);
+        max-width: none;
+        margin: 0 auto 3rem;
+        padding: 0;
+        display: flex;
+        gap: 1.25rem;
+        align-items: center;
+      }
+
+      @media (min-width: 768px) {
+        .container,
+        .sonic-mode-nav {
+          width: min(100% - 10rem, 1536px);
+        }
+      }
+
+      .sonic-mode-nav a {
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 700;
+        border-bottom: 2px solid transparent;
+        padding: 0.2rem 0;
+        font-size: 0.95rem;
+      }
+
+      .sonic-mode-nav a:hover,
+      .sonic-mode-nav a.active {
+        border-bottom-color: currentColor;
       }
 
       /* 悬浮侧边栏导航 */
@@ -1375,9 +1410,304 @@
       .modal-body .track-info strong {
         color: var(--primary-color);
       }
+
+      /* Site shell alignment: photography minimal system */
+      .ambient-background,
+      .color-orb,
+      .module-trail,
+      .watermark,
+      .navbar {
+        display: none !important;
+      }
+
+      .sonic-page-header {
+        width: min(100% - 2.5rem, 1536px);
+        margin: 0 auto;
+        padding-top: 1.5rem;
+        padding-bottom: 2rem;
+      }
+
+      .sonic-page-title {
+        margin: 0;
+        font-size: 2.25rem;
+        line-height: 2.5rem;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      @media (min-width: 768px) {
+        .sonic-page-header {
+          width: min(100% - 10rem, 1536px);
+        }
+      }
+
+      .stat-card,
+      .chart-card,
+      .ranking-card,
+      #nowPlaying,
+      .modal-content {
+        background: #fff !important;
+        border: 1px solid rgba(0, 0, 0, 0.12) !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+
+      .stat-card:hover,
+      .chart-card:hover,
+      .ranking-card:hover {
+        transform: none;
+        border-color: rgba(0, 0, 0, 0.22) !important;
+        box-shadow: none;
+      }
+
+      .stats-container {
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+        min-width: 180px;
+      }
+
+      .stat-header {
+        margin-bottom: 0.75rem;
+      }
+
+      .stat-title,
+      .track-artist,
+      .track-album,
+      .stat-change,
+      .loading,
+      .error,
+      .progress-time {
+        color: rgb(75 85 99);
+      }
+
+      .error {
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 4px;
+      }
+
+      .stat-title {
+        font-size: 0.82rem;
+        font-weight: 600;
+      }
+
+      .stat-icon {
+        display: none;
+      }
+
+      .stat-value {
+        font-size: 1.9rem;
+        line-height: 1.1;
+        margin-bottom: 0.35rem;
+        color: #000;
+      }
+
+      .positive,
+      .negative,
+      .play-count {
+        color: #000;
+      }
+
+      .charts-container,
+      .rankings-container {
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .chart-card,
+      .ranking-card {
+        padding: 1.25rem;
+      }
+
+      .card-header {
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .card-title {
+        font-size: 1.125rem;
+        line-height: 1.5rem;
+        font-weight: 700;
+        color: #000;
+      }
+
+      .time-filters {
+        gap: 0.65rem;
+        flex-wrap: wrap;
+        background: transparent;
+        border-radius: 0;
+        padding: 0;
+      }
+
+      .time-filter,
+      .fullscreen-btn {
+        appearance: none;
+        background: transparent;
+        color: #000;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        padding: 0.15rem 0;
+        font-size: 0.86rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: border-color 0.2s ease, color 0.2s ease;
+      }
+
+      .time-filter:hover,
+      .time-filter.active,
+      .fullscreen-btn:hover {
+        background: transparent;
+        color: #000;
+        border-color: currentColor;
+        box-shadow: none;
+      }
+
+      .time-filter:disabled {
+        color: rgb(156 163 175);
+        border-color: transparent;
+        cursor: not-allowed;
+      }
+
+      .ranking-item {
+        padding: 0.85rem 0;
+        border-bottom-color: rgba(0, 0, 0, 0.12);
+      }
+
+      .rank-number {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0;
+        background: #fff !important;
+        color: #000 !important;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+      }
+
+      .play-source,
+      .source-applemusic,
+      .source-audirvana,
+      .source-roon {
+        background: transparent;
+        color: rgb(75 85 99);
+        border: 1px solid rgba(0, 0, 0, 0.16);
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      #nowPlaying {
+        top: auto;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        width: 280px;
+        padding: 1rem;
+        color: #000;
+      }
+
+      .now-playing-header {
+        margin: -1rem -1rem 1rem;
+        padding: 0.65rem 1rem;
+      }
+
+      .now-playing-header h4 {
+        font-size: 0.95rem;
+        line-height: 1.35;
+      }
+
+      .drag-handle,
+      .minimize-handle,
+      .favorite-button.unliked {
+        color: rgb(107 114 128);
+      }
+
+      .favorite-button.liked,
+      .progress-fill,
+      .progress-thumb {
+        color: #000;
+        background-color: #000;
+      }
+
+      .progress-track {
+        height: 4px;
+        background-color: rgba(0, 0, 0, 0.12);
+        border-radius: 0;
+      }
+
+      .progress-fill {
+        border-radius: 0;
+      }
+
+      .modal {
+        background-color: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(6px);
+      }
+
+      .modal-content {
+        max-width: 640px;
+      }
+
+      .modal-header h2 {
+        font-size: 1.25rem;
+        line-height: 1.6rem;
+      }
+
+      #unscrobbledContainer table {
+        font-size: 0.9rem;
+      }
+
+      #unscrobbledContainer table th,
+      #unscrobbledContainer table td {
+        border-color: rgba(0, 0, 0, 0.12) !important;
+      }
+
+      @media (max-width: 768px) {
+        .sonic-page-header,
+        .container,
+        .sonic-mode-nav {
+          width: min(100% - 2.5rem, 1536px);
+        }
+
+        .sonic-mode-nav {
+          margin-bottom: 2rem;
+        }
+
+        .stats-container {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #nowPlaying {
+          left: 1.25rem;
+          right: 1.25rem;
+          width: auto;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 0 0 4rem;
+        }
+
+        .chart-card,
+        .ranking-card,
+        .stat-card {
+          padding: 1rem;
+        }
+
+        .stats-container {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
-  <body>
+  <body class="site-shell-page">
+    <header data-site-shell data-site-root="../../" data-site-active="sonic"></header>
     <!-- 动态氛围背景层：高级极光流光效果 -->
     <div class="ambient-background">
       <div class="color-orb orb-1"></div>
@@ -1426,19 +1756,13 @@
       </div>
     </div>
 
-    <!-- 悬浮侧边导航栏 -->
-    <nav class="navbar">
-      <div class="navbar-content">
-        <a href="./" class="logo">
-          <span class="logo-icon">🎵</span>
-          <span class="logo-text">收听习惯及偏好分布</span>
-        </a>
-        <ul class="nav-links">
-          <li><a href="./" class="active" title="仪表板">🏠<span class="nav-text">仪表板</span></a></li>
-          <li><a href="#" id="unscrobbledTab" title="未上报">📦<span class="nav-text">未上报</span></a></li>
-          <li><a href="../../web/photography/" title="光绘集">📸<span class="nav-text">光绘集</span></a></li>
-        </ul>
-      </div>
+    <section class="sonic-page-header">
+      <h1 class="sonic-page-title">SONIC LENS</h1>
+    </section>
+
+    <nav class="sonic-mode-nav" aria-label="Sonic Lens views">
+      <a href="./" class="active">仪表板</a>
+      <a href="#" id="unscrobbledTab">未上报</a>
     </nav>
 
     <div class="container">
@@ -3892,7 +4216,7 @@
               "block";
 
             // 更新导航栏活动状态
-            document.querySelectorAll(".nav-links a").forEach((link) => {
+            document.querySelectorAll(".sonic-mode-nav a").forEach((link) => {
               link.classList.remove("active");
             });
             this.classList.add("active");

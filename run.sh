@@ -25,8 +25,11 @@ case "$1" in
   stop)
     sh "$SCRIPT_DIR/stop_photograph-management.sh"
     ;;
-  update)
+  updatep)
     go run cmd/update-photos/main.go
+    ;;
+  updaten)
+    go run cmd/update-neodb/main.go
     ;;
   verify)
     go run ./cmd/build-photography-assets --check
@@ -39,11 +42,12 @@ case "$1" in
     sh "$SCRIPT_DIR/start_photograph-management.sh"
     ;;
   *)
-    echo "用法: $0 {init|start|stop|update|verify|restart}"
+    echo "用法: $0 {init|start|stop|updatep|updaten|verify|restart}"
     echo "  init   初始化并安装 admin + 静态预览的 LaunchAgent"
     echo "  start  同时启动照片管理后台(:3002)和本地博客预览(:3000)"
     echo "  stop   停止上述两个本地服务"
-    echo "  update 运行照片更新"
+    echo "  updatep 运行照片更新"
+    echo "  updaten 运行 NeoDB 书影音数据更新"
     echo "  verify 校验摄影 bundle 是否最新，并运行 Go 测试"
     exit 1
     ;;

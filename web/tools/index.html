@@ -66,6 +66,8 @@
     <link rel="icon" href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png" />
     <link rel="apple-touch-icon" href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png">
     <link rel="apple-touch-icon-precomposed" href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png">
+    <link rel="stylesheet" href="/web/shared/styles/site-shell.css?v=2026071724" />
+    <script defer src="/web/shared/scripts/site-shell.js?v=2026071724"></script>
     
     <!-- js-yaml library for YAML conversion -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
@@ -93,19 +95,27 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--dark-bg);
+            background: #fff;
             color: var(--text-primary);
             line-height: 1.6;
             min-height: 100vh;
-            padding: 20px;
+            padding: 0;
         }
 
-        .container {
-            max-width: 1200px;
+        .tools-app {
+            width: min(100% - 2.5rem, 1536px);
+            max-width: none;
             margin: 0 auto;
+            padding: 30px 20px 60px;
         }
 
-        header {
+        @media (min-width: 768px) {
+            .tools-app {
+                width: min(100% - 10rem, 1536px);
+            }
+        }
+
+        .tools-app > header {
             text-align: center;
             margin-bottom: 40px;
             padding: 30px 20px;
@@ -114,7 +124,7 @@
             box-shadow: var(--shadow);
         }
 
-        header h1 {
+        .tools-app > header h1 {
             font-size: 2.5em;
             background: var(--primary-gradient);
             -webkit-background-clip: text;
@@ -123,7 +133,7 @@
             margin-bottom: 10px;
         }
 
-        header p {
+        .tools-app > header p {
             color: var(--text-secondary);
             font-size: 1.1em;
         }
@@ -257,7 +267,7 @@
             margin-top: 20px;
         }
 
-        button {
+        .tools-app button {
             padding: 12px 28px;
             background: var(--primary-gradient);
             border: none;
@@ -270,21 +280,21 @@
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
-        button:hover {
+        .tools-app button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
 
-        button:active {
+        .tools-app button:active {
             transform: translateY(0);
         }
 
-        button.secondary {
+        .tools-app button.secondary {
             background: var(--success-gradient);
             box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
         }
 
-        button.secondary:hover {
+        .tools-app button.secondary:hover {
             box-shadow: 0 6px 20px rgba(79, 172, 254, 0.4);
         }
 
@@ -683,7 +693,7 @@
                 padding: 20px;
             }
 
-            button {
+            .tools-app button {
                 width: 100%;
             }
         }
@@ -917,8 +927,9 @@
 
     </style>
 </head>
-<body>
-    <div class="container">
+<body class="site-shell-page">
+    <header data-site-shell data-site-root="../../" data-site-active="tools"></header>
+    <div class="tools-app">
         <header>
             <h1>🛠️ Developer Tools</h1>
             <p>实用的在线开发者工具集合</p>

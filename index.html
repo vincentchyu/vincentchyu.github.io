@@ -65,6 +65,7 @@
     <link rel="icon" href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png" />
     <link rel="apple-touch-icon" href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png">
     <link rel="apple-touch-icon-precomposed" href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png">
+    <link rel="stylesheet" href="web/shared/styles/site-shell.css?v=2026071724" />
 
     <style>
         * {
@@ -141,6 +142,7 @@
                 overflow-y: auto;
                 -webkit-overflow-scrolling: touch;
                 padding-bottom: 100px; /* Ensure enough space at bottom */
+                padding-top: 120px;
                 /* Ensure container is above fixed background overlay (z-index: 1) */
                 position: relative; 
                 z-index: 2;
@@ -176,7 +178,7 @@
                 position: relative;
                 top: auto;
                 transform: none;
-                margin: 80px auto 40px;
+                margin: 0 auto 40px;
                 display: block;
                 height: auto;
             }
@@ -327,6 +329,7 @@
     </style>
 
     <script src="web/shared/scripts/index.js"></script>
+    <script defer src="web/shared/scripts/site-shell.js?v=2026071724"></script>
     <script src="https://use.typekit.net/nlq1kdt.js"></script>
     <script>try {
         Typekit.load({async: true});
@@ -334,6 +337,7 @@
     }</script>
 </head>
 <body style="overflow:hidden">
+<header data-site-shell data-site-root="./" data-site-active="home" data-site-shell-theme="overlay"></header>
 <video id="background_video" loop muted playsinline></video>
 <div id="video_cover"></div>
 <div id="overlay"></div>
@@ -351,7 +355,6 @@
 
     <section id="main_content">
         <div id="head">
-            <h1>VINCENT CHYU'S BLOG</h1>
             <p class="info">Code mirrors life, striving for the perfect logical loop</p>
             <br>
             <p class="info"></p>
@@ -365,12 +368,13 @@
             <p class="info"><span id="sitetime"></span></p>
             <p class="info">since 2019</p>
         </div>
-        <div id="links">
-            <!--<a href="web/before/html/index_cydia.html">cydia packages</a>-->
+       <!-- <div id="links">
+            &lt;!&ndash;<a href="web/before/html/index_cydia.html">cydia packages</a>&ndash;&gt;
             <a href="web/tools/">developer tools</a>
             <a href="web/sonic-lens">sonic lens</a>
+            <a href="web/media/">media journal</a>
             <a href="web/photography/">photography portfolio</a>
-        </div>
+        </div>-->
     </section>
 </div>
 
