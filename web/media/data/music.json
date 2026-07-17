@@ -1,6 +1,18 @@
 [
   {
     "item": {
+      "uuid": "7RFPB8S3bZDGU9o0fMPLBo",
+      "title": "黑梦",
+      "cover_image_url": "https://neodb.social/m/item/discogs_release/2024/12/11/db661d7e-291e-424e-80fc-3a3644838e8e.jpg",
+      "category": "music",
+      "brief": "《窦唯：黑梦》1994年，窦唯《黑梦》发行。他与张楚、何勇共称为“魔岩三杰”。他在离开黑豹乐队后，窦唯更加展现出与众不同的音乐天才，这张专辑无不流露一种黑色的弥幻色彩",
+      "url": "/album/7RFPB8S3bZDGU9o0fMPLBo",
+      "rating": 9.3
+    },
+    "created_time": "2026-07-17T06:06:27.288Z"
+  },
+  {
+    "item": {
       "uuid": "4n45tWYFNvQr0z64GBB9yK",
       "title": "万能青年旅店",
       "cover_image_url": "https://neodb.social/m/item/musicbrainz_releasegroup/2026/05/24/f96657dd-ec1b-4495-8238-06e7f1c61bf9.jpg",
@@ -13,17 +25,6 @@
   },
   {
     "item": {
-      "uuid": "0sehgbzUoxl2ioViKOih7r",
-      "title": "Mahal",
-      "cover_image_url": "https://neodb.social/m/item/doubanmusic/2024/08/08/33fea182-b928-4b37-be36-7207b0ef133d.jpg",
-      "category": "music",
-      "url": "/album/0sehgbzUoxl2ioViKOih7r",
-      "rating": 7.8
-    },
-    "created_time": "2026-07-08T14:00:00Z"
-  },
-  {
-    "item": {
       "uuid": "2JijjtZBJhIH8uahKKKQtz",
       "title": "OK Computer",
       "cover_image_url": "https://neodb.social/m/album/2021/09/15b7c2da05-75f9-4d79-a1af-ec3025467aec.jpg",
@@ -31,6 +32,17 @@
       "brief": "Radiohead's third studio album, produced by Nigel Godrich.\n\nRelease dates:\nJapan - May 21, 1997\nUK - June 16, 1997\nUS - July 1, 1997",
       "url": "/album/2JijjtZBJhIH8uahKKKQtz",
       "rating": 9.3
+    },
+    "created_time": "2026-07-08T14:00:00Z"
+  },
+  {
+    "item": {
+      "uuid": "0sehgbzUoxl2ioViKOih7r",
+      "title": "Mahal",
+      "cover_image_url": "https://neodb.social/m/item/doubanmusic/2024/08/08/33fea182-b928-4b37-be36-7207b0ef133d.jpg",
+      "category": "music",
+      "url": "/album/0sehgbzUoxl2ioViKOih7r",
+      "rating": 7.8
     },
     "created_time": "2026-07-08T14:00:00Z"
   },
