@@ -31,7 +31,7 @@
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  margin: 0 0 3rem;
+  margin: 0 0 0.9rem;
 }
 
 .media-tabs a {
@@ -45,6 +45,14 @@
 
 .media-tabs a:hover {
   border-bottom-color: currentColor;
+}
+
+.media-intro {
+  margin: 0 0 3rem;
+  max-width: 42rem;
+  color: rgb(107 114 128);
+  font-size: 0.78rem;
+  line-height: 1.7;
 }
 
 .media-section {
@@ -113,6 +121,15 @@
   line-height: 1.35;
 }
 
+.media-rating {
+  color: #b8860b;
+  font-weight: 700;
+}
+
+.media-date {
+  color: inherit;
+}
+
 .media-comment {
   margin: 0.55rem 0 0;
   color: #111827;
@@ -152,6 +169,7 @@
   }
 
   .media-footer,
+  .media-intro,
   .media-count,
   .media-meta,
   .media-empty,
@@ -172,6 +190,10 @@
 
   .media-comment {
     color: #f9fafb;
+  }
+
+  .media-rating {
+    color: #d4af37;
   }
 }
 

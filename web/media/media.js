@@ -38,7 +38,7 @@
     const personal = Number(record.rating || 0);
     const itemRating = Number(record.item?.rating || 0);
     if (personal > 0) return `我的评分 ${personal.toLocaleString("zh-CN")}/10`;
-    if (itemRating > 0) return `NeoDB ${itemRating.toLocaleString("zh-CN")}/10`;
+    if (itemRating > 0) return `${itemRating.toLocaleString("zh-CN")}/10`;
     return "";
   }
 
@@ -66,7 +66,10 @@
     const title = item.title || "未命名条目";
     const date = formatDate(record.created_time);
     const rating = ratingText(record);
-    const meta = [rating, date].filter(Boolean).join(" · ");
+    const meta = [
+      rating ? `<span class="media-rating">${escapeHTML(rating)}</span>` : "",
+      date ? `<span class="media-date">${escapeHTML(date)}</span>` : "",
+    ].filter(Boolean).join(" · ");
     const comment = record.comment ? `<p class="media-comment">${escapeHTML(record.comment)}</p>` : "";
     const url = normalizeNeoDBURL(item.url);
     const cover = item.cover_image_url || item.cover || fallbackCover(title);
@@ -77,7 +80,7 @@
           <img class="media-cover" src="${cover}" alt="${escapeHTML(title)}封面" loading="lazy" />
           <h3 class="media-card-title">${escapeHTML(title)}</h3>
         </a>
-        <div class="media-meta">${escapeHTML(meta || item.category || "")}</div>
+        <div class="media-meta">${meta || escapeHTML(item.category || "")}</div>
         ${comment}
       </article>
     `;
