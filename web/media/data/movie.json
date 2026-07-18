@@ -145,6 +145,18 @@
   },
   {
     "item": {
+      "uuid": "1bgVODaWCBKlCQ1AuGlLzC",
+      "title": "椒麻堂会",
+      "cover_image_url": "https://neodb.social/m/movie/2021/09/154f638fbd-6de6-4c12-92b1-295005155f66.jpg",
+      "category": "movie",
+      "brief": "演员过日子，举手投足就是一幕幕川剧，癫狂、苦涩、地道，烟火气刺鼻。百年的生活史，大大小小，就这样在舞台上下踉跄展开。",
+      "url": "/movie/1bgVODaWCBKlCQ1AuGlLzC",
+      "rating": 8.8
+    },
+    "created_time": "2023-07-18T13:54:00Z"
+  },
+  {
+    "item": {
       "uuid": "5gLS4djxVa0Zn8XVdQGenK",
       "title": "迷墙",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2023/12/15/fcd1cc9e-af42-4437-b8c1-216b7d744e21.webp",
