@@ -95,6 +95,13 @@
   text-decoration: none;
 }
 
+.media-cover-wrap {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
 .media-cover {
   aspect-ratio: 2 / 3;
   width: 100%;
@@ -102,6 +109,61 @@
   display: block;
   background: #f3f4f6;
   border: 0;
+}
+
+.media-hover-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding: 0.85rem;
+  color: #fff;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.08) 0%,
+    rgba(0, 0, 0, 0.62) 48%,
+    rgba(0, 0, 0, 0.86) 100%
+  );
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition: opacity 180ms ease, transform 180ms ease;
+  pointer-events: none;
+}
+
+.media-cover-link:hover .media-hover-card,
+.media-cover-link:focus-visible .media-hover-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.media-hover-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.media-hover-row strong {
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.media-hover-comment {
+  margin: 0;
+  color: #fff;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
 }
 
 .media-card--music .media-cover {
@@ -113,6 +175,9 @@
   font-size: 0.95rem;
   line-height: 1.25;
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .media-meta {
@@ -128,17 +193,6 @@
 
 .media-date {
   color: inherit;
-}
-
-.media-comment {
-  margin: 0.55rem 0 0;
-  color: #111827;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
 }
 
 .media-empty,
@@ -183,13 +237,10 @@
     border-color: rgba(255, 255, 255, 0.18);
   }
 
-  .media-cover {
+  .media-cover,
+  .media-cover-wrap {
     background: #111;
     border-color: rgba(255, 255, 255, 0.14);
-  }
-
-  .media-comment {
-    color: #f9fafb;
   }
 
   .media-rating {

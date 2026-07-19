@@ -35,57 +35,6 @@ type PhotoAdminService struct {
 	extractor  photo.ExifExtractor
 }
 
-type ListPhotosPageRequest struct {
-	Cursor string
-	Limit  int
-	Search string
-	Year   string
-	Status string
-}
-
-type PhotoListItem struct {
-	Filename   string          `json:"filename"`
-	Path       string          `json:"path"`
-	Thumbnail  string          `json:"thumbnail"`
-	Alt        string          `json:"alt"`
-	Year       string          `json:"year"`
-	Month      string          `json:"month"`
-	Date       string          `json:"date"`
-	Width      int             `json:"width,omitempty"`
-	Height     int             `json:"height,omitempty"`
-	IsHidden   bool            `json:"is_hidden"`
-	Subject    []string        `json:"Subject,omitempty"`
-	SourceURLs PhotoSourceURLs `json:"source_urls"`
-}
-
-type PhotoListPage struct {
-	Items       []PhotoListItem `json:"items"`
-	NextCursor  string          `json:"next_cursor,omitempty"`
-	HasMore     bool            `json:"has_more"`
-	TotalCount  int             `json:"total_count"`
-	HiddenCount int             `json:"hidden_count"`
-	Years       []string        `json:"years"`
-}
-
-type PhotoSourceURL struct {
-	Path      string `json:"path"`
-	Thumbnail string `json:"thumbnail"`
-}
-
-type PhotoSourceURLs struct {
-	R2  PhotoSourceURL `json:"r2"`
-	TOS PhotoSourceURL `json:"tos"`
-}
-
-type GallerySourceResponse struct {
-	Config   photo.GallerySourceConfig   `json:"config"`
-	Statuses []photo.GallerySourceStatus `json:"statuses"`
-}
-
-type GallerySourceUpdateRequest struct {
-	ActiveSource photo.GallerySource `json:"active_source"`
-}
-
 func NewPhotoAdminService(
 	rootDir string,
 	imagesDir string,
@@ -530,17 +479,6 @@ func collectYears(albums []photo.YearAlbum) []string {
 		years = append(years, album.Year)
 	}
 	return years
-}
-
-func decodeCursor(cursor string) (int, error) {
-	if cursor == "" {
-		return 0, nil
-	}
-	return strconv.Atoi(cursor)
-}
-
-func encodeCursor(offset int) string {
-	return strconv.Itoa(offset)
 }
 
 func (s *PhotoAdminService) findPhotoLocation(filename string) (string, photo.Photo, error) {

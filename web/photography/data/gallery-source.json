@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "active_source": "r2",
+  "active_source": "tos",
   "sources": {
     "r2": {
       "public_base": "https://cdn-photography-img-vincent.chyu.org"
@@ -9,5 +9,5 @@
       "public_base": "https://photography.tos-cn-guangzhou.volces.com"
     }
   },
-  "updated_at": "2026-06-28T12:16:50Z"
+  "updated_at": "2026-07-19T08:44:07Z"
 }

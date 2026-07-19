@@ -9,6 +9,8 @@
 
 ### 重构
 
+- 将 NeoDB 更新逻辑从 `cmd/update-neodb` 下沉到 `internal/neodb`，命令入口仅保留环境解析与执行编排；Media 卡片改为展示作品发行/出版日期，标记日期收敛到封面 hover 信息
+- 将照片管理后台的共享请求/响应类型与分页 cursor 工具拆出到独立文件，降低 `internal/admin` 单文件职责密度
 - 抽出 `web/shared/styles/site-shell.css` 与 `web/shared/scripts/site-shell.js` 作为公开页面统一的 `VINCENT CHYU` 基础导航框架
 - 将 HOME、PORTFOLIO、SONIC LENS、DEVELOPER TOOLS、ABOUT ME、CONTACT 接入共享导航，SonicLens 原浮动导航降级为页面二级入口
 

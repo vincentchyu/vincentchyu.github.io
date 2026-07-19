@@ -25,6 +25,7 @@
 
   function formatDate(value) {
     if (!value) return "";
+    if (/^\d{4}(?:-\d{2})?$/.test(value)) return value;
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "";
     return date.toLocaleDateString("zh-CN", {
@@ -34,12 +35,16 @@
     });
   }
 
-  function ratingText(record) {
-    const personal = Number(record.rating || 0);
-    const itemRating = Number(record.item?.rating || 0);
-    if (personal > 0) return `我的评分 ${personal.toLocaleString("zh-CN")}/10`;
-    if (itemRating > 0) return `${itemRating.toLocaleString("zh-CN")}/10`;
-    return "";
+  function personalRatingText(record) {
+    const rating = Number(record.rating_grade || record.rating || 0);
+    if (rating <= 0) return "";
+    return `${rating.toLocaleString("zh-CN")}/10`;
+  }
+
+  function itemRatingText(record) {
+    const rating = Number(record.item?.rating || 0);
+    if (rating <= 0) return "";
+    return `${rating.toLocaleString("zh-CN")}/10`;
   }
 
   function fallbackCover(title) {
@@ -64,24 +69,36 @@
   function renderCard(record, category) {
     const item = record.item || {};
     const title = item.title || "未命名条目";
-    const date = formatDate(record.created_time);
-    const rating = ratingText(record);
+    const markedDate = formatDate(record.created_time);
+    const releaseDate = formatDate(item.release_date);
+    const itemRating = itemRatingText(record);
+    const personalRating = personalRatingText(record);
+    const commentText = record.comment_text || record.comment || "";
     const meta = [
-      rating ? `<span class="media-rating">${escapeHTML(rating)}</span>` : "",
-      date ? `<span class="media-date">${escapeHTML(date)}</span>` : "",
+      itemRating ? `<span class="media-rating">${escapeHTML(itemRating)}</span>` : "",
+      releaseDate ? `<span class="media-date">${escapeHTML(releaseDate)}</span>` : "",
     ].filter(Boolean).join(" · ");
-    const comment = record.comment ? `<p class="media-comment">${escapeHTML(record.comment)}</p>` : "";
     const url = normalizeNeoDBURL(item.url);
     const cover = item.cover_image_url || item.cover || fallbackCover(title);
+    const hoverRows = [
+      personalRating ? `<div class="media-hover-row"><span>我的评分</span><strong>${escapeHTML(personalRating)}</strong></div>` : "",
+      commentText ? `<p class="media-hover-comment">${escapeHTML(commentText)}</p>` : "",
+      markedDate ? `<div class="media-hover-row"><span>标记日期</span><strong>${escapeHTML(markedDate)}</strong></div>` : "",
+    ].filter(Boolean).join("");
+    const hoverCard = hoverRows
+      ? `<div class="media-hover-card" aria-hidden="true">${hoverRows}</div>`
+      : "";
 
     return `
       <article class="media-card media-card--${category.id}">
         <a class="media-cover-link" href="${url}" target="_blank" rel="noreferrer">
-          <img class="media-cover" src="${cover}" alt="${escapeHTML(title)}封面" loading="lazy" />
-          <h3 class="media-card-title">${escapeHTML(title)}</h3>
+          <span class="media-cover-wrap">
+            <img class="media-cover" src="${cover}" alt="${escapeHTML(title)}封面" loading="lazy" />
+            ${hoverCard}
+          </span>
+          <h3 class="media-card-title" title="${escapeHTML(title)}">${escapeHTML(title)}</h3>
         </a>
         <div class="media-meta">${meta || escapeHTML(item.category || "")}</div>
-        ${comment}
       </article>
     `;
   }

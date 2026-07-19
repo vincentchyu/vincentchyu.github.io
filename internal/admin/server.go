@@ -18,42 +18,6 @@ import (
 	"github.com/vincentchyu/vincentchyu.github.io/pkg/config"
 )
 
-// AdminServer manages the photo admin HTTP server
-type AdminServer struct {
-	rootDir      string
-	photosPath   string
-	imagesDir    string
-	galleryStore *photo.GalleryStore
-	service      *PhotoAdminService
-	publishers   *storage.PublisherRegistry
-	mu           sync.RWMutex
-	rebuildTask  *RebuildTask
-	rebuildMutex sync.Mutex
-}
-
-// RebuildTask tracks the status of a rebuild operation
-type RebuildTask struct {
-	Status    string    `json:"status"` // "idle", "running", "completed", "failed"
-	Progress  int       `json:"progress"`
-	Message   string    `json:"message"`
-	StartTime time.Time `json:"start_time,omitempty"`
-	EndTime   time.Time `json:"end_time,omitempty"`
-	Logs      []string  `json:"logs"`
-}
-
-// PhotoUpdateRequest represents a photo metadata update request
-type PhotoUpdateRequest struct {
-	Alt      *string  `json:"alt,omitempty"`
-	IsHidden *bool    `json:"is_hidden,omitempty"`
-	Subject  []string `json:"Subject,omitempty"`
-}
-
-// BatchUpdateRequest represents a batch update request
-type BatchUpdateRequest struct {
-	Filenames []string           `json:"filenames"`
-	Updates   PhotoUpdateRequest `json:"updates"`
-}
-
 // NewAdminServer creates a new admin server instance
 func NewAdminServer() (*AdminServer, error) {
 	rootDir, err := config.ResolveRootDir("")
