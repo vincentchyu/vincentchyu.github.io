@@ -88,12 +88,17 @@
     const hoverCard = hoverRows
       ? `<div class="media-hover-card" aria-hidden="true">${hoverRows}</div>`
       : "";
+    const commentIndicator = commentText
+      ? `<span class="media-comment-indicator" title="有我的短评" aria-hidden="true"></span>`
+      : "";
+    const hasPersonalDetails = Boolean(personalRating || commentText);
 
     return `
-      <article class="media-card media-card--${category.id}">
+      <article class="media-card media-card--${category.id}"${hasPersonalDetails ? ' data-touch-preview="true"' : ""}>
         <a class="media-cover-link" href="${url}" target="_blank" rel="noreferrer">
           <span class="media-cover-wrap">
             <img class="media-cover" src="${cover}" alt="${escapeHTML(title)}封面" loading="lazy" />
+            ${commentIndicator}
             ${hoverCard}
           </span>
           <h3 class="media-card-title" title="${escapeHTML(title)}">${escapeHTML(title)}</h3>
@@ -101,6 +106,35 @@
         <div class="media-meta">${meta || escapeHTML(item.category || "")}</div>
       </article>
     `;
+  }
+
+  function isTouchPreviewDevice() {
+    return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+  }
+
+  function clearActiveCards(exceptCard) {
+    document.querySelectorAll(".media-card.is-active").forEach((card) => {
+      if (card !== exceptCard) card.classList.remove("is-active");
+    });
+  }
+
+  function handleTouchPreviewClick(event) {
+    if (!isTouchPreviewDevice()) return;
+
+    const link = event.target.closest(".media-cover-link");
+    if (!link || !event.target.closest(".media-cover-wrap")) {
+      clearActiveCards(null);
+      return;
+    }
+
+    const card = link.closest('.media-card[data-touch-preview="true"]');
+    if (!card) return;
+
+    if (!card.classList.contains("is-active")) {
+      event.preventDefault();
+      clearActiveCards(card);
+      card.classList.add("is-active");
+    }
   }
 
   function renderCategory(category, records) {
@@ -140,6 +174,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("click", handleTouchPreviewClick);
     categories.forEach(loadCategory);
   });
 })();

@@ -111,6 +111,28 @@
   border: 0;
 }
 
+.media-comment-indicator {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 2;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #d93025;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.media-cover-link:hover .media-comment-indicator,
+.media-cover-link:focus-visible .media-comment-indicator,
+.media-card.is-active .media-comment-indicator {
+  opacity: 0;
+  transform: scale(0.72);
+}
+
 .media-hover-card {
   position: absolute;
   inset: 0;
@@ -133,7 +155,8 @@
 }
 
 .media-cover-link:hover .media-hover-card,
-.media-cover-link:focus-visible .media-hover-card {
+.media-cover-link:focus-visible .media-hover-card,
+.media-card.is-active .media-hover-card {
   opacity: 1;
   transform: translateY(0);
 }
