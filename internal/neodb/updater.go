@@ -94,6 +94,13 @@ func (u *Updater) Run() error {
 			log.Printf("Error fetching category %s: %v", category, err)
 			continue
 		}
+		existingRecords, err := u.readCategory(category)
+		if err != nil {
+			log.Printf("  ⚠ %s cache skipped: %v", category, err)
+		}
+		if cached := applyCachedReleaseDates(records, existingRecords); cached > 0 {
+			log.Printf("  Reused %d cached release dates", cached)
+		}
 		u.client.EnrichReleaseDates(category, records)
 
 		if err := u.writeCategory(category, records); err != nil {
@@ -104,6 +111,50 @@ func (u *Updater) Run() error {
 	}
 
 	return nil
+}
+
+func (u *Updater) readCategory(category string) ([]Record, error) {
+	fileData, err := os.ReadFile(u.categoryPath(category))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("read existing category: %w", err)
+	}
+
+	var records []Record
+	if err := json.Unmarshal(fileData, &records); err != nil {
+		return nil, fmt.Errorf("unmarshal existing category: %w", err)
+	}
+	return records, nil
+}
+
+func applyCachedReleaseDates(records []Record, cachedRecords []Record) int {
+	if len(records) == 0 || len(cachedRecords) == 0 {
+		return 0
+	}
+
+	releaseDatesByUUID := make(map[string]string, len(cachedRecords))
+	for _, record := range cachedRecords {
+		if record.Item.UUID == "" || record.Item.ReleaseDate == "" {
+			continue
+		}
+		releaseDatesByUUID[record.Item.UUID] = record.Item.ReleaseDate
+	}
+
+	applied := 0
+	for i := range records {
+		if records[i].Item.UUID == "" || records[i].Item.ReleaseDate != "" {
+			continue
+		}
+		releaseDate := releaseDatesByUUID[records[i].Item.UUID]
+		if releaseDate == "" {
+			continue
+		}
+		records[i].Item.ReleaseDate = releaseDate
+		applied++
+	}
+	return applied
 }
 
 func (u *Updater) writeCategory(category string, records []Record) error {

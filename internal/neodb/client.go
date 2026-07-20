@@ -96,6 +96,7 @@ func (c *Client) fetchShelfPage(category string, page int) (ShelfResponse, error
 }
 
 func (c *Client) fetchReleaseDate(endpoint string, uuid string) (string, error) {
+	log.Printf("  fetchReleaseDate %s: uuid %s", endpoint, uuid)
 	url := fmt.Sprintf("%s/%s/%s", baseURL, endpoint, uuid)
 	req, err := c.newRequest(url)
 	if err != nil {
