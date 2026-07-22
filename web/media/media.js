@@ -11,13 +11,14 @@
   const GRID_MIN_CARD_WIDTH = 140;
   const MIN_PAGE_ROWS = 1;
   const MAX_PAGE_ROWS = 4;
-  const CARD_TEXT_HEIGHT = 56;
+  const DEFAULT_CARD_TEXT_HEIGHT = 56;
   const MOBILE_MEDIA_QUERY = "(max-width: 720px)";
   const GRID_BOTTOM_GAP = 14;
 
   const state = {
     activeCategoryId: "music",
     categories: {},
+    anchorNavigationRequested: false,
     pendingScrollCategoryId: "",
     total: 0,
     loaded: 0,
@@ -165,11 +166,45 @@
     image.src = image.dataset.fallbackCover || fallbackCover(image.alt);
   }
 
+  function paginationItems(page, totalPages) {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const pages = new Set([1, totalPages]);
+    for (let pageNumber = page - 1; pageNumber <= page + 1; pageNumber++) {
+      if (pageNumber > 1 && pageNumber < totalPages) pages.add(pageNumber);
+    }
+
+    if (page <= 3) {
+      pages.add(2);
+      pages.add(3);
+      pages.add(4);
+    }
+    if (page >= totalPages - 2) {
+      pages.add(totalPages - 3);
+      pages.add(totalPages - 2);
+      pages.add(totalPages - 1);
+    }
+
+    const orderedPages = [...pages].sort((a, b) => a - b);
+    return orderedPages.reduce((items, pageNumber, index) => {
+      const previous = orderedPages[index - 1];
+      if (previous && pageNumber - previous > 1) items.push("ellipsis");
+      items.push(pageNumber);
+      return items;
+    }, []);
+  }
+
   function renderPagination(category, page, totalPages) {
     if (totalPages <= 1) return "";
 
-    const pageButtons = Array.from({ length: totalPages }, (_, index) => {
-      const pageNumber = index + 1;
+    const pageButtons = paginationItems(page, totalPages).map((item, index) => {
+      if (item === "ellipsis") {
+        return `<span class="media-page-ellipsis" aria-hidden="true" data-ellipsis-index="${index}">...</span>`;
+      }
+
+      const pageNumber = item;
       return `
         <button
           class="media-page-button${pageNumber === page ? " is-active" : ""}"
@@ -215,15 +250,34 @@
     if (slot) slot.innerHTML = markup || "";
   }
 
+  function notifyPageContentReady() {
+    document.dispatchEvent(new CustomEvent("site-shell:content-ready"));
+    if (!state.anchorNavigationRequested || isMobileViewport()) return;
+    window.setTimeout(() => {
+      window.scrollTo({ top: pageAnchorTop(), left: 0, behavior: "auto" });
+      if (Math.abs(document.querySelector(".media-title")?.getBoundingClientRect().top || 0) <= 1) {
+        state.anchorNavigationRequested = false;
+        if (window.location.search.includes("site-page-anchor=1")) {
+          history.replaceState(history.state, "", window.location.pathname + window.location.hash);
+        }
+      }
+    }, 0);
+  }
+
+  function pageAnchorTop() {
+    if (window.SiteShell?.pageAnchorTop) return window.SiteShell.pageAnchorTop();
+    const title = document.querySelector(".media-title");
+    return title ? title.getBoundingClientRect().top + window.scrollY : 0;
+  }
+
   function activePageGridHeight(section) {
-    const tabs = document.querySelector(".media-tabs");
     const body = section.querySelector(".media-section-body");
     const bottomBar = document.querySelector(".media-bottom-bar");
-    if (!tabs || !body) return 0;
+    if (!body) return 0;
 
-    const tabsTop = tabs.getBoundingClientRect().top + window.scrollY;
+    const mediaTop = pageAnchorTop();
     const bodyTop = body.getBoundingClientRect().top + window.scrollY;
-    const bodyTopAfterScroll = Math.max(0, bodyTop - tabsTop);
+    const bodyTopAfterScroll = Math.max(0, bodyTop - mediaTop);
     const bottomBarHeight = bottomBar?.getBoundingClientRect().height || 0;
     const bottomBarTop = isMobileViewport()
       ? window.innerHeight
@@ -234,15 +288,14 @@
 
   function updateScrollSpacer() {
     const main = document.querySelector(".media-main");
-    const tabs = document.querySelector(".media-tabs");
-    if (!main || !tabs) return;
+    if (!main) return;
 
     main.style.paddingBottom = "";
     if (isMobileViewport()) return;
 
-    const tabsOffset = tabs.getBoundingClientRect().top + window.scrollY;
+    const mediaOffset = pageAnchorTop();
     const mainBottom = main.getBoundingClientRect().bottom + window.scrollY;
-    const requiredBottom = window.innerHeight + tabsOffset;
+    const requiredBottom = window.innerHeight + mediaOffset;
     const spacer = Math.max(0, Math.ceil(requiredBottom - mainBottom));
     main.style.paddingBottom = `calc(2rem + ${spacer}px)`;
   }
@@ -252,12 +305,16 @@
     if (isMobileViewport() && categoryState) return Math.max(1, categoryState.records.length);
 
     const body = section.querySelector(".media-section-body");
+    const grid = body?.querySelector(".media-grid");
+    const firstCard = grid?.querySelector(".media-card");
     const width = body?.clientWidth || section.clientWidth || window.innerWidth;
-    const gap = 16;
-    const columns = Math.max(1, Math.floor((width + gap) / (GRID_MIN_CARD_WIDTH + gap)));
-    const cardWidth = (width - gap * (columns - 1)) / columns;
-    const rowHeight = cardWidth * category.coverHeightRatio + CARD_TEXT_HEIGHT;
-    const rowGap = 22;
+    const columnGap = parseFloat(grid ? getComputedStyle(grid).columnGap : "") || 16;
+    const rowGap = parseFloat(grid ? getComputedStyle(grid).rowGap : "") || 22;
+    const columns = Math.max(1, Math.floor((width + columnGap) / (GRID_MIN_CARD_WIDTH + columnGap)));
+    const cardWidth = (width - columnGap * (columns - 1)) / columns;
+    const measuredRowHeight = firstCard?.getBoundingClientRect().height || 0;
+    const estimatedRowHeight = cardWidth * category.coverHeightRatio + DEFAULT_CARD_TEXT_HEIGHT;
+    const rowHeight = measuredRowHeight > 0 ? measuredRowHeight : estimatedRowHeight;
     const availableHeight = Math.max(rowHeight, activePageGridHeight(section));
     const rows = clamp(
       Math.floor((availableHeight + rowGap) / (rowHeight + rowGap)),
@@ -268,13 +325,13 @@
     return Math.max(1, columns * rows);
   }
 
-  function scrollTabsIntoView() {
+  function scrollMediaIntoView() {
     if (isMobileViewport()) return;
-    const tabs = document.querySelector(".media-tabs");
-    if (!tabs) return;
-
-    const top = tabs.getBoundingClientRect().top + window.scrollY;
-    window.scrollTo({ top, left: 0, behavior: "auto" });
+    if (window.SiteShell?.scrollToPageAnchor) {
+      window.SiteShell.scrollToPageAnchor({ behavior: "auto" });
+      return;
+    }
+    window.scrollTo({ top: pageAnchorTop(), left: 0, behavior: "auto" });
   }
 
   function renderCategoryPage(category) {
@@ -303,6 +360,17 @@
       <div class="media-grid">${pageRecords.map((record) => renderCard(record, category)).join("")}</div>
     `;
     renderBottomPagination(renderPagination(category, page, totalPages));
+    notifyPageContentReady();
+    requestAnimationFrame(() => {
+      if (state.activeCategoryId !== category.id) return;
+      const nextPageSize = calculatePageSize(category, section);
+      if (nextPageSize === categoryState.pageSize) return;
+
+      categoryState.renderKey = "";
+      renderCategoryPage(category);
+      updateScrollSpacer();
+      notifyPageContentReady();
+    });
   }
 
   function renderActiveCategory() {
@@ -320,6 +388,7 @@
         body.innerHTML = `<div class="media-empty">还没有${category.label}记录。</div>`;
       }
       renderBottomPagination("");
+      notifyPageContentReady();
       return;
     }
 
@@ -330,12 +399,12 @@
     renderActiveCategory();
     updateScrollSpacer();
 
-    if (!options.scrollToTabs) return;
+    if (!options.scrollToMedia) return;
 
     requestAnimationFrame(() => {
       updateScrollSpacer();
-      scrollTabsIntoView();
-      requestAnimationFrame(scrollTabsIntoView);
+      scrollMediaIntoView();
+      requestAnimationFrame(scrollMediaIntoView);
     });
   }
 
@@ -362,11 +431,11 @@
       history.pushState({ mediaCategory: category.id }, "", `#${category.id}`);
     }
 
-    if (options.scrollToTabs) {
+    if (options.scrollToMedia) {
       state.pendingScrollCategoryId = category.id;
     }
 
-    syncActiveView({ scrollToTabs: options.scrollToTabs });
+    syncActiveView({ scrollToMedia: options.scrollToMedia });
     if (state.categories[category.id]) state.pendingScrollCategoryId = "";
   }
 
@@ -388,7 +457,7 @@
     body.innerHTML = "";
     if (category.id === state.activeCategoryId) {
       const shouldScroll = state.pendingScrollCategoryId === category.id;
-      syncActiveView({ scrollToTabs: shouldScroll });
+      syncActiveView({ scrollToMedia: shouldScroll });
       if (shouldScroll) state.pendingScrollCategoryId = "";
     }
 
@@ -396,6 +465,7 @@
       const total = document.getElementById("media-total");
       if (total) total.textContent = `${state.total} 条记录`;
       updateScrollSpacer();
+      notifyPageContentReady();
     }
   }
 
@@ -416,14 +486,14 @@
 
     clearActiveCards(null);
     categoryState.page = nextPage;
-    syncActiveView({ scrollToTabs: true });
+    syncActiveView({ scrollToMedia: true });
   }
 
   function handleTabClick(event) {
     const tab = event.target.closest("[data-media-tab]");
     if (!tab) return;
 
-    setActiveCategory(tab.dataset.mediaTab, { updateURL: true, scrollToTabs: true });
+    setActiveCategory(tab.dataset.mediaTab, { updateURL: true, scrollToMedia: true });
   }
 
   function handleTabKeydown(event) {
@@ -446,7 +516,7 @@
     const nextIndex = (currentIndex + offset + categories.length) % categories.length;
     const nextTab = document.querySelector(`[data-media-tab="${categories[nextIndex].id}"]`);
     nextTab?.focus();
-    setActiveCategory(categories[nextIndex].id, { updateURL: true, scrollToTabs: true });
+    setActiveCategory(categories[nextIndex].id, { updateURL: true, scrollToMedia: true });
   }
 
   function handleResize() {
@@ -470,6 +540,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     state.activeCategoryId = categoryIdFromHash();
+    state.anchorNavigationRequested = window.location.search.includes("site-page-anchor=1");
     setActiveCategory(state.activeCategoryId);
     document.addEventListener("error", handleCoverError, true);
     document.addEventListener("click", handleTouchPreviewClick);
@@ -477,7 +548,7 @@
     document.addEventListener("click", handleTabClick);
     document.addEventListener("keydown", handleTabKeydown);
     window.addEventListener("popstate", () => {
-      setActiveCategory(categoryIdFromHash(), { scrollToTabs: true });
+      setActiveCategory(categoryIdFromHash(), { scrollToMedia: true });
     });
     window.addEventListener("resize", handleResize);
     categories.forEach(loadCategory);

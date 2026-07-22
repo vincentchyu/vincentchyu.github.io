@@ -272,6 +272,19 @@
   padding: 0 0.7rem;
 }
 
+.media-page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.2rem;
+  min-height: 2.2rem;
+  color: rgb(107 114 128);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  user-select: none;
+}
+
 .media-page-button:hover:not(:disabled),
 .media-page-button.is-active {
   border-color: currentColor;
@@ -368,6 +381,7 @@
   .media-count,
   .media-meta,
   .media-page-button,
+  .media-page-ellipsis,
   .media-empty,
   .media-error {
     color: rgb(209 213 219);
