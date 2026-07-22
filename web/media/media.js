@@ -1,20 +1,39 @@
 (function () {
   const categories = [
-    { id: "music", label: "音乐" },
-    { id: "book", label: "书籍" },
-    { id: "movie", label: "电影" },
-    { id: "tv", label: "剧集" },
-    { id: "game", label: "游戏" },
-    { id: "podcast", label: "播客" },
+    { id: "music", label: "音乐", coverHeightRatio: 1 },
+    { id: "book", label: "书籍", coverHeightRatio: 1.5 },
+    { id: "movie", label: "电影", coverHeightRatio: 1.5 },
+    { id: "tv", label: "剧集", coverHeightRatio: 1.5 },
+    { id: "game", label: "游戏", coverHeightRatio: 1.5 },
+    { id: "podcast", label: "播客", coverHeightRatio: 1.5 },
   ];
 
+  const GRID_MIN_CARD_WIDTH = 140;
+  const MIN_PAGE_ROWS = 1;
+  const MAX_PAGE_ROWS = 4;
+  const CARD_TEXT_HEIGHT = 56;
+  const MOBILE_MEDIA_QUERY = "(max-width: 720px)";
+  const GRID_BOTTOM_GAP = 14;
+
   const state = {
+    activeCategoryId: "music",
+    categories: {},
+    pendingScrollCategoryId: "",
     total: 0,
     loaded: 0,
   };
 
   function normalizeRecords(value) {
     return Array.isArray(value) ? value : [];
+  }
+
+  function categoryById(id) {
+    return categories.find((category) => category.id === id);
+  }
+
+  function categoryIdFromHash() {
+    const hash = window.location.hash.replace(/^#/, "").replace(/^media-/, "");
+    return categoryById(hash) ? hash : "music";
   }
 
   function normalizeNeoDBURL(url) {
@@ -79,7 +98,8 @@
       releaseDate ? `<span class="media-date">${escapeHTML(releaseDate)}</span>` : "",
     ].filter(Boolean).join(" · ");
     const url = normalizeNeoDBURL(item.url);
-    const cover = item.cover_image_url || item.cover || fallbackCover(title);
+    const fallback = fallbackCover(title);
+    const cover = item.cover_image_url || item.cover || fallback;
     const hoverRows = [
       personalRating ? `<div class="media-hover-row"><span>我的评分</span><strong>${escapeHTML(personalRating)}</strong></div>` : "",
       commentText ? `<p class="media-hover-comment">${escapeHTML(commentText)}</p>` : "",
@@ -97,7 +117,7 @@
       <article class="media-card media-card--${category.id}"${hasPersonalDetails ? ' data-touch-preview="true"' : ""}>
         <a class="media-cover-link" href="${url}" target="_blank" rel="noreferrer">
           <span class="media-cover-wrap">
-            <img class="media-cover" src="${cover}" alt="${escapeHTML(title)}封面" loading="lazy" />
+            <img class="media-cover" src="${escapeHTML(cover)}" data-fallback-cover="${escapeHTML(fallback)}" alt="${escapeHTML(title)}封面" loading="lazy" />
             ${commentIndicator}
             ${hoverCard}
           </span>
@@ -137,25 +157,300 @@
     }
   }
 
+  function handleCoverError(event) {
+    const image = event.target.closest?.(".media-cover");
+    if (!image || image.dataset.fallbackApplied === "true") return;
+
+    image.dataset.fallbackApplied = "true";
+    image.src = image.dataset.fallbackCover || fallbackCover(image.alt);
+  }
+
+  function renderPagination(category, page, totalPages) {
+    if (totalPages <= 1) return "";
+
+    const pageButtons = Array.from({ length: totalPages }, (_, index) => {
+      const pageNumber = index + 1;
+      return `
+        <button
+          class="media-page-button${pageNumber === page ? " is-active" : ""}"
+          type="button"
+          data-media-page="${pageNumber}"
+          data-media-category="${category.id}"
+          aria-current="${pageNumber === page ? "page" : "false"}"
+        >${pageNumber}</button>
+      `;
+    }).join("");
+
+    return `
+      <nav class="media-pagination" aria-label="${escapeHTML(category.label)}分页">
+        <button
+          class="media-page-button"
+          type="button"
+          data-media-page="${page - 1}"
+          data-media-category="${category.id}"
+          ${page === 1 ? "disabled" : ""}
+        >上一页</button>
+        <div class="media-page-numbers">${pageButtons}</div>
+        <button
+          class="media-page-button"
+          type="button"
+          data-media-page="${page + 1}"
+          data-media-category="${category.id}"
+          ${page === totalPages ? "disabled" : ""}
+        >下一页</button>
+      </nav>
+    `;
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function isMobileViewport() {
+    return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
+  }
+
+  function renderBottomPagination(markup) {
+    const slot = document.getElementById("media-pagination-slot");
+    if (slot) slot.innerHTML = markup || "";
+  }
+
+  function activePageGridHeight(section) {
+    const tabs = document.querySelector(".media-tabs");
+    const body = section.querySelector(".media-section-body");
+    const bottomBar = document.querySelector(".media-bottom-bar");
+    if (!tabs || !body) return 0;
+
+    const tabsTop = tabs.getBoundingClientRect().top + window.scrollY;
+    const bodyTop = body.getBoundingClientRect().top + window.scrollY;
+    const bodyTopAfterScroll = Math.max(0, bodyTop - tabsTop);
+    const bottomBarHeight = bottomBar?.getBoundingClientRect().height || 0;
+    const bottomBarTop = isMobileViewport()
+      ? window.innerHeight
+      : window.innerHeight - bottomBarHeight;
+
+    return Math.max(0, bottomBarTop - bodyTopAfterScroll - GRID_BOTTOM_GAP);
+  }
+
+  function updateScrollSpacer() {
+    const main = document.querySelector(".media-main");
+    const tabs = document.querySelector(".media-tabs");
+    if (!main || !tabs) return;
+
+    main.style.paddingBottom = "";
+    if (isMobileViewport()) return;
+
+    const tabsOffset = tabs.getBoundingClientRect().top + window.scrollY;
+    const mainBottom = main.getBoundingClientRect().bottom + window.scrollY;
+    const requiredBottom = window.innerHeight + tabsOffset;
+    const spacer = Math.max(0, Math.ceil(requiredBottom - mainBottom));
+    main.style.paddingBottom = `calc(2rem + ${spacer}px)`;
+  }
+
+  function calculatePageSize(category, section) {
+    const categoryState = state.categories[category.id];
+    if (isMobileViewport() && categoryState) return Math.max(1, categoryState.records.length);
+
+    const body = section.querySelector(".media-section-body");
+    const width = body?.clientWidth || section.clientWidth || window.innerWidth;
+    const gap = 16;
+    const columns = Math.max(1, Math.floor((width + gap) / (GRID_MIN_CARD_WIDTH + gap)));
+    const cardWidth = (width - gap * (columns - 1)) / columns;
+    const rowHeight = cardWidth * category.coverHeightRatio + CARD_TEXT_HEIGHT;
+    const rowGap = 22;
+    const availableHeight = Math.max(rowHeight, activePageGridHeight(section));
+    const rows = clamp(
+      Math.floor((availableHeight + rowGap) / (rowHeight + rowGap)),
+      MIN_PAGE_ROWS,
+      MAX_PAGE_ROWS,
+    );
+
+    return Math.max(1, columns * rows);
+  }
+
+  function scrollTabsIntoView() {
+    if (isMobileViewport()) return;
+    const tabs = document.querySelector(".media-tabs");
+    if (!tabs) return;
+
+    const top = tabs.getBoundingClientRect().top + window.scrollY;
+    window.scrollTo({ top, left: 0, behavior: "auto" });
+  }
+
+  function renderCategoryPage(category) {
+    const section = document.getElementById(`media-${category.id}`);
+    const categoryState = state.categories[category.id];
+    if (!section || !categoryState) return;
+
+    const body = section.querySelector(".media-section-body");
+    const { records } = categoryState;
+    const pageSize = calculatePageSize(category, section);
+    const totalPages = Math.max(1, Math.ceil(records.length / pageSize));
+    const page = clamp(categoryState.page, 1, totalPages);
+    const start = (page - 1) * pageSize;
+    const pageRecords = records.slice(start, start + pageSize);
+    const renderKey = `${page}:${pageSize}:${records.length}`;
+    categoryState.page = page;
+    categoryState.pageSize = pageSize;
+
+    if (categoryState.renderKey === renderKey && body.querySelector(".media-grid")) {
+      renderBottomPagination(renderPagination(category, page, totalPages));
+      return;
+    }
+
+    categoryState.renderKey = renderKey;
+    body.innerHTML = `
+      <div class="media-grid">${pageRecords.map((record) => renderCard(record, category)).join("")}</div>
+    `;
+    renderBottomPagination(renderPagination(category, page, totalPages));
+  }
+
+  function renderActiveCategory() {
+    const category = categoryById(state.activeCategoryId);
+    const categoryState = category ? state.categories[category.id] : null;
+    if (!category || !categoryState) return;
+
+    const section = document.getElementById(`media-${category.id}`);
+    const body = section?.querySelector(".media-section-body");
+    if (!body) return;
+
+    if (categoryState.records.length === 0) {
+      if (categoryState.renderKey !== "empty") {
+        categoryState.renderKey = "empty";
+        body.innerHTML = `<div class="media-empty">还没有${category.label}记录。</div>`;
+      }
+      renderBottomPagination("");
+      return;
+    }
+
+    renderCategoryPage(category);
+  }
+
+  function syncActiveView(options = {}) {
+    renderActiveCategory();
+    updateScrollSpacer();
+
+    if (!options.scrollToTabs) return;
+
+    requestAnimationFrame(() => {
+      updateScrollSpacer();
+      scrollTabsIntoView();
+      requestAnimationFrame(scrollTabsIntoView);
+    });
+  }
+
+  function setActiveCategory(categoryId, options = {}) {
+    const category = categoryById(categoryId) || categories[0];
+    state.activeCategoryId = category.id;
+    clearActiveCards(null);
+
+    categories.forEach((item) => {
+      const isActive = item.id === category.id;
+      const tab = document.querySelector(`[data-media-tab="${item.id}"]`);
+      const section = document.getElementById(`media-${item.id}`);
+
+      if (tab) {
+        tab.classList.toggle("is-active", isActive);
+        tab.setAttribute("aria-selected", String(isActive));
+        tab.tabIndex = isActive ? 0 : -1;
+      }
+
+      if (section) section.hidden = !isActive;
+    });
+
+    if (options.updateURL) {
+      history.pushState({ mediaCategory: category.id }, "", `#${category.id}`);
+    }
+
+    if (options.scrollToTabs) {
+      state.pendingScrollCategoryId = category.id;
+    }
+
+    syncActiveView({ scrollToTabs: options.scrollToTabs });
+    if (state.categories[category.id]) state.pendingScrollCategoryId = "";
+  }
+
   function renderCategory(category, records) {
     const section = document.getElementById(`media-${category.id}`);
     if (!section) return;
     const list = normalizeRecords(records);
+    state.categories[category.id] = {
+      page: 1,
+      pageSize: 0,
+      renderKey: "",
+      records: list,
+    };
     state.total += list.length;
     state.loaded += 1;
 
     section.querySelector(".media-count").textContent = `${list.length} 条记录`;
     const body = section.querySelector(".media-section-body");
-    if (list.length === 0) {
-      body.innerHTML = `<div class="media-empty">还没有${category.label}记录。</div>`;
-    } else {
-      body.innerHTML = `<div class="media-grid">${list.map((record) => renderCard(record, category)).join("")}</div>`;
+    body.innerHTML = "";
+    if (category.id === state.activeCategoryId) {
+      const shouldScroll = state.pendingScrollCategoryId === category.id;
+      syncActiveView({ scrollToTabs: shouldScroll });
+      if (shouldScroll) state.pendingScrollCategoryId = "";
     }
 
     if (state.loaded === categories.length) {
       const total = document.getElementById("media-total");
       if (total) total.textContent = `${state.total} 条记录`;
+      updateScrollSpacer();
     }
+  }
+
+  function handlePaginationClick(event) {
+    const button = event.target.closest("[data-media-page][data-media-category]");
+    if (!button) return;
+
+    const categoryId = button.dataset.mediaCategory;
+    const categoryState = state.categories[categoryId];
+    const category = categories.find((item) => item.id === categoryId);
+    if (!categoryState || !category) return;
+
+    const section = document.getElementById(`media-${category.id}`);
+    const pageSize = section ? calculatePageSize(category, section) : categoryState.pageSize;
+    const totalPages = Math.max(1, Math.ceil(categoryState.records.length / pageSize));
+    const nextPage = Number(button.dataset.mediaPage);
+    if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalPages) return;
+
+    clearActiveCards(null);
+    categoryState.page = nextPage;
+    syncActiveView({ scrollToTabs: true });
+  }
+
+  function handleTabClick(event) {
+    const tab = event.target.closest("[data-media-tab]");
+    if (!tab) return;
+
+    setActiveCategory(tab.dataset.mediaTab, { updateURL: true, scrollToTabs: true });
+  }
+
+  function handleTabKeydown(event) {
+    const tab = event.target.closest("[data-media-tab]");
+    if (!tab) return;
+
+    const currentIndex = categories.findIndex((category) => category.id === tab.dataset.mediaTab);
+    if (currentIndex < 0) return;
+
+    const keyMap = {
+      ArrowLeft: -1,
+      ArrowUp: -1,
+      ArrowRight: 1,
+      ArrowDown: 1,
+    };
+    const offset = keyMap[event.key];
+    if (!offset) return;
+
+    event.preventDefault();
+    const nextIndex = (currentIndex + offset + categories.length) % categories.length;
+    const nextTab = document.querySelector(`[data-media-tab="${categories[nextIndex].id}"]`);
+    nextTab?.focus();
+    setActiveCategory(categories[nextIndex].id, { updateURL: true, scrollToTabs: true });
+  }
+
+  function handleResize() {
+    syncActiveView();
   }
 
   async function loadCategory(category) {
@@ -174,7 +469,17 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    state.activeCategoryId = categoryIdFromHash();
+    setActiveCategory(state.activeCategoryId);
+    document.addEventListener("error", handleCoverError, true);
     document.addEventListener("click", handleTouchPreviewClick);
+    document.addEventListener("click", handlePaginationClick);
+    document.addEventListener("click", handleTabClick);
+    document.addEventListener("keydown", handleTabKeydown);
+    window.addEventListener("popstate", () => {
+      setActiveCategory(categoryIdFromHash(), { scrollToTabs: true });
+    });
+    window.addEventListener("resize", handleResize);
     categories.forEach(loadCategory);
   });
 })();

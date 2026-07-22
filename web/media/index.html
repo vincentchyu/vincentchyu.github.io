@@ -27,9 +27,9 @@
       href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png"
     />
     <link rel="stylesheet" href="/web/shared/styles/site-shell.css?v=2026071724" />
-    <link rel="stylesheet" href="./media.css?v=2026071724" />
+    <link rel="stylesheet" href="./media.css?v=2026071734" />
     <script defer src="/web/shared/scripts/site-shell.js?v=2026071724"></script>
-    <script defer src="./media.js?v=2026071724"></script>
+    <script defer src="./media.js?v=2026071734"></script>
   </head>
   <body class="media-page site-shell-page">
     <header data-site-shell data-site-root="../../" data-site-active="media"></header>
@@ -39,19 +39,19 @@
         <h1 class="media-title">MEDIA</h1>
       </section>
 
-      <nav class="media-tabs" aria-label="书影音分类">
-        <a href="#media-music">音乐</a>
-        <a href="#media-book">书籍</a>
-        <a href="#media-movie">电影</a>
-        <a href="#media-tv">剧集</a>
-        <a href="#media-game">游戏</a>
-        <a href="#media-podcast">播客</a>
+      <nav class="media-tabs" role="tablist" aria-label="书影音分类">
+        <button class="media-tab" id="media-tab-music" type="button" role="tab" data-media-tab="music" aria-controls="media-music">音乐</button>
+        <button class="media-tab" id="media-tab-book" type="button" role="tab" data-media-tab="book" aria-controls="media-book">书籍</button>
+        <button class="media-tab" id="media-tab-movie" type="button" role="tab" data-media-tab="movie" aria-controls="media-movie">电影</button>
+        <button class="media-tab" id="media-tab-tv" type="button" role="tab" data-media-tab="tv" aria-controls="media-tv">剧集</button>
+        <button class="media-tab" id="media-tab-game" type="button" role="tab" data-media-tab="game" aria-controls="media-game">游戏</button>
+        <button class="media-tab" id="media-tab-podcast" type="button" role="tab" data-media-tab="podcast" aria-controls="media-podcast">播客</button>
       </nav>
       <p class="media-intro">
         记录这些已经看过、听过或玩过的书籍、电影、专辑、剧集、游戏和播客记录。放在这里，也只是放在这里。给自己看或给你看。
       </p>
 
-      <section class="media-section" id="media-music">
+      <section class="media-section" id="media-music" role="tabpanel" aria-labelledby="media-tab-music">
         <div class="media-section-head">
           <h2>音乐</h2>
           <span class="media-count">加载中</span>
@@ -59,7 +59,7 @@
         <div class="media-section-body"></div>
       </section>
 
-      <section class="media-section" id="media-book">
+      <section class="media-section" id="media-book" role="tabpanel" aria-labelledby="media-tab-book" hidden>
         <div class="media-section-head">
           <h2>书籍</h2>
           <span class="media-count">加载中</span>
@@ -67,7 +67,7 @@
         <div class="media-section-body"></div>
       </section>
 
-      <section class="media-section" id="media-movie">
+      <section class="media-section" id="media-movie" role="tabpanel" aria-labelledby="media-tab-movie" hidden>
         <div class="media-section-head">
           <h2>电影</h2>
           <span class="media-count">加载中</span>
@@ -75,7 +75,7 @@
         <div class="media-section-body"></div>
       </section>
 
-      <section class="media-section" id="media-tv">
+      <section class="media-section" id="media-tv" role="tabpanel" aria-labelledby="media-tab-tv" hidden>
         <div class="media-section-head">
           <h2>剧集</h2>
           <span class="media-count">加载中</span>
@@ -83,7 +83,7 @@
         <div class="media-section-body"></div>
       </section>
 
-      <section class="media-section" id="media-game">
+      <section class="media-section" id="media-game" role="tabpanel" aria-labelledby="media-tab-game" hidden>
         <div class="media-section-head">
           <h2>游戏</h2>
           <span class="media-count">加载中</span>
@@ -91,7 +91,7 @@
         <div class="media-section-body"></div>
       </section>
 
-      <section class="media-section" id="media-podcast">
+      <section class="media-section" id="media-podcast" role="tabpanel" aria-labelledby="media-tab-podcast" hidden>
         <div class="media-section-head">
           <h2>播客</h2>
           <span class="media-count">加载中</span>
@@ -99,10 +99,15 @@
         <div class="media-section-body"></div>
       </section>
 
-      <footer class="media-footer">
-        <div id="media-total">正在加载记录</div>
-        <div>每日从 NeoDB 更新</div>
-      </footer>
+      <div class="media-bottom-bar">
+        <div class="media-bottom-inner">
+          <div id="media-pagination-slot" class="media-pagination-slot"></div>
+          <footer class="media-footer">
+            <div id="media-total">正在加载记录</div>
+            <div>每日从 NeoDB 更新</div>
+          </footer>
+        </div>
+      </div>
     </main>
   </body>
 </html>

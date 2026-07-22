@@ -8,14 +8,14 @@
 
 .media-main {
   padding-top: 0;
-  padding-bottom: 5rem;
+  padding-bottom: 2rem;
 }
 
 .media-hero {
   display: block;
   border-bottom: 0;
   padding-top: 1.5rem;
-  padding-bottom: 2rem;
+  padding-bottom: 1.35rem;
 }
 
 .media-title {
@@ -31,24 +31,35 @@
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
-  margin: 0 0 0.9rem;
+  margin: 0 0 0.45rem;
 }
 
-.media-tabs a {
-  color: inherit;
-  text-decoration: none;
+.media-tab {
+  appearance: none;
+  border: 0;
   border-bottom: 2px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
   padding: 0.2rem 0;
   font-weight: 700;
   font-size: 0.95rem;
 }
 
-.media-tabs a:hover {
+.media-tab:hover,
+.media-tab:focus-visible,
+.media-tab.is-active {
+  border-bottom-color: currentColor;
+}
+
+.media-tab:focus-visible {
+  outline: 0;
   border-bottom-color: currentColor;
 }
 
 .media-intro {
-  margin: 0 0 3rem;
+  margin: 0 0 0.4rem;
   max-width: 42rem;
   color: rgb(107 114 128);
   font-size: 0.78rem;
@@ -57,26 +68,29 @@
 
 .media-section {
   scroll-margin-top: 7rem;
-  margin-top: 3.75rem;
+  margin-top: 0.45rem;
+}
+
+.media-section[hidden] {
+  display: none;
 }
 
 .media-section-head {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.35rem;
 }
 
 .media-section h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  line-height: 2rem;
+  display: none;
 }
 
 .media-count {
   color: rgb(75 85 99);
   font-size: 0.86rem;
+  line-height: 1.1;
 }
 
 .media-grid {
@@ -218,6 +232,58 @@
   color: inherit;
 }
 
+.media-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+.media-pagination-slot:empty {
+  display: none;
+}
+
+.media-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.media-page-button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  min-height: 2.2rem;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 0 0.7rem;
+}
+
+.media-page-button:hover:not(:disabled),
+.media-page-button.is-active {
+  border-color: currentColor;
+  background: #000;
+  color: #fff;
+}
+
+.media-page-button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
 .media-empty,
 .media-error {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
@@ -225,8 +291,16 @@
   color: rgb(75 85 99);
 }
 
+.media-bottom-bar {
+  margin: 2rem auto 0;
+}
+
+.media-bottom-inner {
+  width: 100%;
+}
+
 .media-footer {
-  margin: 5rem auto 0;
+  margin: 0 auto;
   max-width: 44rem;
   color: rgb(107 114 128);
   font-size: 0.82rem;
@@ -239,6 +313,50 @@
   margin: 0 0 0.85rem;
 }
 
+@media (min-width: 721px) {
+  .media-main {
+    padding-bottom: 0;
+  }
+
+  .media-bottom-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    margin: 0;
+    padding: 0.5rem 0 calc(0.55rem + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .media-bottom-inner {
+    width: min(100% - 2.5rem, 1536px);
+    margin: 0 auto;
+  }
+
+  .media-pagination-slot {
+    min-height: 2.2rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .media-pagination-slot:empty {
+    display: block;
+  }
+
+  .media-footer {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+}
+
+@media (min-width: 768px) {
+  .media-bottom-inner {
+    width: min(100% - 10rem, 1536px);
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   .media-page {
     background: #000;
@@ -249,9 +367,15 @@
   .media-intro,
   .media-count,
   .media-meta,
+  .media-page-button,
   .media-empty,
   .media-error {
     color: rgb(209 213 219);
+  }
+
+  .media-bottom-bar {
+    background: rgba(0, 0, 0, 0.88);
+    border-color: rgba(255, 255, 255, 0.16);
   }
 
   .media-hero,
@@ -269,6 +393,16 @@
   .media-rating {
     color: #d4af37;
   }
+
+  .media-page-button {
+    border-color: rgba(255, 255, 255, 0.24);
+  }
+
+  .media-page-button:hover:not(:disabled),
+  .media-page-button.is-active {
+    background: #fff;
+    color: #000;
+  }
 }
 
 @media (max-width: 720px) {
@@ -278,5 +412,15 @@
 
   .media-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .media-pagination {
+    align-items: stretch;
+    justify-content: flex-start;
+    overflow-x: auto;
+  }
+
+  .media-page-numbers {
+    flex: 0 0 auto;
   }
 }
