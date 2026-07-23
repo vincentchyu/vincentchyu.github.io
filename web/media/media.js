@@ -252,16 +252,14 @@
 
   function notifyPageContentReady() {
     document.dispatchEvent(new CustomEvent("site-shell:content-ready"));
-    if (!state.anchorNavigationRequested || isMobileViewport()) return;
-    window.setTimeout(() => {
-      window.scrollTo({ top: pageAnchorTop(), left: 0, behavior: "auto" });
-      if (Math.abs(document.querySelector(".media-title")?.getBoundingClientRect().top || 0) <= 1) {
-        state.anchorNavigationRequested = false;
-        if (window.location.search.includes("site-page-anchor=1")) {
-          history.replaceState(history.state, "", window.location.pathname + window.location.hash);
-        }
-      }
-    }, 0);
+    if (!state.anchorNavigationRequested) return;
+
+    state.anchorNavigationRequested = false;
+    window.SiteShell?.schedulePageAnchorScroll({
+      behavior: "auto",
+      cleanHash: true,
+      cleanQuery: true,
+    });
   }
 
   function pageAnchorTop() {
@@ -326,12 +324,7 @@
   }
 
   function scrollMediaIntoView() {
-    if (isMobileViewport()) return;
-    if (window.SiteShell?.scrollToPageAnchor) {
-      window.SiteShell.scrollToPageAnchor({ behavior: "auto" });
-      return;
-    }
-    window.scrollTo({ top: pageAnchorTop(), left: 0, behavior: "auto" });
+    window.SiteShell?.scrollToPageAnchor({ behavior: "auto" });
   }
 
   function renderCategoryPage(category) {
@@ -540,7 +533,8 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     state.activeCategoryId = categoryIdFromHash();
-    state.anchorNavigationRequested = window.location.search.includes("site-page-anchor=1");
+    state.anchorNavigationRequested = window.location.search.includes("site-page-anchor=1")
+      || window.location.hash === "#site-page-anchor";
     setActiveCategory(state.activeCategoryId);
     document.addEventListener("error", handleCoverError, true);
     document.addEventListener("click", handleTouchPreviewClick);
