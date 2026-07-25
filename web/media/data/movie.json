@@ -1,11 +1,22 @@
 [
   {
     "item": {
+      "uuid": "17di0KLMu15MEcT2rGavEC",
+      "title": "阿基尔，上帝的愤怒",
+      "cover_image_url": "https://neodb.social/m/item/tmdb_movie/2025/06/07/9726c402-774e-4a54-958f-196ac8d8186c.jpg",
+      "category": "movie",
+      "url": "/movie/17di0KLMu15MEcT2rGavEC",
+      "rating": 8.2,
+      "release_date": "1972-12-29"
+    },
+    "created_time": "2026-07-25T10:42:53.678Z"
+  },
+  {
+    "item": {
       "uuid": "2dAgkdTUYKaaIArlOeKQOv",
-      "title": "Protégé",
+      "title": "门徒",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15040a6951-3715-4afb-8826-64fc74ac0e89.jpg",
       "category": "movie",
-      "brief": "2007 film by Derek Yee",
       "url": "/movie/2dAgkdTUYKaaIArlOeKQOv",
       "rating": 7.6,
       "release_date": "2007-02-13"
@@ -17,10 +28,9 @@
   {
     "item": {
       "uuid": "1DXm1XaclfqAX0osSfRT0E",
-      "title": "Shinjuku Incident",
+      "title": "新宿事件",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16888cca96-59ef-4a98-a1b4-fc87659dd558.jpg",
       "category": "movie",
-      "brief": "2009 film by Derek Yee",
       "url": "/movie/1DXm1XaclfqAX0osSfRT0E",
       "rating": 7.1,
       "release_date": "2009-04-02"
@@ -32,10 +42,9 @@
   {
     "item": {
       "uuid": "5Xs3T7uBZf5JKuOBA1oGDP",
-      "title": "Hollow Man",
+      "title": "空心人",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15c68ce983-c42e-4a11-ad0e-7c96272f412a.jpg",
       "category": "movie",
-      "brief": "2000 film directed by Paul Verhoeven",
       "url": "/movie/5Xs3T7uBZf5JKuOBA1oGDP",
       "rating": 6.4,
       "release_date": "2000-08-04"
@@ -47,10 +56,9 @@
   {
     "item": {
       "uuid": "5rWsRhuvAS7Lx2rJWRiKn2",
-      "title": "穹顶之下",
+      "title": "同呼吸，共命运",
       "cover_image_url": "https://neodb.social/m/movie/2021/10/1269cbeb11-7041-41a2-a924-edec0bded1be.jpg",
       "category": "movie",
-      "brief": "“我不是多怕死，我只是不想这么活”——柴静\n2014年初从央视辞职的记者柴静，在2015年2月28日，推出了她自费拍摄的雾霾深度调查《穹顶之下》，这也是柴静辞职后首度公开亮相。纪录片中，柴静披露了自己离开央视的原因，她称在自己怀孕期间，女儿被诊断有良性肿瘤，出生后便要接受手术，而她自己辞职后用了一段时间专程陪伴照顾女儿。 在照顾孩子的过程中，柴静对雾霾的感受却越来越强烈，“生活在一年竟有175天污染的北京，害怕女儿有一天会问我‘什么是蓝天’‘为什么老把我关在家里’，加上全社会对空气污染问题也越来越关心，职业训练和母亲本能都让她觉得应该回答这些问题：雾霾是什么？从哪儿来？该怎么办？”因此，柴静开始了这个调查。",
       "url": "/movie/5rWsRhuvAS7Lx2rJWRiKn2",
       "rating": 9,
       "release_date": "2015"
@@ -62,10 +70,9 @@
   {
     "item": {
       "uuid": "05F2V5hrufAHNranHc6SDy",
-      "title": "May You Stay Forever Young",
+      "title": "少年",
       "cover_image_url": "https://neodb.social/m/item/imdb/2024/01/12/901ad594-f92e-401f-b7ba-9b3aa2e1dfa9.jpg",
       "category": "movie",
-      "brief": "2021 film",
       "url": "/movie/05F2V5hrufAHNranHc6SDy",
       "rating": 7.7,
       "release_date": "2022"
@@ -76,10 +83,9 @@
   {
     "item": {
       "uuid": "5ktQJA5VALpymnaNB9SNXD",
-      "title": "Millennium Mambo",
+      "title": "千禧曼波",
       "cover_image_url": "https://neodb.social/m/item/movie/2024/07/26/67579744-3a1d-4174-97f1-f6c8dc2b93f5.webp",
       "category": "movie",
-      "brief": "2001 film by Hou Hsiao-Hsien",
       "url": "/movie/5ktQJA5VALpymnaNB9SNXD",
       "rating": 7,
       "release_date": "2001"
@@ -88,26 +94,10 @@
   },
   {
     "item": {
-      "uuid": "6QkfDyZjTtF8q4DkUeHvrc",
-      "title": "Running on Karma",
-      "cover_image_url": "https://neodb.social/m/movie/2021/09/150aa0acb5-2985-4b42-a466-9c0f26b22d1d.jpg",
-      "category": "movie",
-      "brief": "2003 film by Johnnie To, Wai Ka-Fai",
-      "url": "/movie/6QkfDyZjTtF8q4DkUeHvrc",
-      "rating": 6.8,
-      "release_date": "2003"
-    },
-    "created_time": "2026-07-14T13:54:00Z",
-    "comment_text": "活在当下，种下因得果，尊重自己的内心与做人的操守。",
-    "rating_grade": 7
-  },
-  {
-    "item": {
       "uuid": "6goVLEBDJriCkGCNWFXkgM",
-      "title": "Lost in Beijing",
+      "title": "迷失北京",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/14d954636e-b569-4627-9358-d072d2a858e4.jpg",
       "category": "movie",
-      "brief": "2007 film directed by Li Yu",
       "url": "/movie/6goVLEBDJriCkGCNWFXkgM",
       "rating": 6.7,
       "release_date": "2007"
@@ -118,11 +108,24 @@
   },
   {
     "item": {
+      "uuid": "6QkfDyZjTtF8q4DkUeHvrc",
+      "title": "大只佬",
+      "cover_image_url": "https://neodb.social/m/movie/2021/09/150aa0acb5-2985-4b42-a466-9c0f26b22d1d.jpg",
+      "category": "movie",
+      "url": "/movie/6QkfDyZjTtF8q4DkUeHvrc",
+      "rating": 6.8,
+      "release_date": "2003"
+    },
+    "created_time": "2026-07-14T13:54:00Z",
+    "comment_text": "活在当下，种下因得果，尊重自己的内心与做人的操守。",
+    "rating_grade": 7
+  },
+  {
+    "item": {
       "uuid": "2rRCaF69iiNElnyZ8E9fkA",
-      "title": "Hidden Man",
+      "title": "侠隐",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/02/08/05d1e0b6-5d23-4176-ace3-796c07afc104.jpeg",
       "category": "movie",
-      "brief": "A martial arts-infused spy thriller set in 1937 Beijing. A time when China was lurching between revolution, prosperity, and chaos.",
       "url": "/movie/2rRCaF69iiNElnyZ8E9fkA",
       "rating": 6.8,
       "release_date": "2018"
@@ -132,10 +135,9 @@
   {
     "item": {
       "uuid": "2JkYR89731Eir6nS5Pa8NX",
-      "title": "What Time Is It There?",
+      "title": "你那边几点？",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16f3ea9c34-5346-4303-98ad-dd62049fbc09.jpg",
       "category": "movie",
-      "brief": "2001 film by Tsai Ming-liang",
       "url": "/movie/2JkYR89731Eir6nS5Pa8NX",
       "rating": 8.5,
       "release_date": "2001"
@@ -147,10 +149,9 @@
   {
     "item": {
       "uuid": "6bSYa7eaQsxwolsaKMHM4F",
-      "title": "Mountains May Depart",
+      "title": "山河恋人",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1388a4cb6f-5232-40c0-ad6c-90d9ef7445c8.jpg",
       "category": "movie",
-      "brief": "2015 film by Jia Zhangke",
       "url": "/movie/6bSYa7eaQsxwolsaKMHM4F",
       "rating": 7.5,
       "release_date": "2015"
@@ -162,10 +163,9 @@
   {
     "item": {
       "uuid": "5Ha2b8omaK84mGvQ9xoMlU",
-      "title": "Gimme Kudos",
+      "title": "求求你，表扬我",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1794f4001d-b7d4-4974-a029-c56e2401816a.jpg",
       "category": "movie",
-      "brief": "film",
       "url": "/movie/5Ha2b8omaK84mGvQ9xoMlU",
       "rating": 6.5,
       "release_date": "2005"
@@ -175,10 +175,9 @@
   {
     "item": {
       "uuid": "3JBBQZPu26Fg1R3Wgsqh1n",
-      "title": "The Blue Kite",
+      "title": "蓝风筝",
       "cover_image_url": "https://neodb.social/m/movie/2021/10/03d9dfe1ce-52a9-4492-8b23-2c5dfc9fe42e.jpg",
       "category": "movie",
-      "brief": "1993 film by Tian Zhuangzhuang",
       "url": "/movie/3JBBQZPu26Fg1R3Wgsqh1n",
       "rating": 8.7,
       "release_date": "1993"
@@ -188,10 +187,9 @@
   {
     "item": {
       "uuid": "33LOjfwbrV4tp9hrTm0qFA",
-      "title": "Crouching Tiger, Hidden Dragon",
+      "title": "卧虎藏龙",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/02/03/8317d9db-5a1a-41a8-81a7-41f401a5142a.jpeg",
       "category": "movie",
-      "brief": "Two warriors in pursuit of a stolen sword and a notorious fugitive are led to an impetuous, physically-skilled, teenage nobleman's daughter, who is at a crossroads in her life.",
       "url": "/movie/33LOjfwbrV4tp9hrTm0qFA",
       "rating": 8.3,
       "release_date": "2000-05-16"
@@ -201,10 +199,9 @@
   {
     "item": {
       "uuid": "2fEdnxYWozPayayizQmk5M",
-      "title": "Dune: Part Two",
+      "title": "沙丘：第二部分",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2024/03/09/31bfde12-4660-40cd-865c-47964fcf1c48.webp",
       "category": "movie",
-      "brief": "Follow the mythic journey of Paul Atreides as he unites with Chani and the Fremen while on a path of revenge against the conspirators who destroyed his family. Facing a choice between the love of his life and the fate of the known universe, Paul endeavors to prevent a terrible future only he can foresee.",
       "url": "/movie/2fEdnxYWozPayayizQmk5M",
       "rating": 7.5,
       "release_date": "2024"
@@ -214,10 +211,9 @@
   {
     "item": {
       "uuid": "31Emt5g7KlZQd14XWHYXCh",
-      "title": "An Unfinished Film",
+      "title": "一部未完成的电影",
       "cover_image_url": "https://neodb.social/m/item/movie/2025/06/11/16f183e6-7035-4eb8-8563-357dce420481.jpg",
       "category": "movie",
-      "brief": "2024 Lou Ye film",
       "url": "/movie/31Emt5g7KlZQd14XWHYXCh",
       "rating": 8.2,
       "release_date": "2024"
@@ -228,10 +224,9 @@
   {
     "item": {
       "uuid": "7fHa44vAl3sSzmOLSuiOKO",
-      "title": "The Last Dance",
+      "title": "破·地狱",
       "cover_image_url": "https://neodb.social/m/item/tmdb_movie/2024/09/04/e92c20cc-c435-4ca6-9194-239b232d1380.jpg",
       "category": "movie",
-      "brief": "The pandemic has sent most industries into recession. Mired in debt, wedding planner Dominic (Dayo WONG) gets a miraculous chance to turn things around when a funeral planner retires and passes the baton to him. Planning weddings and funerals are polar opposites, but Dominic puts his all into his new job, from opening graves, digging coffins, to handling the deceased. No matter how unpleasant it gets, he takes on everything with gusto. However, the biggest obstacle is getting the approval of respected Taoist priest, Master Man (Michael HUI). In his 70s, Master Man is a traditional man who has devoted his life to his Taoist faith. He wants to pass the mantle to his son, Ben (Tommy CHU), but Ben is more devoted to his wife and kids than to Taoism. Master Man's daughter, Yuet (Michelle WAI), respects her father greatly. However, since her ancestors dictated that women are filthy by nature, Yuet doesn't take romantic relationships seriously.",
       "url": "/movie/7fHa44vAl3sSzmOLSuiOKO",
       "rating": 7.5,
       "release_date": "2024"
@@ -241,10 +236,9 @@
   {
     "item": {
       "uuid": "5KJNqbTzhuc5BNV2ubGdIl",
-      "title": "Yi yi: A One and a Two",
+      "title": "一一",
       "cover_image_url": "https://neodb.social/m/item/movie/2023/02/06/7c90520d-5ee0-4975-a84f-d87c4d43183f.webp",
       "category": "movie",
-      "brief": "NJ（吴念真 饰）是个很有原则的生意人，同妻子敏敏（金燕玲 饰）、女儿婷婷（李凯莉 饰）、儿子洋洋（张杨洋 饰）以及外婆住在台北某所普通公寓里。小舅子一场麻烦的婚礼过后，因为外婆突然中风昏迷，他迎来更加混乱的日子。\r\n敏敏要在公司、家里两头跑，时常感觉自己要被耗空；婷婷一直为外婆的中风内疚，恋爱谈到中途发现自己不过是替代品；NJ更是麻烦重重，公司面临破产，他又不愿放下别人眼里一文不值的自尊。一家人里，似乎只有洋洋没有烦恼，他平静地用照相机拍着各种人的背面，帮他们长出另一双眼睛。然而，洋洋简简单单的一句话，道出了更深的悲凉……",
       "url": "/movie/5KJNqbTzhuc5BNV2ubGdIl",
       "rating": 9.3,
       "release_date": "2000-05-14"
@@ -254,10 +248,9 @@
   {
     "item": {
       "uuid": "6rjVMh6bdr8u0LJBAKf8Td",
-      "title": "12.12: The Day",
+      "title": "首尔之春",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2024/05/05/ff4458fb-b949-416c-833f-def4a33e1a74.webp",
       "category": "movie",
-      "brief": "1979年10月26日，时任韩国总统的朴正熙被自己的亲信射杀，局势顿时波谲云诡。为调查此事，陆军保安司令官全斗光（黄政民 饰）被任命为联合调查总部部长，而这个天生反骨的男人趁机扩大自己的势力，拉帮结伙，培植亲信，狼子野心昭然若揭。为了牵制全斗光，参谋总长任命将军李泰信（郑雨盛 饰）担任首都警备司令官，以防肘腋之变。与此同时，全斗光感受到来自总长的威胁，于是纠集亲信密谋逮捕总长，试图先下手为强。谁曾想全的人马急于求成，在未能逼迫代总统签署逮捕令之前便展开行动。成王败寇，一旦失败就会成为韩国的叛国者。一不做二不休的全斗光索性揭竿而起。\n而孤军奋战的李泰信，将秉承最朴素的信念与叛军展开对抗……",
       "url": "/movie/6rjVMh6bdr8u0LJBAKf8Td",
       "rating": 8.1,
       "release_date": "2023"
@@ -269,10 +262,9 @@
   {
     "item": {
       "uuid": "3Dj1JNy6ouVms2AUT4pPy1",
-      "title": "Across the Furious Sea",
+      "title": "怒海",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2023/10/20/1da820fd-8dfc-40c4-95b4-84aaa71ee443.webp",
       "category": "movie",
-      "brief": "2023 Chinese film",
       "url": "/movie/3Dj1JNy6ouVms2AUT4pPy1",
       "rating": 6.6,
       "release_date": "2023"
@@ -284,10 +276,9 @@
   {
     "item": {
       "uuid": "0KSCjSjMXwdBwTcDxhBvq5",
-      "title": "Paradise in Service",
+      "title": "军中乐园",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/158bf5e79d-4cc9-447b-8ea9-2d1c3ba01a4e.jpg",
       "category": "movie",
-      "brief": "Set in the island Kinmen, often seen as the most dangerous military base because it’s geographically close to China, \"Paradise in Service\" follows the adventure of a boy who serves his military service in Unit 831 from 1969 to 1972, in preparation for a war that could erupt anytime. Through an unlucky lottery draw result, Pao, a twenty-something young man from Southern Taiwan has to serve the military in the remote and perilous Kinmen. Moreover, he is assigned to the Sea Dragon (ARB), a unit noted for the toughest physical training. It never occurs to Pao, however, that the greatest challenge in his military service lies not in the Sea Dragon but in Unit 831, a special task he is later appointed to… In this peculiar assignment, Pao vows to keep his virginity against all odds.",
       "url": "/movie/0KSCjSjMXwdBwTcDxhBvq5",
       "rating": 7.1,
       "release_date": "2014"
@@ -296,11 +287,22 @@
   },
   {
     "item": {
+      "uuid": "6B0zuW9QkAApwjKD3ZLSi4",
+      "title": "沙丘瀚战(港)",
+      "cover_image_url": "https://neodb.social/m/movie/2021/09/15f62c4093-b3be-4829-87e9-320449e3a5f9.jpg",
+      "category": "movie",
+      "url": "/movie/6B0zuW9QkAApwjKD3ZLSi4",
+      "rating": 7.6,
+      "release_date": "2021"
+    },
+    "created_time": "2023-07-18T13:54:00Z"
+  },
+  {
+    "item": {
       "uuid": "1bgVODaWCBKlCQ1AuGlLzC",
-      "title": "A New Old Play",
+      "title": "椒麻堂会",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/154f638fbd-6de6-4c12-92b1-295005155f66.jpg",
       "category": "movie",
-      "brief": "2021 film",
       "url": "/movie/1bgVODaWCBKlCQ1AuGlLzC",
       "rating": 8.8,
       "release_date": "2021-08-13"
@@ -310,24 +312,10 @@
   },
   {
     "item": {
-      "uuid": "6B0zuW9QkAApwjKD3ZLSi4",
-      "title": "Dune",
-      "cover_image_url": "https://neodb.social/m/movie/2021/09/15f62c4093-b3be-4829-87e9-320449e3a5f9.jpg",
-      "category": "movie",
-      "brief": "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people. As malevolent forces explode into conflict over the planet's exclusive supply of the most precious resource in existence-a commodity capable of unlocking humanity's greatest potential-only those who can conquer their fear will survive.",
-      "url": "/movie/6B0zuW9QkAApwjKD3ZLSi4",
-      "rating": 7.6,
-      "release_date": "2021"
-    },
-    "created_time": "2023-07-18T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "5gLS4djxVa0Zn8XVdQGenK",
-      "title": "Pink Floyd The Wall",
+      "title": "暴力迷墙",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2023/12/15/fcd1cc9e-af42-4437-b8c1-216b7d744e21.webp",
       "category": "movie",
-      "brief": "1982 British live-action/animated musical drama film",
       "url": "/movie/5gLS4djxVa0Zn8XVdQGenK",
       "rating": 8.7,
       "release_date": "1982"
@@ -338,10 +326,9 @@
   {
     "item": {
       "uuid": "5ptlbNXJIiz5108Tjz1gg4",
-      "title": "The Home in the Tree",
+      "title": "树上有个好地方",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15af95dd1a-7c1f-4a10-a82b-56e5cfe0afdf.jpg",
       "category": "movie",
-      "brief": "本故事讲述的是上世纪90年代末发生在陕西关中农村的童年故事。在以成绩高低作为评判学生好坏的环境中，小学生巴王超过在老师与家长的眼中是那种不学无术的“渣滓”。得不到家长和老师认同的巴王超过，将田野里一棵可以栖息的大树变成了自己的“好地方”，并将所有“好玩”的东西都藏在了那棵大树的上面。孩子的天性，让巴王超过与成人世界充满了斗争，直到有一天，他的处境因为前来支教的粉提老师而改变了！粉提老师让他负责班级里的图书管理员，同时他也与女老师成了好朋友，他的“好地方”也成了女老师的“好地方”。然而好景不长，他在粉提老师面前特殊的待遇，又因为粉提老师的男朋友的到来而改变了……",
       "url": "/movie/5ptlbNXJIiz5108Tjz1gg4",
       "rating": 7.5,
       "release_date": "2019"
@@ -352,10 +339,9 @@
   {
     "item": {
       "uuid": "73iZdOnPpESuGFXTitzwqZ",
-      "title": "A Young Patriot",
+      "title": "少年·小赵",
       "cover_image_url": "https://neodb.social/m/movie/2021/10/03a95fd316-9c9e-4818-a67e-18ca9e63f5bb.jpg",
       "category": "movie",
-      "brief": "A documentary chronicling the coming of age of a young chinese man.",
       "url": "/movie/73iZdOnPpESuGFXTitzwqZ",
       "rating": 7.8,
       "release_date": "2015"
@@ -366,10 +352,9 @@
   {
     "item": {
       "uuid": "7JKzHBAvuVX75L4hNSGCjv",
-      "title": "The Emperor's Shadow",
+      "title": "秦颂",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/145c3116e8-9665-4338-aa2a-9ac764de0323.jpg",
       "category": "movie",
-      "brief": "Epic drama about China's first emperor (221 BC) who struggles to make his childhood best friend, now China's greatest composer, succumb to his will and compose a grand anthem to his exploits.",
       "url": "/movie/7JKzHBAvuVX75L4hNSGCjv",
       "rating": 7.5,
       "release_date": "1996"
@@ -380,10 +365,9 @@
   {
     "item": {
       "uuid": "750hAPkwmmbaAWRwXNlS1r",
-      "title": "Mountain Cry",
+      "title": "喊山",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15a3a545e0-bb5f-466d-a4a2-0e737185089e.jpg",
       "category": "movie",
-      "brief": "The tight-knight community of a remote mountain village come to know and understand a strange, mute woman's past in the wake of her husband's death.",
       "url": "/movie/750hAPkwmmbaAWRwXNlS1r",
       "rating": 7.1,
       "release_date": "2015"
@@ -394,10 +378,9 @@
   {
     "item": {
       "uuid": "4MZpBRvoHmCzutMU2ygcd7",
-      "title": "The Ditch",
+      "title": "夹边沟",
       "cover_image_url": "https://neodb.social/m/movie/2021/12/21d4e28749-fd64-4e6a-bae3-7efc290118c1.jpg",
       "category": "movie",
-      "brief": "2010 film by Wang Bing",
       "url": "/movie/4MZpBRvoHmCzutMU2ygcd7",
       "rating": 7.6,
       "release_date": "2011"
@@ -407,10 +390,9 @@
   {
     "item": {
       "uuid": "4eLdZ33zDnKpwMF1EWhRWU",
-      "title": "Trivisa",
+      "title": "树大招风",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/2204831685-1ed2-429d-bc42-0b71ebcfbc62.jpg",
       "category": "movie",
-      "brief": "2016 Hong Kong film",
       "url": "/movie/4eLdZ33zDnKpwMF1EWhRWU",
       "rating": 8,
       "release_date": "2016"
@@ -420,10 +402,9 @@
   {
     "item": {
       "uuid": "1TyukDnZPNKIK3J7sXxsIy",
-      "title": "The Sun Also Rises",
+      "title": "太阳照常升起",
       "cover_image_url": "https://neodb.social/m/movie/2022/01/026f727af7-d878-42d4-a53a-c464d0c0ecb4.jpg",
       "category": "movie",
-      "brief": "2007 film by Jiang Wen",
       "url": "/movie/1TyukDnZPNKIK3J7sXxsIy",
       "rating": 8.3,
       "release_date": "2007"
@@ -434,10 +415,9 @@
   {
     "item": {
       "uuid": "483ZUTGZICh0EMr3DEKpNo",
-      "title": "We Are the World",
+      "title": "四海一家",
       "cover_image_url": "https://neodb.social/m/movie/2022/02/057c249edd-d19b-4570-a88b-df197a520bfb.jpg",
       "category": "movie",
-      "brief": "为缓解非洲，特别是埃塞俄比亚日益严重的饥荒，在哈里.贝拉方特的召集下，45位艺术家齐聚一堂，共同录制了慈善单曲《天下一家》。唱片销量高达700多万张，所得善款超过6000万美元。\n本片为《天下一家》的制作花絮，由简.方达录制旁白。",
       "url": "/movie/483ZUTGZICh0EMr3DEKpNo",
       "rating": 9.6,
       "release_date": "1985"
@@ -448,10 +428,9 @@
   {
     "item": {
       "uuid": "1VPb0r3vPnXDvH8z8wmOlA",
-      "title": "Come And See",
+      "title": "炙628",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/05/23/663cb1ba-47df-4c17-a6a5-0181bec72e0d.jpeg",
       "category": "movie",
-      "brief": "The invasion of a village in Byelorussia by German forces sends young Florya into the forest to join the weary Resistance fighters, against his family's wishes. There he meets a girl, Glasha, who accompanies him back to his village. On returning home, Florya finds his family and fellow peasants massacred. His continued survival amidst the brutal debris of war becomes increasingly nightmarish, a battle between despair and hope.",
       "url": "/movie/1VPb0r3vPnXDvH8z8wmOlA",
       "rating": 8.9,
       "release_date": "1985"
@@ -461,10 +440,9 @@
   {
     "item": {
       "uuid": "45ZnfhBuq1bLw1isGBmlSc",
-      "title": "Long Long Time Ago",
+      "title": "我们的故事",
       "cover_image_url": "https://neodb.social/m/movie/2021/12/05219ee369-1064-4201-9718-74ec7e6f8c3a.jpg",
       "category": "movie",
-      "brief": "The story spans from 1965 to the early 1970s. Heavily pregnant Zhao Di, the unwanted second wife of an older man, was chased out by her husband's family and forced to return to her own family. She gave birth to a pair of twins, Shun Fatt and Su-mei. As Su-mei had two moles on her face, which was said to be bad luck, she decided to give her up due to the pressure of wanting to build a better life for the rest of her family.",
       "url": "/movie/45ZnfhBuq1bLw1isGBmlSc",
       "rating": 7.5,
       "release_date": "2016"
@@ -476,10 +454,9 @@
   {
     "item": {
       "uuid": "4uYHvMrXEFGcX8koF4raMS",
-      "title": "Hi, Mom",
+      "title": "你好，李焕英",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15a5cb7008-acae-4a3b-8d5d-581355037dcf.jpg",
       "category": "movie",
-      "brief": "Devastated after her mom's serious accident and grief-stricken because she hasn't become the daughter she wanted to be for her mother, Jia Xiaoling finds herself transported back in time to the year 1981, where she meets her young mother before she was her mom.",
       "url": "/movie/4uYHvMrXEFGcX8koF4raMS",
       "rating": 7.4,
       "release_date": "2021"
@@ -490,24 +467,10 @@
   },
   {
     "item": {
-      "uuid": "4HDXxOOFD319Qvo5P3cGTB",
-      "title": "A Touch of Sin",
-      "cover_image_url": "https://neodb.social/m/movie/2021/10/011cb5cbc2-127c-428f-bd22-51d3768e2d54.jpg",
-      "category": "movie",
-      "brief": "2013 film by Jia Zhangke",
-      "url": "/movie/4HDXxOOFD319Qvo5P3cGTB",
-      "rating": 7.8,
-      "release_date": "2013"
-    },
-    "created_time": "2020-07-20T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "1BHE0eie4JV1VZYRKUMAIr",
-      "title": "Mystery",
+      "title": "谜",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/132ca2e478-ddd7-4358-9bc1-d5527563672a.jpg",
       "category": "movie",
-      "brief": "2012 film directed by Lou Ye",
       "url": "/movie/1BHE0eie4JV1VZYRKUMAIr",
       "rating": 7.2,
       "release_date": "2012"
@@ -517,10 +480,9 @@
   {
     "item": {
       "uuid": "4gERui0EhrKb582CUTtxaT",
-      "title": "Memoirs of a Geisha",
+      "title": "艺妓回忆录",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15c1d53e80-1e6b-45ad-b60c-11948d77b8fb.jpg",
       "category": "movie",
-      "brief": "2005 film directed by Rob Marshall",
       "url": "/movie/4gERui0EhrKb582CUTtxaT",
       "rating": 6.9,
       "release_date": "2005"
@@ -529,11 +491,22 @@
   },
   {
     "item": {
+      "uuid": "4HDXxOOFD319Qvo5P3cGTB",
+      "title": "天注定",
+      "cover_image_url": "https://neodb.social/m/movie/2021/10/011cb5cbc2-127c-428f-bd22-51d3768e2d54.jpg",
+      "category": "movie",
+      "url": "/movie/4HDXxOOFD319Qvo5P3cGTB",
+      "rating": 7.8,
+      "release_date": "2013"
+    },
+    "created_time": "2020-07-20T13:54:00Z"
+  },
+  {
+    "item": {
       "uuid": "5g5OX8XYvyZlpizXLbx0QT",
-      "title": "A Taxi Driver",
+      "title": "出租车司机",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/17955b7799-4f83-447a-b3af-761fefe9b05c.jpg",
       "category": "movie",
-      "brief": "《出租车司机》讲述了搭载德国记者Jurgen Hinzpeter，偶然来到光州的出租车司机金四福身上发生的故事。\r\nJurgen Hinzpeter1980年5月作为德国第一公营广播ARD-NDR的驻日本员工用影像记录了光州事件，并创作了《蓝色眼睛的目击者》一书，让全世界了解到5.18光州惨案，还于2003年在韩国获得了新闻大奖。\r\n领奖当时，Jurgen Hinzpeter还特别提到了出租车司机金四福，“我要感谢80年5月带我到光州，并给我做向导的勇敢的出租车司机金四福。”\r\nJurgen Hinzpeter于今年1月离世。 而当年搭载Jurgen Hinzpeter的金司机则勇敢的在光州的小巷内甩开了戒严军队，将十卷胶片安全护送出了光州。\r\n宋康昊褪去《思悼》的皇帝外衣，将在《出租车司机》中变身出租车司机，回归演绎他最擅长的小人物角色。此外，刘海镇和最近凭借《社交恐惧症》《请回答1988》等影视作品崭露头角的新秀柳俊烈也将加盟该片，出演反政府军角色。 \r\n《出租车司机》由SHOWBOX投资发行，《义兄弟》《高地战》的导演张熏执掌拍摄，这是张熏导演在《义兄弟》之后时隔五年与宋康昊的再度合作。",
       "url": "/movie/5g5OX8XYvyZlpizXLbx0QT",
       "rating": 8.9,
       "release_date": "2017"
@@ -543,10 +516,9 @@
   {
     "item": {
       "uuid": "7AapG5bTSqEnC7OlJHfWtJ",
-      "title": "Almost a Comedy",
+      "title": "如果，我不是我",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16fd55059c-bcfc-4b27-9fa5-8084bd8b15a4.jpg",
       "category": "movie",
-      "brief": "Three free and romantic young people live a life with their own thoughts: some are eager to get rid of singleness, some want to debauch before getting married, some want to gain a foothold in the big city. Because of an emotional derailment, the three kinked into a mess of \"joking and scolding\". When various values ​​collide, when a person needs to balance family friendship and love...their chaotic life is like half a comedy.",
       "url": "/movie/7AapG5bTSqEnC7OlJHfWtJ",
       "rating": 6.9,
       "release_date": "2019"
@@ -557,10 +529,9 @@
   {
     "item": {
       "uuid": "5BbvAYBafQgOYRar02BPZg",
-      "title": "Gone with the Light",
+      "title": "被光抓走的人",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/175e9c6885-e7ae-4781-b0c6-8c8c49f51974.jpg",
       "category": "movie",
-      "brief": "A group of people that disappear after a mysterious light falls upon the city, leaving the survivors to try and unravel the mystery.",
       "url": "/movie/5BbvAYBafQgOYRar02BPZg",
       "rating": 6.6,
       "release_date": "2019"
@@ -571,10 +542,9 @@
   {
     "item": {
       "uuid": "0AuVwaIk75X5qhO2byLM9c",
-      "title": "Hotel Mumbai",
+      "title": "失控危城(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1615def6a7-9aa4-4be9-beb5-b5b0e8a6b4a6.jpg",
       "category": "movie",
-      "brief": "2019 film directed by Anthony Maras",
       "url": "/movie/0AuVwaIk75X5qhO2byLM9c",
       "rating": 7.7,
       "release_date": "2018"
@@ -585,10 +555,9 @@
   {
     "item": {
       "uuid": "6EePZt4AddKgNoXDXecLec",
-      "title": "Paths of the Soul",
+      "title": "冈仁波齐",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1481d2f38f-922e-48dd-bb17-0e74c1dc8983.jpg",
       "category": "movie",
-      "brief": "2015 film by Zhang Yang",
       "url": "/movie/6EePZt4AddKgNoXDXecLec",
       "rating": 7.1,
       "release_date": "2015"
@@ -598,10 +567,9 @@
   {
     "item": {
       "uuid": "6Iv4U734xKFqG3qRps0ZlQ",
-      "title": "Chongqing Hot Pot",
+      "title": "火锅",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15b99bd34c-b6ed-484d-8bb0-2dde1b92e673.jpg",
       "category": "movie",
-      "brief": "2016 Chinese film",
       "url": "/movie/6Iv4U734xKFqG3qRps0ZlQ",
       "rating": 6.9,
       "release_date": "2016"
@@ -611,10 +579,9 @@
   {
     "item": {
       "uuid": "3wm0dYYUb5KQkqDSMyqyar",
-      "title": "Port of Call",
+      "title": "踏血寻梅",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15f61c24d5-7e2f-4fbe-a2c4-c3a9b0ce2c89.jpg",
       "category": "movie",
-      "brief": "2015 Hong Kong film directed by Philip Yung",
       "url": "/movie/3wm0dYYUb5KQkqDSMyqyar",
       "rating": 7.3,
       "release_date": "2015"
@@ -624,10 +591,9 @@
   {
     "item": {
       "uuid": "4EkOlu78kKNMRtTMg6EG2T",
-      "title": "Paradox",
+      "title": "杀破狼·贪狼",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1668aea1bf-8843-4ddc-8a83-d49ab6ec992b.jpg",
       "category": "movie",
-      "brief": "2017 film by Wilson Yip",
       "url": "/movie/4EkOlu78kKNMRtTMg6EG2T",
       "rating": 6.6,
       "release_date": "2017"
@@ -637,10 +603,9 @@
   {
     "item": {
       "uuid": "3v0KZMmgbQqsTjo6F7Pool",
-      "title": "Warcraft",
+      "title": "魔兽世界 电影版",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15a23c1829-2214-4f26-b192-f0ae8a4eeb9d.jpg",
       "category": "movie",
-      "brief": "The peaceful realm of Azeroth stands on the brink of war as its civilization faces a fearsome race of invaders: orc warriors fleeing their dying home to colonize another. As a portal opens to connect the two worlds, one army faces destruction and the other faces extinction. From opposing sides, two heroes are set on a collision course that will decide the fate of their family, their people, and their home.",
       "url": "/movie/3v0KZMmgbQqsTjo6F7Pool",
       "rating": 7,
       "release_date": "2016"
@@ -650,10 +615,9 @@
   {
     "item": {
       "uuid": "1aT3vwU7jOdfgJkLRADEbw",
-      "title": "Point Break",
+      "title": "新终极豪情",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16c8b3e742-213b-4c69-9947-8d7b262a1fd1.jpg",
       "category": "movie",
-      "brief": "A young undercover FBI agent infiltrates a gang of thieves who share a common interest in extreme sports. A remake of the 1991 film, \"Point Break\".",
       "url": "/movie/1aT3vwU7jOdfgJkLRADEbw",
       "rating": 6.4,
       "release_date": "2015"
@@ -663,10 +627,9 @@
   {
     "item": {
       "uuid": "5A1FzqoFAsXCmOM9nKwGQc",
-      "title": "Battle of Myeongryang",
+      "title": "鸣梁：怒海交锋(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16f18c8fb9-dbda-4740-969c-0fc3f01174d2.jpg",
       "category": "movie",
-      "brief": "Admiral Yi Sun-sin faces a tough challenge when he is forced to defend his nation with just 13 battleships against 300 Japanese enemy ships in the Battle of Myeongryang.",
       "url": "/movie/5A1FzqoFAsXCmOM9nKwGQc",
       "rating": 6.8,
       "release_date": "2014"
@@ -676,10 +639,9 @@
   {
     "item": {
       "uuid": "4p9nZVTpQl91Bh8H1LA6eW",
-      "title": "Wang Mao",
+      "title": "我不是王毛",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16d93248c1-cfe7-4274-9238-27326552ad86.jpg",
       "category": "movie",
-      "brief": "Wang Mao joins the army in order to earn money to marry his favorite girl. He struggled his life through the whole war against Janpanese invaders.",
       "url": "/movie/4p9nZVTpQl91Bh8H1LA6eW",
       "rating": 7.4,
       "release_date": "2014"
@@ -689,10 +651,9 @@
   {
     "item": {
       "uuid": "740JqS74BdBsL7EIcnI1RG",
-      "title": "Cold War",
+      "title": "Cold War 香港警察 两种正义(日)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15a9bcdbe8-a45f-45e9-9304-288ebf4fc604.jpg",
       "category": "movie",
-      "brief": "Five police officers in Hong Kong are kidnapped. The police commissioner is on a business trip overseas. Two vice commissioners, Sean Rau and M.B. Lee, then take over the case. The two vice commissioners are rivals who both vie for the police commissioner seat. At first, M.B. Lee takes the lead in the case, but comes to a dead end. Sean Lau then takes the lead, but he falls into a trap. Both men are then investigated by the ICAC (Independent Commission Against Corruption).",
       "url": "/movie/740JqS74BdBsL7EIcnI1RG",
       "rating": 7.2,
       "release_date": "2012"
@@ -702,10 +663,9 @@
   {
     "item": {
       "uuid": "2eGsoFnSQpYYmJXzeQ4xFG",
-      "title": "The Maze Runner",
+      "title": "迷宫行者",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/157738da1a-2e7a-4853-8c5b-1d40c40af4e1.jpg",
       "category": "movie",
-      "brief": "Set in a post-apocalyptic world, young Thomas is deposited in a community of boys after his memory is erased, soon learning they're all trapped in a maze that will require him to join forces with fellow “runners” for a shot at escape.",
       "url": "/movie/2eGsoFnSQpYYmJXzeQ4xFG",
       "rating": 6.5,
       "release_date": "2014"
@@ -715,10 +675,9 @@
   {
     "item": {
       "uuid": "1EdWZi9vbdS3wO5VXvQN48",
-      "title": "1942",
+      "title": "温故一九四二",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1412b59134-0032-4b6d-9aa0-305204d79ca3.jpg",
       "category": "movie",
-      "brief": "2012 film by Feng Xiaogang",
       "url": "/movie/1EdWZi9vbdS3wO5VXvQN48",
       "rating": 7.5,
       "release_date": "2012"
@@ -728,10 +687,9 @@
   {
     "item": {
       "uuid": "3mTnbW64ImUFb1Ka70BBgn",
-      "title": "The White Storm",
+      "title": "当局者",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/186cae8582-5739-48be-8fc5-8bd4560e3335.jpg",
       "category": "movie",
-      "brief": "An operation in Thailand against a notorious drug lord changes the destiny of a Hong Kong Police Department narcotic team. Five years later, a drug dealing brings them together again.",
       "url": "/movie/3mTnbW64ImUFb1Ka70BBgn",
       "rating": 6.6,
       "release_date": "2013"
@@ -741,10 +699,9 @@
   {
     "item": {
       "uuid": "1aSmCbdckmp9AY1B20cv8U",
-      "title": "I Am Not Madame Bovary",
+      "title": "我叫李雪莲",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1633c699d7-991b-49da-8e23-2f492bb38aa8.jpg",
       "category": "movie",
-      "brief": "2016 film directed by Feng Xiaogang",
       "url": "/movie/1aSmCbdckmp9AY1B20cv8U",
       "rating": 6.6,
       "release_date": "2016"
@@ -754,10 +711,9 @@
   {
     "item": {
       "uuid": "59oGJAUTWpCScw10NOj0Uy",
-      "title": "Wolf Warriors",
+      "title": "兵锋",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1580f9f6b4-d02b-427d-8c0d-6b4597ec4ed7.jpg",
       "category": "movie",
-      "brief": "2015 film directed by Wu Jing",
       "url": "/movie/59oGJAUTWpCScw10NOj0Uy",
       "rating": 5.6,
       "release_date": "2015"
@@ -767,10 +723,9 @@
   {
     "item": {
       "uuid": "33I7AiGhLXaMg2Cdz4RATK",
-      "title": "Finding Mr. Right 2",
+      "title": "北京遇上西雅图2",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1523b0d31d-7d61-485b-8adc-525771c34908.jpg",
       "category": "movie",
-      "brief": "2016 film directed by Xue Xiaolu",
       "url": "/movie/33I7AiGhLXaMg2Cdz4RATK",
       "rating": 5.7,
       "release_date": "2016"
@@ -780,10 +735,9 @@
   {
     "item": {
       "uuid": "7EkIdRuyhl1taQ7R3WPLdM",
-      "title": "SPL 2: A Time for Consequences",
+      "title": "杀破狼2之杀无赦",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/151840e85a-f90d-44f2-99c7-f57ebaf23b02.jpg",
       "category": "movie",
-      "brief": "A Hong Kong cop named Kit busts a major gangster only to find his cover blown and his main witness gone. The gangster, in retaliation, has him kidnapped and put in a Thai jail with a false criminal identity. Lowly prison guard Chai, with his extraordinary fighting skills, guards Kit and prevents his escape. The prison guard’s daughter suffers from a rare form of leukemia and Kit is the only donor who can save her. The prison guard discovers Kit’s real identity and helps him to escape in return for his agreeing to save his daughter. Together, Kit and Chai must face and take down the gangster and his minions.",
       "url": "/movie/7EkIdRuyhl1taQ7R3WPLdM",
       "rating": 7,
       "release_date": "2015"
@@ -793,10 +747,9 @@
   {
     "item": {
       "uuid": "4IhipVURP4Pekn4t1250Qh",
-      "title": "The Chef, The Actor, The Scoundrel",
+      "title": "虎烈拉",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/167ea66044-999e-4259-a0f9-5dbff0744a0b.jpg",
       "category": "movie",
-      "brief": "World War II: a cholera epidemic ravages the streets of Beijing. A crack team of Chinese intelligence agents kidnap a Japanese general and biochemist who may hold the antidote.",
       "url": "/movie/4IhipVURP4Pekn4t1250Qh",
       "rating": 6.5,
       "release_date": "2013"
@@ -806,10 +759,9 @@
   {
     "item": {
       "uuid": "3ztkVIEPeOOLphSVQYzmtf",
-      "title": "Song of the Phoenix",
+      "title": "百鸟朝凤",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1591ba0ab7-31a7-4b3a-a503-e20c3268ac56.jpg",
       "category": "movie",
-      "brief": "2013 Chinese film directed by Wu Tianming",
       "url": "/movie/3ztkVIEPeOOLphSVQYzmtf",
       "rating": 7.3,
       "release_date": "2013"
@@ -819,10 +771,9 @@
   {
     "item": {
       "uuid": "6NStLTzSNZfbhNYnz9cPeG",
-      "title": "Gift From Room",
+      "title": "七号房的礼物",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2024/03/26/9475265c-0431-4f7a-9a62-977694c61031.webp",
       "category": "movie",
-      "brief": "2013 film by Lee Hwan-kyung",
       "url": "/movie/6NStLTzSNZfbhNYnz9cPeG",
       "rating": 8,
       "release_date": "2013"
@@ -832,10 +783,9 @@
   {
     "item": {
       "uuid": "7fiuHWWzQtmck0po1DDFSK",
-      "title": "Cock and Bull",
+      "title": "边城凶案",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16454cef33-31b2-4474-b4a9-2dcbc92e65a0.jpg",
       "category": "movie",
-      "brief": "When a murder occurs in a small town in Southeast China, a local mechanic, known for his honesty, comes under suspicion.  When the police target him to take the fall, he’s forced to try and exonerate himself, uncovering a number of disturbing facts, most much bigger than the initial crime.",
       "url": "/movie/7fiuHWWzQtmck0po1DDFSK",
       "rating": 7.3,
       "release_date": "2016"
@@ -845,10 +795,9 @@
   {
     "item": {
       "uuid": "7IWdXjz5W4eCLjP3kJmbrp",
-      "title": "To The Fore",
+      "title": "破风",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/169087ae49-0fa7-4574-bcbf-8d2ba4f85ad8.jpg",
       "category": "movie",
-      "brief": "In the world of professional cycling, where teamwork demands individual sacrifice, the three leading sprinters of Team Radiant must confront their own egos and aspirations as the competition becomes increasingly tough. Arrogant cyclist Ming cares more about personal glory than the good of the team. His shy teammate Tian is unlucky in both love and sports. Finally, the third teammate, Korean Ji-won, is forced to confront the ethics of his manager.",
       "url": "/movie/7IWdXjz5W4eCLjP3kJmbrp",
       "rating": 6.6,
       "release_date": "2015"
@@ -858,10 +807,9 @@
   {
     "item": {
       "uuid": "3StgCCogBJjLdGKMhG8BRu",
-      "title": "Lost in Hong Kong",
+      "title": "泰囧续集",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16a9514ac2-86c5-4203-afc1-250d30a53bb8.jpg",
       "category": "movie",
-      "brief": "2015 film by Xu Zheng",
       "url": "/movie/3StgCCogBJjLdGKMhG8BRu",
       "rating": 4.8,
       "release_date": "2015"
@@ -871,10 +819,9 @@
   {
     "item": {
       "uuid": "50hGDif81QaqnCzaXpv1Bk",
-      "title": "Lost and Love",
+      "title": "失孤",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1800e8e7d2-66cb-49c8-9299-23c328c71924.jpg",
       "category": "movie",
-      "brief": "2015 Chinese-Hong Kong film",
       "url": "/movie/50hGDif81QaqnCzaXpv1Bk",
       "rating": 5.9,
       "release_date": "2015"
@@ -884,10 +831,9 @@
   {
     "item": {
       "uuid": "4mCKnpMYgD2KCbYgezUaVJ",
-      "title": "Coming Home",
+      "title": "陆犯焉识",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/14a38d8d1a-b9eb-4efb-8e8a-0ab3331403a0.jpg",
       "category": "movie",
-      "brief": "2014 film",
       "url": "/movie/4mCKnpMYgD2KCbYgezUaVJ",
       "rating": 7.4,
       "release_date": "2014"
@@ -897,10 +843,9 @@
   {
     "item": {
       "uuid": "2C2CLE56XVk2AQjGd3OKAH",
-      "title": "The Coffin in the Mountain",
+      "title": "殡棺",
       "cover_image_url": "https://neodb.social/m/movie/2022/09/2788126f80-13f9-4f3d-bc85-de22c114d322.jpg",
       "category": "movie",
-      "brief": "2014 film directed by Xin Yukun",
       "url": "/movie/2C2CLE56XVk2AQjGd3OKAH",
       "rating": 8.4,
       "release_date": "2014"
@@ -910,10 +855,9 @@
   {
     "item": {
       "uuid": "4vmQw8skGrG6EwtHuo9JCl",
-      "title": "Dearest",
+      "title": "家之亲爱的小孩",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/162cb8060b-e72e-4ebd-b44e-3e340db0dbd8.jpg",
       "category": "movie",
-      "brief": "A story centered around a divorced couple living in a southern Chinese city Shenzhen and dealing with the disappearance of their missing son.",
       "url": "/movie/4vmQw8skGrG6EwtHuo9JCl",
       "rating": 8.1,
       "release_date": "2014"
@@ -923,10 +867,9 @@
   {
     "item": {
       "uuid": "5J936QRRulwnDwbTFgguL6",
-      "title": "Twilight",
+      "title": "晨光",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/13c58fa885-bae3-4313-b20a-4c10f8dc5d67.jpg",
       "category": "movie",
-      "brief": "When Bella Swan moves to a small town in the Pacific Northwest, she falls in love with Edward Cullen, a mysterious classmate who reveals himself to be a 108-year-old vampire. Despite Edward's repeated cautions, Bella can't stay away from him, a fatal move that endangers her own life.",
       "url": "/movie/5J936QRRulwnDwbTFgguL6",
       "rating": 6.3,
       "release_date": "2008"
@@ -936,10 +879,9 @@
   {
     "item": {
       "uuid": "3wpsKzIcbLAFAiB3C2iN2C",
-      "title": "So-won",
+      "title": "希望：为爱重生(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/150048dab4-2230-4672-b219-13153ec76e9a.jpg",
       "category": "movie",
-      "brief": "2013 film by Lee Joon-ik",
       "url": "/movie/3wpsKzIcbLAFAiB3C2iN2C",
       "rating": 8.9,
       "release_date": "2013"
@@ -949,10 +891,9 @@
   {
     "item": {
       "uuid": "4byB5tFgbdwUuOO81GlSuM",
-      "title": "Lucy",
+      "title": "超能毒贩",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/156bbc2ea2-fc09-440a-bb29-83dd0339574a.jpg",
       "category": "movie",
-      "brief": "A woman, accidentally caught in a dark deal, turns the tables on her captors and transforms into a merciless warrior evolved beyond human logic.",
       "url": "/movie/4byB5tFgbdwUuOO81GlSuM",
       "rating": 6.7,
       "release_date": "2014"
@@ -962,10 +903,9 @@
   {
     "item": {
       "uuid": "15sKdxeHaKBt9fpdsQFVgE",
-      "title": "The Attorney",
+      "title": "正义辩护人(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1304264032-3cdf-4009-8af8-bbd3c8d414ad.jpg",
       "category": "movie",
-      "brief": "2013 South Korean film directed by Yang U-seok",
       "url": "/movie/15sKdxeHaKBt9fpdsQFVgE",
       "rating": 9,
       "release_date": "2013"
@@ -975,10 +915,9 @@
   {
     "item": {
       "uuid": "5keeB4FEJWCez795QDtP80",
-      "title": "No Man's Land",
+      "title": "无人区",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15d86f91c7-d3a1-4596-810e-8bbc28d735ec.jpg",
       "category": "movie",
-      "brief": "2013 film directed by Ning Hao",
       "url": "/movie/5keeB4FEJWCez795QDtP80",
       "rating": 8.1,
       "release_date": "2013"
@@ -988,10 +927,9 @@
   {
     "item": {
       "uuid": "2Cjm9X9amyZx2tL1bSIu26",
-      "title": "Breakup Buddies",
+      "title": "心花怒放",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15ab846627-10e4-4b88-92f0-fc210b508182.jpg",
       "category": "movie",
-      "brief": "2014 film",
       "url": "/movie/2Cjm9X9amyZx2tL1bSIu26",
       "rating": 6.4,
       "release_date": "2014"
@@ -1001,10 +939,9 @@
   {
     "item": {
       "uuid": "20PT8BWug6DnwWpOOXn49I",
-      "title": "Perfume: The Story of a Murderer",
+      "title": "杀手故事",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/152a1d51da-f204-46ec-a9b1-1e09665a8c49.jpg",
       "category": "movie",
-      "brief": "Jean-Baptiste Grenouille, born in the stench of 18th century Paris, develops a superior olfactory sense, which he uses to create the world's finest perfumes. However, his work takes a dark turn as he tries to preserve scents in the search for the ultimate perfume.",
       "url": "/movie/20PT8BWug6DnwWpOOXn49I",
       "rating": 8.2,
       "release_date": "2006"
@@ -1014,10 +951,9 @@
   {
     "item": {
       "uuid": "1MLtA9E35aO7RexmRIVhhs",
-      "title": "The Dead End",
+      "title": "光斑",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/07/24/27654ac5-dfb0-4048-b2ae-fea36ff6ce59.jpeg",
       "category": "movie",
-      "brief": "2015 film by Cao Baoping",
       "url": "/movie/1MLtA9E35aO7RexmRIVhhs",
       "rating": 7.6,
       "release_date": "2015"
@@ -1027,10 +963,9 @@
   {
     "item": {
       "uuid": "56XB7R18bVuAJSiGlhTFK3",
-      "title": "Devils on the Doorstep",
+      "title": "鬼子来了",
       "cover_image_url": "https://neodb.social/m/movie/2022/01/027f3da7fe-ed50-4160-8b18-00c841193278.jpg",
       "category": "movie",
-      "brief": "2000 film by Jiang Wen",
       "url": "/movie/56XB7R18bVuAJSiGlhTFK3",
       "rating": 9.4,
       "release_date": "2000"
@@ -1040,10 +975,9 @@
   {
     "item": {
       "uuid": "3kkVKjJykhNGaEQiokYaga",
-      "title": "Happy Together",
+      "title": "一起快乐",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/05/11/5328191e-3765-48a0-b054-0bb211152308.jpeg",
       "category": "movie",
-      "brief": "1997 film by Wong Kar-wai",
       "url": "/movie/3kkVKjJykhNGaEQiokYaga",
       "rating": 9,
       "release_date": "1997"
@@ -1053,10 +987,9 @@
   {
     "item": {
       "uuid": "0jz8N9vV9W9jEK0UXFw6vB",
-      "title": "Saving Private Ryan",
+      "title": "拯救大兵雷恩",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/148812467e-7202-4937-a786-f82407b411e0.jpg",
       "category": "movie",
-      "brief": "As U.S. troops storm the beaches of Normandy, three brothers lie dead on the battlefield, with a fourth trapped behind enemy lines. Ranger captain John Miller and seven men are tasked with penetrating German-held territory and bringing the boy home.",
       "url": "/movie/0jz8N9vV9W9jEK0UXFw6vB",
       "rating": 8.7,
       "release_date": "1998"
@@ -1066,10 +999,9 @@
   {
     "item": {
       "uuid": "2tSJxAsDhJSGEdmb023Lgy",
-      "title": "Lust, Caution",
+      "title": "色·戒",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/13b4e0e03c-c438-4b1c-962d-839a489ecec1.jpg",
       "category": "movie",
-      "brief": "During World War II era, a young woman, Wang Jiazhi, gets swept up in a dangerous game of emotional intrigue with a powerful political figure, Mr. Yee.",
       "url": "/movie/2tSJxAsDhJSGEdmb023Lgy",
       "rating": 8.7,
       "release_date": "2007"
@@ -1079,10 +1011,9 @@
   {
     "item": {
       "uuid": "5Qud7r50mIyR1ZToMUKChu",
-      "title": "In the Heat of the Sun",
+      "title": "阳光灿烂的日子",
       "cover_image_url": "https://neodb.social/m/item/movie/2023/02/02/b4e3ebc3-fd88-4e8f-a2cf-ba7a85cbf7ec.webp",
       "category": "movie",
-      "brief": "1994 film by Jiang Wen",
       "url": "/movie/5Qud7r50mIyR1ZToMUKChu",
       "rating": 8.7,
       "release_date": "1994"
@@ -1092,10 +1023,9 @@
   {
     "item": {
       "uuid": "75xnIJtis3D92xz0xtKlHZ",
-      "title": "The Grandmaster",
+      "title": "一代宗师终极版",
       "cover_image_url": "https://neodb.social/m/item/movie/2023/05/17/542ea8a4-8766-4e72-87be-68dd26b6cd0a.webp",
       "category": "movie",
-      "brief": "Ip Man's peaceful life in Foshan changes after Gong Yutian seeks an heir for his family in Southern China. Ip Man then meets Gong Er who challenges him for the sake of regaining her family's honor. After the Second Sino-Japanese War, Ip Man moves to Hong Kong and struggles to provide for his family. In the mean time, Gong Er chooses the path of vengeance after her father was killed by Ma San.",
       "url": "/movie/75xnIJtis3D92xz0xtKlHZ",
       "rating": 8.1,
       "release_date": "2013"
@@ -1105,10 +1035,9 @@
   {
     "item": {
       "uuid": "4i77XtzQUoz8ORPTdB3uOL",
-      "title": "2012",
+      "title": "2012末日预言(港)",
       "cover_image_url": "https://neodb.social/m/item/fedi/2025/01/13/19428ae2-45c6-437c-ae8a-8bf5f5193dcd.jpg",
       "category": "movie",
-      "brief": "Dr. Adrian Helmsley, part of a worldwide geophysical team investigating the effect on the earth of radiation from unprecedented solar storms, learns that the earth's core is heating up. He warns U.S. President Thomas Wilson that the crust of the earth is becoming unstable and that without proper preparations for saving a fraction of the world's population, the entire race is doomed. Meanwhile, writer Jackson Curtis stumbles on the same information. While the world's leaders race to build \"arks\" to escape the impending cataclysm, Curtis struggles to find a way to save his family. Meanwhile, volcanic eruptions and earthquakes of unprecedented strength wreak havoc around the world.",
       "url": "/movie/4i77XtzQUoz8ORPTdB3uOL",
       "rating": 7.3,
       "release_date": "2009"
@@ -1118,10 +1047,9 @@
   {
     "item": {
       "uuid": "3RrgK18gVbIlS5iSjnKip0",
-      "title": "The Last Emperor",
+      "title": "末代皇帝溥仪(港)",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/02/14/24ddfb7b-671f-4879-9ab7-ad74278de9d0.jpeg",
       "category": "movie",
-      "brief": "A dramatic history of Pu Yi, the last of the Emperors of China, from his lofty birth and brief reign in the Forbidden City, the object of worship by half a billion people; through his abdication, his decline and dissolute lifestyle; his exploitation by the invading Japanese, and finally to his obscure existence as just another peasant worker in the People's Republic.",
       "url": "/movie/3RrgK18gVbIlS5iSjnKip0",
       "rating": 9.3,
       "release_date": "1987"
@@ -1131,10 +1059,9 @@
   {
     "item": {
       "uuid": "6lmKwAYss3F8OKFt2htNE7",
-      "title": "So Young",
+      "title": "致青春",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/152a013281-e4e0-4269-bd76-d072b1c25698.jpg",
       "category": "movie",
-      "brief": "2013 Chinese drama film directed by Zhao Wei",
       "url": "/movie/6lmKwAYss3F8OKFt2htNE7",
       "rating": 5.6,
       "release_date": "2013"
@@ -1144,10 +1071,9 @@
   {
     "item": {
       "uuid": "2G4L7gQHoNsr2ebKb1BhXC",
-      "title": "Departures",
+      "title": "纳棺师",
       "cover_image_url": "https://neodb.social/m/item/tmdb_movie/2025/03/01/04444275-7d80-4166-b673-f6a80f8c1be1.jpg",
       "category": "movie",
-      "brief": "Daigo, a cellist, is laid off from his orchestra and moves with his wife back to his small hometown where the living is cheaper. Thinking he’s applying for a job at a travel agency he finds he’s being interviewed for work with departures of a more permanent nature – as an undertaker’s assistant.",
       "url": "/movie/2G4L7gQHoNsr2ebKb1BhXC",
       "rating": 8.6,
       "release_date": "2008"
@@ -1157,10 +1083,9 @@
   {
     "item": {
       "uuid": "5oHFtDtbvqNlN2AgB1ZPxL",
-      "title": "Duckweed",
+      "title": "乘风破浪",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15230a57b3-212f-43d6-a508-2da9daad45fc.jpg",
       "category": "movie",
-      "brief": "When a son attempts to reconcile with his father, a series of fateful events allow him to experience the father's life in the past.",
       "url": "/movie/5oHFtDtbvqNlN2AgB1ZPxL",
       "rating": 6,
       "release_date": "2017"
@@ -1170,10 +1095,9 @@
   {
     "item": {
       "uuid": "5e6lTFw72btgyNpmkg0fPD",
-      "title": "Lost on Journey",
+      "title": "人在囧途",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1528a6830f-bb98-43b8-a8c4-657f8d0631b6.jpg",
       "category": "movie",
-      "brief": "A boss of a toy corporation, Chenggong Li, tries to head back to Chan Sar to celebrate the Chinese New Year with his family. However, plans don't go as smoothly after he crosses paths with a stranger, Geng Niu.",
       "url": "/movie/5e6lTFw72btgyNpmkg0fPD",
       "rating": 7.1,
       "release_date": "2010"
@@ -1183,10 +1107,9 @@
   {
     "item": {
       "uuid": "4EgUZ8Q66lYax2peTrW5ci",
-      "title": "The Flowers Of War",
+      "title": "金陵十三钗",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/155af47472-cc83-4304-8b5c-b0c9a5d554e7.jpg",
       "category": "movie",
-      "brief": "2011 film directed by Zhang Yimou",
       "url": "/movie/4EgUZ8Q66lYax2peTrW5ci",
       "rating": 7.4,
       "release_date": "2011"
@@ -1196,10 +1119,9 @@
   {
     "item": {
       "uuid": "5bh8eg2ZuwTZuWRzRzcnMB",
-      "title": "Alita: Battle Angel",
+      "title": "铳梦：战斗天使",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/166a8c2d88-bbee-4c40-965d-30666d6bba4e.jpg",
       "category": "movie",
-      "brief": "2019 film directed by Robert Rodriguez",
       "url": "/movie/5bh8eg2ZuwTZuWRzRzcnMB",
       "rating": 7,
       "release_date": "2019"
@@ -1209,10 +1131,9 @@
   {
     "item": {
       "uuid": "6LoMqLR9IGtJ8UwrVAJxzZ",
-      "title": "SoulMate",
+      "title": "七月与安生",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15d3b00121-de78-4e1f-90a3-93a70ce02392.jpg",
       "category": "movie",
-      "brief": "The films spans two decades as the story unfolds in a series of flashbacks that begin when Qiyue and Ansheng were just thirteen. The two became inseparable until they met a boy who ended up tearing their lives apart.",
       "url": "/movie/6LoMqLR9IGtJ8UwrVAJxzZ",
       "rating": 7.1,
       "release_date": "2016"
@@ -1222,10 +1143,9 @@
   {
     "item": {
       "uuid": "1EorKpdrqwhOPLLIeyBSWo",
-      "title": "The Dark Knight Rises",
+      "title": "暗夜骑士崛起",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/13dcf8aa5d-bd61-436f-841c-218dde1598f6.jpg",
       "category": "movie",
-      "brief": "Following the death of District Attorney Harvey Dent, Batman assumes responsibility for Dent's crimes to protect the late attorney's reputation and is subsequently hunted by the Gotham City Police Department. Eight years later, Batman encounters the mysterious Selina Kyle and the villainous Bane, a new terrorist leader who overwhelms Gotham's finest. The Dark Knight resurfaces to protect a city that has branded him an enemy.",
       "url": "/movie/1EorKpdrqwhOPLLIeyBSWo",
       "rating": 8.5,
       "release_date": "2012"
@@ -1235,10 +1155,9 @@
   {
     "item": {
       "uuid": "0372aKuiEqCv83eXBuabCs",
-      "title": "The Ghouls",
+      "title": "鬼吹灯",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1674506c02-8b3c-4d4f-9f0e-00cdae0dab43.jpg",
       "category": "movie",
-      "brief": "2015 Chinese film directed by Wu Ershan",
       "url": "/movie/0372aKuiEqCv83eXBuabCs",
       "rating": 6.7,
       "release_date": "2015"
@@ -1248,10 +1167,9 @@
   {
     "item": {
       "uuid": "40cfCg1qsYluVauoxY5Oes",
-      "title": "Finding Mr. Right",
+      "title": "情定西雅图",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15022b69b2-5ab9-443b-bf0f-d243a9c12f0d.jpg",
       "category": "movie",
-      "brief": "2013 film directed by Xue Xiaolu",
       "url": "/movie/40cfCg1qsYluVauoxY5Oes",
       "rating": 6.5,
       "release_date": "2013"
@@ -1261,10 +1179,9 @@
   {
     "item": {
       "uuid": "3hD43Qk0eUcU6grfX8wE19",
-      "title": "Lifetimes",
+      "title": "人生",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/145f861699-f73a-4881-8146-9f775950635b.jpg",
       "category": "movie",
-      "brief": "1994 Chinese film directed by Zhang Yimou",
       "url": "/movie/3hD43Qk0eUcU6grfX8wE19",
       "rating": 9,
       "release_date": "1994"
@@ -1274,10 +1191,9 @@
   {
     "item": {
       "uuid": "2V5JzwI8AsHEqfEYqx0pzY",
-      "title": "Dunkirk",
+      "title": "敦刻尔克大撤退",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/154db306bd-3419-4f72-9d2c-3e07fa0385c9.jpg",
       "category": "movie",
-      "brief": "The story of the miraculous evacuation of Allied soldiers from Belgium, Britain, Canada and France, who were cut off and surrounded by the German army from the beaches and harbour of Dunkirk between May 26th and June 4th 1940 during World War II.",
       "url": "/movie/2V5JzwI8AsHEqfEYqx0pzY",
       "rating": 8.3,
       "release_date": "2017"
@@ -1287,10 +1203,9 @@
   {
     "item": {
       "uuid": "1qb5WP9J411ADbsfolYr4h",
-      "title": "Crazy Stone",
+      "title": "疯狂的石头",
       "cover_image_url": "https://neodb.social/m/item/movie/2023/05/14/31bc2bb5-7210-4ed0-891c-520075ac36e7.webp",
       "category": "movie",
-      "brief": "2006 Chinese film from Ning Hao",
       "url": "/movie/1qb5WP9J411ADbsfolYr4h",
       "rating": 8.2,
       "release_date": "2006"
@@ -1300,10 +1215,9 @@
   {
     "item": {
       "uuid": "3kenDPe2q8jmtQh3ui9EXF",
-      "title": "Love is Not Blind",
+      "title": "黄了一个来月(豆友译名)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1561b5d15a-4f43-4d0b-9490-4402d3768d78.jpg",
       "category": "movie",
-      "brief": "2011 film directed by Hua-Tao Teng",
       "url": "/movie/3kenDPe2q8jmtQh3ui9EXF",
       "rating": 6.7,
       "release_date": "2011"
@@ -1313,10 +1227,9 @@
   {
     "item": {
       "uuid": "1g09N0yiMHxwnwGFlRTLlV",
-      "title": "Detective Chinatown",
+      "title": "唐探",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15568d4a23-5ef0-4cba-96f4-487d3babbaa8.jpg",
       "category": "movie",
-      "brief": "After being rejected from the police college, a mannerly man travels to Bangkok where he and an energetic distant relative must solve a murder case.",
       "url": "/movie/1g09N0yiMHxwnwGFlRTLlV",
       "rating": 6.8,
       "release_date": "2015"
@@ -1326,10 +1239,9 @@
   {
     "item": {
       "uuid": "3XgtUjRhVKtoHFVtMtefq4",
-      "title": "Hacksaw Ridge",
+      "title": "钢铁英雄(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/150723281a-b7e9-40ae-8c35-16c18cc6692a.jpg",
       "category": "movie",
-      "brief": "WWII American Army Medic Desmond T. Doss, who served during the Battle of Okinawa, refuses to kill people and becomes the first Conscientious Objector in American history to receive the Congressional Medal of Honor.",
       "url": "/movie/3XgtUjRhVKtoHFVtMtefq4",
       "rating": 8.3,
       "release_date": "2016"
@@ -1339,10 +1251,9 @@
   {
     "item": {
       "uuid": "1ctdpRzZj96ZUShlJC9yVz",
-      "title": "Operation Mekong",
+      "title": "湄公河",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15881fc78e-fd01-4cab-aa49-030c330e48dd.jpg",
       "category": "movie",
-      "brief": "2016 film by Dante Lam",
       "url": "/movie/1ctdpRzZj96ZUShlJC9yVz",
       "rating": 7.3,
       "release_date": "2016"
@@ -1352,10 +1263,9 @@
   {
     "item": {
       "uuid": "79xI5OWqu8YpRy91nH4P0V",
-      "title": "Kung Fu Hustle",
+      "title": "功夫3D",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/135717365f-c912-4679-9f01-b05fcca43095.jpg",
       "category": "movie",
-      "brief": "It's the 1940s, and the notorious Axe Gang terrorizes Shanghai. Small-time criminals Sing and Bone hope to join, but they only manage to make lots of very dangerous enemies. Fortunately for them, kung fu masters and hidden strength can be found in unlikely places. Now they just have to take on the entire Axe Gang.",
       "url": "/movie/79xI5OWqu8YpRy91nH4P0V",
       "rating": 8.4,
       "release_date": "2004"
@@ -1365,10 +1275,9 @@
   {
     "item": {
       "uuid": "7TjcwpRxvBblxskweu2EFo",
-      "title": "Laputa: Castle in the Sky",
+      "title": "空中城堡“拉普他”",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2023/03/01/c0aa1c9e-0312-4212-b2d0-31af97411021.jpg",
       "category": "movie",
-      "brief": "A young boy and a girl with a magic crystal must race against pirates and foreign agents in a search for a legendary floating castle.",
       "url": "/movie/7TjcwpRxvBblxskweu2EFo",
       "rating": 8.9,
       "release_date": "1986"
@@ -1378,10 +1287,9 @@
   {
     "item": {
       "uuid": "4cTcCSwAMsVDA5d0OGS0xR",
-      "title": "Silenced",
+      "title": "漩涡",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15c2a7d9fb-6ae0-4437-8860-d638f4e239f4.jpg",
       "category": "movie",
-      "brief": "2011 film by Hwang Dong-hyuk",
       "url": "/movie/4cTcCSwAMsVDA5d0OGS0xR",
       "rating": 9.1,
       "release_date": "2011"
@@ -1391,10 +1299,9 @@
   {
     "item": {
       "uuid": "6eCRaqynE3ISWPWgEStp63",
-      "title": "Mr. Six",
+      "title": "老炮儿",
       "cover_image_url": "https://neodb.social/m/item/movie/2023/02/16/918b1177-ef27-4f62-853c-d95b82eca6b9.webp",
       "category": "movie",
-      "brief": "2015 film by Guan Hu",
       "url": "/movie/6eCRaqynE3ISWPWgEStp63",
       "rating": 7.2,
       "release_date": "2015"
@@ -1404,10 +1311,9 @@
   {
     "item": {
       "uuid": "0Z2iixXjapnXKu8V0wUYtj",
-      "title": "Mr. Donkey",
+      "title": "驴得水",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15b5fa8d7e-ad33-4736-a9db-f39c6613b08b.jpg",
       "category": "movie",
-      "brief": "2016 Chinese film",
       "url": "/movie/0Z2iixXjapnXKu8V0wUYtj",
       "rating": 8,
       "release_date": "2016"
@@ -1417,10 +1323,9 @@
   {
     "item": {
       "uuid": "0NWnd19YM31Ze9WBXt1m0i",
-      "title": "Pirates of the Caribbean: The Curse of the Black Pearl",
+      "title": "海盗船",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/140227e919-2d47-4f7b-b04d-35b8fc7dbd91.jpg",
       "category": "movie",
-      "brief": "Jack Sparrow, a freewheeling 18th-century pirate, quarrels with a rival pirate bent on pillaging Port Royal. When the governor's daughter is kidnapped, Sparrow decides to help the girl's love save her.",
       "url": "/movie/0NWnd19YM31Ze9WBXt1m0i",
       "rating": 8.4,
       "release_date": "2003"
@@ -1430,10 +1335,9 @@
   {
     "item": {
       "uuid": "2oj30A1hDus2wDRd2obyVU",
-      "title": "King of Comedy",
+      "title": "喜剧之王",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1568906669-00c1-4f62-a7b2-24068159e264.jpg",
       "category": "movie",
-      "brief": "1999 film by Stephen Chow, Lee Lik-chi",
       "url": "/movie/2oj30A1hDus2wDRd2obyVU",
       "rating": 8.5,
       "release_date": "1999"
@@ -1443,10 +1347,9 @@
   {
     "item": {
       "uuid": "0i7tT8JBSvQaBimBf34r90",
-      "title": "Mermaid",
+      "title": "美人鱼",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15441d0fe9-fa9b-4fb8-b41c-16f4b4d500ea.jpg",
       "category": "movie",
-      "brief": "2016 film directed by Stephen Chow",
       "url": "/movie/0i7tT8JBSvQaBimBf34r90",
       "rating": 5.8,
       "release_date": "2016"
@@ -1456,10 +1359,9 @@
   {
     "item": {
       "uuid": "33LWgbD3AIK7K8wSxAhtTp",
-      "title": "Fight Club",
+      "title": "格斗俱乐部",
       "cover_image_url": "https://neodb.social/m/item/movie/2025/03/20/cd31b0e5-a9bc-41fa-be6a-84274cb31815.jpeg",
       "category": "movie",
-      "brief": "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground \"fight clubs\" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion.",
       "url": "/movie/33LWgbD3AIK7K8wSxAhtTp",
       "rating": 9,
       "release_date": "1999"
@@ -1469,10 +1371,9 @@
   {
     "item": {
       "uuid": "6TlNfO3Svt0mcuUh67RnpO",
-      "title": "The Godfather",
+      "title": "教父",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1324f7bdb2-898a-450b-95ca-73c4d1b92011.jpg",
       "category": "movie",
-      "brief": "Spanning the years 1945 to 1955, a chronicle of the fictional Italian-American Corleone crime family. When organized crime family patriarch, Vito Corleone barely survives an attempt on his life, his youngest son, Michael steps in to take care of the would-be killers, launching a campaign of bloody revenge.",
       "url": "/movie/6TlNfO3Svt0mcuUh67RnpO",
       "rating": 9.1,
       "release_date": "1972"
@@ -1482,10 +1383,9 @@
   {
     "item": {
       "uuid": "0S6OeEAjL7DhWm3lGecNby",
-      "title": "Goodbye Mr. Loser",
+      "title": "夏洛特烦恼",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15d0883f9f-f849-4054-9b49-e021f380f73b.jpg",
       "category": "movie",
-      "brief": "A middle-aged loser travels back in time to his high scool years to put his life on the right track.",
       "url": "/movie/0S6OeEAjL7DhWm3lGecNby",
       "rating": 6.5,
       "release_date": "2015"
@@ -1495,10 +1395,9 @@
   {
     "item": {
       "uuid": "3FOCY6WFgq7uG8vmbgM5io",
-      "title": "Lost in Thailand",
+      "title": "人在囧途2",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/154d1c02fe-eaef-453f-b237-2052890e0a5e.jpg",
       "category": "movie",
-      "brief": "2012 Chinese film directed by Xu Zheng",
       "url": "/movie/3FOCY6WFgq7uG8vmbgM5io",
       "rating": 6.6,
       "release_date": "2012"
@@ -1508,10 +1407,9 @@
   {
     "item": {
       "uuid": "1MY6Lcjbc6Ntund3dMxrL6",
-      "title": "Malena",
+      "title": "玛琳娜",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1491639d39-3c0e-4724-bfe3-4cde156a927d.jpg",
       "category": "movie",
-      "brief": "During WWII, a teenage boy discovering himself becomes love-stricken by Malèna, a sensual woman living in a small, narrow-minded Italian town.",
       "url": "/movie/1MY6Lcjbc6Ntund3dMxrL6",
       "rating": 8.6,
       "release_date": "2000"
@@ -1521,10 +1419,9 @@
   {
     "item": {
       "uuid": "1fKHXCvbIgYKCk7PXmbilA",
-      "title": "Flirting Scholar",
+      "title": "唐伯虎点秋香",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/13147ff4ca-6cbb-411e-b76d-6c6a9b1a2687.jpg",
       "category": "movie",
-      "brief": "1993 film by Lee Lik-chi",
       "url": "/movie/1fKHXCvbIgYKCk7PXmbilA",
       "rating": 8.2,
       "release_date": "1993"
@@ -1534,10 +1431,9 @@
   {
     "item": {
       "uuid": "3AtljwtTdzePF9IKtsW9TB",
-      "title": "Intouchables",
+      "title": "不可触摸",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15ea8abbf5-34b4-4354-a74a-4bd75ae8cf66.jpg",
       "category": "movie",
-      "brief": "A true story of two men who should never have met – a quadriplegic aristocrat who was injured in a paragliding accident and a young man from the projects.",
       "url": "/movie/3AtljwtTdzePF9IKtsW9TB",
       "rating": 8.8,
       "release_date": "2011"
@@ -1547,10 +1443,9 @@
   {
     "item": {
       "uuid": "41bYRpQkGrnC1kRYyL4BmS",
-      "title": "The Dark Knight",
+      "title": "蝙蝠侠-黑夜之神(港)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/13ebc0ea8c-ae2c-4329-93be-c1970a37e20d.jpg",
       "category": "movie",
-      "brief": "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.",
       "url": "/movie/41bYRpQkGrnC1kRYyL4BmS",
       "rating": 9.1,
       "release_date": "2008"
@@ -1560,10 +1455,9 @@
   {
     "item": {
       "uuid": "17LPNra5Jn5G1Kiu5tVuyy",
-      "title": "Train to Busan",
+      "title": "尸速列车(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1342c2c8f4-6447-4008-9f51-2fcd641c4799.jpg",
       "category": "movie",
-      "brief": "2016 film directed by Yeon Sang-ho",
       "url": "/movie/17LPNra5Jn5G1Kiu5tVuyy",
       "rating": 7.8,
       "release_date": "2016"
@@ -1573,10 +1467,9 @@
   {
     "item": {
       "uuid": "7kjsxA6O0pN9N0ECKa9JVG",
-      "title": "You Are the Apple of My Eye",
+      "title": "那些年，我们一起追的女孩",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1543c7fce4-2f1d-402b-b4b1-27a1a74d76bb.jpg",
       "category": "movie",
-      "brief": "A group of close friends who attend a private school all have a debilitating crush on the sunny star pupil, Shen Chia-yi. The only member of the group who claims not to is Ko Ching-teng, but he ends up loving her as well.",
       "url": "/movie/7kjsxA6O0pN9N0ECKa9JVG",
       "rating": 7.7,
       "release_date": "2011"
@@ -1586,10 +1479,9 @@
   {
     "item": {
       "uuid": "0cWIcheu8UEhIRKRnPriuu",
-      "title": "Wolf Warriors 2",
+      "title": "新战死沙场",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15592aceaa-38c2-4c47-ad69-e8e41d11a7fb.jpg",
       "category": "movie",
-      "brief": "2017 Chinese action film by Wu Jing",
       "url": "/movie/0cWIcheu8UEhIRKRnPriuu",
       "rating": 5.7,
       "release_date": "2017"
@@ -1599,10 +1491,9 @@
   {
     "item": {
       "uuid": "1XJWHHt2ZGaHDZDywAqVVx",
-      "title": "V for Vendetta",
+      "title": "V字别动队",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/305e9bf79f-f5f0-4c2a-b81a-644da653bc12.jpg",
       "category": "movie",
-      "brief": "In a world in which Great Britain has become a fascist state, a masked vigilante known only as “V” conducts guerrilla warfare against the oppressive British government. When V rescues a young woman from the secret police, he finds in her an ally with whom he can continue his fight to free the people of Britain.",
       "url": "/movie/1XJWHHt2ZGaHDZDywAqVVx",
       "rating": 8.8,
       "release_date": "2005"
@@ -1612,10 +1503,9 @@
   {
     "item": {
       "uuid": "7I0X1RnNmIc8PEOnGsjJ5G",
-      "title": "A Chinese Odyssey Part One - Pandora's Box",
+      "title": "西游记第101回之月光宝盒",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/13e99a10f0-76d0-4038-b4f6-d02a2ed7a383.jpg",
       "category": "movie",
-      "brief": "When the Goddess of Happiness tosses the Longevity Monk and his disciples out of heaven (because the Monkey King tried to attain immortality), the Monkey King is reincarnated as the Joker. He now spends his time chasing two jealous women. When one of them is dying, the Joker goes back in time in an attempt to save her.",
       "url": "/movie/7I0X1RnNmIc8PEOnGsjJ5G",
       "rating": 8.6,
       "release_date": "1995"
@@ -1625,10 +1515,9 @@
   {
     "item": {
       "uuid": "6fL5ox33A5OoM1OdUarTqn",
-      "title": "The Chorus",
+      "title": "歌声伴我心(港)",
       "cover_image_url": "https://neodb.social/m/item/movie/2023/04/28/581b1b98-9a6e-45b4-809f-a39b705876d5.webp",
       "category": "movie",
-      "brief": "2004 film by Christophe Barratier",
       "url": "/movie/6fL5ox33A5OoM1OdUarTqn",
       "rating": 9.1,
       "release_date": "2004"
@@ -1638,10 +1527,9 @@
   {
     "item": {
       "uuid": "0c0WkLq3zobatTWPrKagFP",
-      "title": "Your Name",
+      "title": "君之名",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15e6ca679d-2d3d-4e6e-86c6-0e8580f01846.jpg",
       "category": "movie",
-      "brief": "High schoolers Mitsuha and Taki are complete strangers living separate lives. But one night, they suddenly switch places. Mitsuha wakes up in Taki’s body, and he in hers. This bizarre occurrence continues to happen randomly, and the two must adjust their lives around each other.",
       "url": "/movie/0c0WkLq3zobatTWPrKagFP",
       "rating": 8.2,
       "release_date": "2016"
@@ -1651,10 +1539,9 @@
   {
     "item": {
       "uuid": "7n13RXkBRJlMkrLKTBejvD",
-      "title": "Hachi: A Dog's Tale",
+      "title": "忠犬八公的故事",
       "cover_image_url": "https://neodb.social/m/item/imdb/2023/09/24/081107b4-5d7d-4465-8c47-ca0ade0424af.jpg",
       "category": "movie",
-      "brief": "A drama based on the true story of a college professor's bond with the abandoned dog he takes into his home.",
       "url": "/movie/7n13RXkBRJlMkrLKTBejvD",
       "rating": 8.8,
       "release_date": "2009"
@@ -1664,10 +1551,9 @@
   {
     "item": {
       "uuid": "70XFNgP9EiqlvREPNVbT7O",
-      "title": "A Chinese Odyssey Part Two - Cinderella",
+      "title": "西游记大结局之仙侣奇缘",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/13bef5e4f5-105e-436d-b580-7f223a167cb7.jpg",
       "category": "movie",
-      "brief": "This sequel to \"Pandora's Box\" continues director Jeffrey Lau's adaptation of the Buddhism saga \"Journey to the West\". Stranded five centuries in the past, Joker Monkey King must battle a variety of monsters, seductive women and super-powered villains to save the dying Pak Jing-Jing.",
       "url": "/movie/70XFNgP9EiqlvREPNVbT7O",
       "rating": 8.9,
       "release_date": "1995"
@@ -1677,10 +1563,9 @@
   {
     "item": {
       "uuid": "7YokK8HuhFi8EwCtl7lGM5",
-      "title": "Dangal",
+      "title": "摔跤家族",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1502c1ffd2-6210-4a80-b843-27465766fc86.jpg",
       "category": "movie",
-      "brief": "Dangal is an extraordinary true story based on the life of Mahavir Singh and his two daughters, Geeta and Babita Phogat. The film traces the inspirational journey of a father who trains his daughters to become world class wrestlers.",
       "url": "/movie/7YokK8HuhFi8EwCtl7lGM5",
       "rating": 8.6,
       "release_date": "2016"
@@ -1690,10 +1575,9 @@
   {
     "item": {
       "uuid": "1j6gaZEDVK1IDx4CWMhV5q",
-      "title": "The Pursuit of Happyness",
+      "title": "幸福追击",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1506dd12e7-f31e-4954-a991-f75e84b4afc6.jpg",
       "category": "movie",
-      "brief": "A struggling salesman takes custody of his son as he's poised to begin a life-changing professional career.",
       "url": "/movie/1j6gaZEDVK1IDx4CWMhV5q",
       "rating": 8.4,
       "release_date": "2006"
@@ -1703,10 +1587,9 @@
   {
     "item": {
       "uuid": "3W1p0hQhFGBgOYN4o0E3cT",
-      "title": "Let The Bullets Fly",
+      "title": "让子弹飞",
       "cover_image_url": "https://neodb.social/m/item/movie/2023/05/14/c6b6a72c-2a26-487c-9c3f-54c23cf4ca9e.webp",
       "category": "movie",
-      "brief": "When circumstances force an outlaw to impersonate a county governor and clean up a corrupt town, the Robin Hood figure finds himself in a showdown with the local godfather.",
       "url": "/movie/3W1p0hQhFGBgOYN4o0E3cT",
       "rating": 8.8,
       "release_date": "2010"
@@ -1717,10 +1600,9 @@
   {
     "item": {
       "uuid": "2yRHCS7gP1d89K58GkRh8K",
-      "title": "The Legend of 1900",
+      "title": "传奇1900",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/14eea8a313-2a6d-40fc-96b6-90594849b23d.jpg",
       "category": "movie",
-      "brief": "1998 film by Giuseppe Tornatore",
       "url": "/movie/2yRHCS7gP1d89K58GkRh8K",
       "rating": 9,
       "release_date": "1998"
@@ -1730,10 +1612,9 @@
   {
     "item": {
       "uuid": "78hXBnbUuPhcRn1igYZF6F",
-      "title": "Flipped",
+      "title": "梧桐树之恋",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/14b547e445-785d-44e9-a690-9f9ce7ab8999.jpg",
       "category": "movie",
-      "brief": "When Juli meets Bryce in the second grade, she knows it's true love. After spending six years trying to convince Bryce the same, she's ready to give up - until he starts to reconsider.",
       "url": "/movie/78hXBnbUuPhcRn1igYZF6F",
       "rating": 8.5,
       "release_date": "2010"
@@ -1743,10 +1624,9 @@
   {
     "item": {
       "uuid": "0ewq8wWrMcsGAsi7TC6FB1",
-      "title": "Titanic",
+      "title": "铁达尼号(港/台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1419ca07b1-ec55-4e55-9bd9-c27df39495b6.jpg",
       "category": "movie",
-      "brief": "101-year-old Rose DeWitt Bukater tells the story of her life aboard the Titanic, 84 years later. A young Rose boards the ship with her mother and fiancé. Meanwhile, Jack Dawson and Fabrizio De Rossi win third-class tickets aboard the ship. Rose tells the whole story from Titanic's departure through to its death—on its first and last voyage—on April 15, 1912.",
       "url": "/movie/0ewq8wWrMcsGAsi7TC6FB1",
       "rating": 9.1,
       "release_date": "1997"
@@ -1756,10 +1636,9 @@
   {
     "item": {
       "uuid": "4RQwAeTa5E2DKPPbFt4UVJ",
-      "title": "Farewell My Concubine",
+      "title": "霸王別姬",
       "cover_image_url": "https://neodb.social/m/item/movie/2023/02/02/9fcaf1da-6927-4d94-b5d2-da74ce9e5414.webp",
       "category": "movie",
-      "brief": "Two boys meet at an opera training school in Peking in 1924. Their resulting friendship will span nearly 70 years and endure some of the most troublesome times in China's history.",
       "url": "/movie/4RQwAeTa5E2DKPPbFt4UVJ",
       "rating": 9.5,
       "release_date": "1993"
@@ -1769,10 +1648,9 @@
   {
     "item": {
       "uuid": "7RwHsgClhqDwb3vCzBNACZ",
-      "title": "Forrest Gump",
+      "title": "福雷斯特·冈普",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/13d1567d07-417b-4b7b-8356-5d0b87f43128.jpg",
       "category": "movie",
-      "brief": "A man with a low IQ has accomplished great things in his life and been present during significant historic events—in each case, far exceeding what anyone imagined he could do. But despite all he has achieved, his one true love eludes him.",
       "url": "/movie/7RwHsgClhqDwb3vCzBNACZ",
       "rating": 9.1,
       "release_date": "1994"
@@ -1782,10 +1660,9 @@
   {
     "item": {
       "uuid": "1tinbILMzwlY1GWoo89qfL",
-      "title": "Spirited Away",
+      "title": "千与千寻的神隐",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/144ed58222-783e-4bf5-9563-399c6f0c2b3d.jpg",
       "category": "movie",
-      "brief": "A young girl, Chihiro, becomes trapped in a strange new world of spirits. When her parents undergo a mysterious transformation, she must call upon the courage she never knew she had to free her family.",
       "url": "/movie/1tinbILMzwlY1GWoo89qfL",
       "rating": 9.3,
       "release_date": "2001"
@@ -1795,10 +1672,9 @@
   {
     "item": {
       "uuid": "0RZzjvRiIB3ywsyEToOhq7",
-      "title": "Leon",
+      "title": "杀手里昂",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/14bd0a7d78-fda5-47f9-9d6c-8fbf573ce8c3.jpg",
       "category": "movie",
-      "brief": "Léon, the top hit man in New York, has earned a rep as an effective \"cleaner\". But when his next-door neighbors are wiped out by a loose-cannon DEA agent, he becomes the unwilling custodian of 12-year-old Mathilda. Before long, Mathilda's thoughts turn to revenge, and she considers following in Léon's footsteps.",
       "url": "/movie/0RZzjvRiIB3ywsyEToOhq7",
       "rating": 9.1,
       "release_date": "1994"
@@ -1808,10 +1684,9 @@
   {
     "item": {
       "uuid": "6SAqdyMEu3kGepBN0mHZAr",
-      "title": "The Shawshank Redemption",
+      "title": "消香克的救赎",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/14e5043627-8e2d-43c0-a6cc-a8e05d8115d3.jpg",
       "category": "movie",
-      "brief": "Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.",
       "url": "/movie/6SAqdyMEu3kGepBN0mHZAr",
       "rating": 9.4,
       "release_date": "1994"
@@ -1821,10 +1696,9 @@
   {
     "item": {
       "uuid": "4WzBsUhzv4IXog2TYyJAP4",
-      "title": "Blind Massage",
+      "title": "推拿",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15a2f45055-f7fd-4e4c-ba2b-c9438595671d.jpg",
       "category": "movie",
-      "brief": "2014 film directed by Lou Ye",
       "url": "/movie/4WzBsUhzv4IXog2TYyJAP4",
       "rating": 8,
       "release_date": "2014"
@@ -1835,10 +1709,9 @@
   {
     "item": {
       "uuid": "0wuHeSHIeXLtezLCsssmnf",
-      "title": "A Night Deeply Drunk on the Spring Breeze",
+      "title": "春热",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15ef885c05-3eb7-48f9-8a51-ffc98674447b.jpg",
       "category": "movie",
-      "brief": "2009 Chinese film by Lou Ye",
       "url": "/movie/0wuHeSHIeXLtezLCsssmnf",
       "rating": 8.1,
       "release_date": "2009"
@@ -1849,10 +1722,9 @@
   {
     "item": {
       "uuid": "27IiRc4CWoit53EVUfSzAJ",
-      "title": "Suzhou River",
+      "title": "苏州河",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/16f8ecf183-944c-4ed5-8483-517794c2c393.jpg",
       "category": "movie",
-      "brief": "上海苏州河上，用摩托车替人送货的马达接下送接纯真少女牡丹的活，两人相处时，牡丹爱上马达，但就在她决定把终身托付给对方时，马达财迷心窍联合黑道朋友绑架了她，令牡丹心灰意冷跳进苏州河里。临跳前，牡丹丢下会变成美人鱼再寻马达的话。 五年后，为自己行为懊悔不迭的马达疑惑牡丹又回来了，开始四处找寻。当在某酒吧里看到扮美人鱼表演的美美时，马达认定她就是牡丹，然而美美不过是另一个痴情女子而已。",
       "url": "/movie/27IiRc4CWoit53EVUfSzAJ",
       "rating": 8,
       "release_date": "2000"
@@ -1863,10 +1735,9 @@
   {
     "item": {
       "uuid": "3JOY5ebOdSiqNFx73KQiCC",
-      "title": "Nymphomaniac: Volume II",
+      "title": "性爱成瘾的女人(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/14ca34b6da-2ca6-402a-94bc-9e5a7b748e26.jpg",
       "category": "movie",
-      "brief": "2013 film directed by Lars von Trier",
       "url": "/movie/3JOY5ebOdSiqNFx73KQiCC",
       "rating": 7.9,
       "release_date": "2013"
@@ -1876,10 +1747,9 @@
   {
     "item": {
       "uuid": "0q3PQhCOfJbmp4yY5qoL31",
-      "title": "Hello Mr. Billionaire",
+      "title": "西虹市首富",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/161baa0173-8a4d-476f-8c9a-b29c9c8ee4b6.jpg",
       "category": "movie",
-      "brief": "2018 Chinese film",
       "url": "/movie/0q3PQhCOfJbmp4yY5qoL31",
       "rating": 5.9,
       "release_date": "2018"
@@ -1889,10 +1759,9 @@
   {
     "item": {
       "uuid": "1OaWCbcMzYAp15438lDbjh",
-      "title": "Ready Player One",
+      "title": "一号玩家",
       "cover_image_url": "https://neodb.social/m/item/fedi/2024/10/23/a22a5764-cfb6-4e2f-bbd6-254d0a241f3d.jpg",
       "category": "movie",
-      "brief": "When the creator of a popular video game system dies, a virtual contest is created to compete for his fortune.",
       "url": "/movie/1OaWCbcMzYAp15438lDbjh",
       "rating": 8.3,
       "release_date": "2018"
@@ -1902,10 +1771,9 @@
   {
     "item": {
       "uuid": "4CSpCTD0WuYEHjbGs4sIbg",
-      "title": "Operation Red Sea",
+      "title": "红海风暴",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/154ff20ed0-6fd6-4eae-abad-0e6f970b885a.jpg",
       "category": "movie",
-      "brief": "2018 film directed by Dante Lam",
       "url": "/movie/4CSpCTD0WuYEHjbGs4sIbg",
       "rating": 7.3,
       "release_date": "2018"
@@ -1915,10 +1783,9 @@
   {
     "item": {
       "uuid": "3oPFRDb6GNsBH5436CXR9I",
-      "title": "Youth",
+      "title": "歌声离我远去",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15a247ac03-ee4b-42bb-8cfa-60e08aa1af71.jpg",
       "category": "movie",
-      "brief": "2017 film by Feng Xiaogang",
       "url": "/movie/3oPFRDb6GNsBH5436CXR9I",
       "rating": 7.1,
       "release_date": "2017"
@@ -1928,10 +1795,9 @@
   {
     "item": {
       "uuid": "6aJvUXvXU71FhrPcsNIoAe",
-      "title": "Joker",
+      "title": "JOKER小丑（港）",
       "cover_image_url": "https://neodb.social/m/item/fedi/2024/12/18/e1a4d84a-c39d-4094-8b75-b57f2eb31ce0.jpg",
       "category": "movie",
-      "brief": "During the 1980s, a failed stand-up comedian is driven insane and turns to a life of crime and chaos in Gotham City while becoming an infamous psychopathic crime figure.",
       "url": "/movie/6aJvUXvXU71FhrPcsNIoAe",
       "rating": 8.3,
       "release_date": "2019"
@@ -1941,10 +1807,9 @@
   {
     "item": {
       "uuid": "4QU9PwK6I8KrtLKpwUmNm0",
-      "title": "The Island",
+      "title": "诳想曲",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1663bcc4de-a15c-4d50-a3ab-13f9736bd689.jpg",
       "category": "movie",
-      "brief": "2018 Chinese film directed by Huang Bo",
       "url": "/movie/4QU9PwK6I8KrtLKpwUmNm0",
       "rating": 6.8,
       "release_date": "2018"
@@ -1954,10 +1819,9 @@
   {
     "item": {
       "uuid": "0aZgqnqDb6gg3N37DHflTW",
-      "title": "The Bold, the Corrupt, and the Beautiful",
+      "title": "修罗花",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/154de63b38-fefb-4e5a-a5e9-ceee4dd618e6.jpg",
       "category": "movie",
-      "brief": "2017 film by Yang Ya-che",
       "url": "/movie/0aZgqnqDb6gg3N37DHflTW",
       "rating": 8,
       "release_date": "2017"
@@ -1967,10 +1831,9 @@
   {
     "item": {
       "uuid": "5KWqEmDuouxLDveaNBnE8w",
-      "title": "Project Gutenberg",
+      "title": "无双",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15f38a5ea2-9e29-43c4-b2f8-5ecaab181eda.jpg",
       "category": "movie",
-      "brief": "2018 film directed by Felix Chong",
       "url": "/movie/5KWqEmDuouxLDveaNBnE8w",
       "rating": 7.6,
       "release_date": "2018"
@@ -1980,10 +1843,9 @@
   {
     "item": {
       "uuid": "04iYxtHOmn8RHmMm4velHN",
-      "title": "Zhang Yimou's \"Shadow\"",
+      "title": "张艺谋电影“影”纪录片",
       "cover_image_url": "https://neodb.social/m/movie/2021/11/27f557b599-5f1b-4ad7-b3cc-03985610262f.webp",
       "category": "movie",
-      "brief": "Documentary about the making of Zhang Yimou's fiction movie Shadow.",
       "url": "/movie/04iYxtHOmn8RHmMm4velHN",
       "rating": 6.8,
       "release_date": "2018"
@@ -1993,10 +1855,9 @@
   {
     "item": {
       "uuid": "2r0tdYNi9CW69JXlsgDiS8",
-      "title": "The Great Buddha+",
+      "title": "大佛普拉斯",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15549546d0-412c-497b-8a7a-0bc94ac689f5.jpg",
       "category": "movie",
-      "brief": "2017 film by Huang Hsin-yao",
       "url": "/movie/2r0tdYNi9CW69JXlsgDiS8",
       "rating": 8.8,
       "release_date": "2017"
@@ -2006,10 +1867,9 @@
   {
     "item": {
       "uuid": "0KclQ64vqNhi8oLY7A7f5r",
-      "title": "Villain",
+      "title": "山野追踪",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15a11d69da-acf6-4e50-84e9-694c5bd53acd.jpg",
       "category": "movie",
-      "brief": "2018 film by Xin Yukun",
       "url": "/movie/0KclQ64vqNhi8oLY7A7f5r",
       "rating": 8,
       "release_date": "2017"
@@ -2019,10 +1879,9 @@
   {
     "item": {
       "uuid": "3QjgE0V4yaQGbcjGtpvRIz",
-      "title": "Green Book",
+      "title": "绿书",
       "cover_image_url": "https://neodb.social/m/item/fedi/2025/01/20/9af3d23c-62c9-4794-a514-bd3f69ed9f76.jpg",
       "category": "movie",
-      "brief": "Tony Lip, a bouncer in 1962, is hired to drive pianist Don Shirley on a tour through the Deep South in the days when African Americans, forced to find alternate accommodations and services due to segregation laws below the Mason-Dixon Line, relied on a guide called The Negro Motorist Green Book.",
       "url": "/movie/3QjgE0V4yaQGbcjGtpvRIz",
       "rating": 8.5,
       "release_date": "2018"
@@ -2032,10 +1891,9 @@
   {
     "item": {
       "uuid": "1tUKRo1QZg7JFsKogoQvun",
-      "title": "Dying to Survive",
+      "title": "生命之路",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/02/14/ffe09ef7-e2d1-43f4-86de-0e9c6bec6071.jpeg",
       "category": "movie",
-      "brief": "2018 Chinese film",
       "url": "/movie/1tUKRo1QZg7JFsKogoQvun",
       "rating": 8.6,
       "release_date": "2018"
@@ -2045,10 +1903,9 @@
   {
     "item": {
       "uuid": "2FbIpCnpZOgzaIuo9GyTIy",
-      "title": "An Elephant Sitting Still",
+      "title": "爱在樱花盛开时",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/156a0d49bc-c17f-4722-ae0e-39f76f3136a7.jpg",
       "category": "movie",
-      "brief": "2018 film",
       "url": "/movie/2FbIpCnpZOgzaIuo9GyTIy",
       "rating": 8.4,
       "release_date": "2018"
@@ -2058,10 +1915,9 @@
   {
     "item": {
       "uuid": "3aJP6qzZQD0DkeoQuqcFU5",
-      "title": "Angels Wear White",
+      "title": "嘉年华",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1524251a56-6389-4dda-a7e6-0f185fb8f095.jpg",
       "category": "movie",
-      "brief": "In a small seaside town, two schoolgirls are assaulted by a middle-aged man in a motel. Mia, a teenager who was working on reception that night, is the only witness. For fear of losing her job, she says nothing. Meanwhile, 12-year-old Wen, one of the victims, finds that her troubles have only just begun. Trapped in a world that offers them no safety, Mia and Wen will have to find their own way out.",
       "url": "/movie/3aJP6qzZQD0DkeoQuqcFU5",
       "rating": 8.5,
       "release_date": "2017"
@@ -2071,10 +1927,9 @@
   {
     "item": {
       "uuid": "65A4qltTZtqX61Jwj9ODHE",
-      "title": "Bohemian Rhapsody",
+      "title": "波希米亚狂想曲(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/155ed959b1-0798-4bbc-9126-15d97d397b16.jpg",
       "category": "movie",
-      "brief": "2018 film directed by Bryan Singer",
       "url": "/movie/65A4qltTZtqX61Jwj9ODHE",
       "rating": 8.3,
       "release_date": "2018"
@@ -2084,10 +1939,9 @@
   {
     "item": {
       "uuid": "33r2iUvUw85I4QErBFtvkV",
-      "title": "Parasite",
+      "title": "寄生虫",
       "cover_image_url": "https://neodb.social/m/item/fedi/2025/01/20/ed66a414-64f8-41a7-9a6c-19242c2a1f67.jpg",
       "category": "movie",
-      "brief": "All unemployed, Ki-taek's family takes peculiar interest in the wealthy and glamorous Parks for their livelihood until they get entangled in an unexpected incident.",
       "url": "/movie/33r2iUvUw85I4QErBFtvkV",
       "rating": 8.4,
       "release_date": "2019"
@@ -2097,10 +1951,9 @@
   {
     "item": {
       "uuid": "172sd9JNRpgSurtNYosomN",
-      "title": "A Cool Fish",
+      "title": "慌枪走板",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15cd943477-b70e-44fa-b85d-86869783bdc2.jpg",
       "category": "movie",
-      "brief": "2018 Chinese film",
       "url": "/movie/172sd9JNRpgSurtNYosomN",
       "rating": 7.7,
       "release_date": "2018"
@@ -2110,10 +1963,9 @@
   {
     "item": {
       "uuid": "00mRnUS4JukAU8091gvE1H",
-      "title": "Ne Zha: Birth of the Demon Child",
+      "title": "哪吒之魔童降世",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15f440c10b-6210-43ff-860d-907297628e18.jpg",
       "category": "movie",
-      "brief": "The Primus extracts a Mixed Yuan Bead into a Spirit Seed and a Demon Pill. The Spirit Seed can be reincarnated as a human to help King Zhou establish a new dynasty, whereas the Demon Pill will create a devil threatening humanity. Ne Zha is the one who is destined to be the hero, but instead he becomes a devil incarnate, because the Spirit Seed and a Demon Pill are switched.",
       "url": "/movie/00mRnUS4JukAU8091gvE1H",
       "rating": 7.4,
       "release_date": "2019"
@@ -2123,10 +1975,9 @@
   {
     "item": {
       "uuid": "2S44tTR5oKyCAu0s9P5AUQ",
-      "title": "Ash is Purest White",
+      "title": "灰烬是最洁白的",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1463d18c77-9389-4a64-928a-91e0aaeb0ed7.jpg",
       "category": "movie",
-      "brief": "2018 film directed by Jia Zhangke",
       "url": "/movie/2S44tTR5oKyCAu0s9P5AUQ",
       "rating": 7.5,
       "release_date": "2018"
@@ -2136,10 +1987,9 @@
   {
     "item": {
       "uuid": "3n86TYzc7HZQZ3NaQLBwuD",
-      "title": "Last Letter",
+      "title": "之华",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15034219f7-88f0-49e3-ae99-825136155f88.jpg",
       "category": "movie",
-      "brief": "All Yuan Zhinan has left behind when she passed away is a letter and an invitation to a school reunion. Attending the reunion in lieu of her late elder sister, Zhihua accidentally runs into Yin Chuan, on whom she had a crush in her youth. As old memories are evoked, and correspondences travel through different contexts and times, Zhihua slowly uncovers the intricate story of the trio.",
       "url": "/movie/3n86TYzc7HZQZ3NaQLBwuD",
       "rating": 6.1,
       "release_date": "2018"
@@ -2149,10 +1999,9 @@
   {
     "item": {
       "uuid": "5TTX7VfN4GHX4HbwLILNpq",
-      "title": "Shoplifters",
+      "title": "万引き家族",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1499c49ec6-6897-4f5a-80ea-8a225bf36d1c.jpg",
       "category": "movie",
-      "brief": "2018 Japanese film",
       "url": "/movie/5TTX7VfN4GHX4HbwLILNpq",
       "rating": 8.8,
       "release_date": "2018"
@@ -2162,10 +2011,9 @@
   {
     "item": {
       "uuid": "4ak4E8tIj7G8KCabFYZwPO",
-      "title": "So Long, My Son",
+      "title": "地久天长",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15771a5ab8-d707-4535-bf5d-a58bc52d4f8f.jpg",
       "category": "movie",
-      "brief": "Two married couples adjust to the vast social and economic changes taking place in China from the 1980s to the present.",
       "url": "/movie/4ak4E8tIj7G8KCabFYZwPO",
       "rating": 7.4,
       "release_date": "2019"
@@ -2175,10 +2023,9 @@
   {
     "item": {
       "uuid": "205lTPMnTPiBhu0qxSkrVo",
-      "title": "The Crossing",
+      "title": "佩佩",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1543acc81f-0985-43de-a8bc-edb9649d21cc.jpg",
       "category": "movie",
-      "brief": "2019 Chinese film",
       "url": "/movie/205lTPMnTPiBhu0qxSkrVo",
       "rating": 7.9,
       "release_date": "2018"
@@ -2188,10 +2035,9 @@
   {
     "item": {
       "uuid": "0FUZ6LeEVisTf0R38PDPVk",
-      "title": "Cloud in the Wind",
+      "title": "风雨云",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1586f89fff-c532-46b7-980c-717083905d95.jfif",
       "category": "movie",
-      "brief": "film directed by Lou Ye",
       "url": "/movie/0FUZ6LeEVisTf0R38PDPVk",
       "rating": 7.4,
       "release_date": "2018"
@@ -2201,10 +2047,9 @@
   {
     "item": {
       "uuid": "6mm951dJwKaWZdT2HkhBEM",
-      "title": "Einstein \u0026 Einstein",
+      "title": "爱因斯坦和爱因斯坦",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15d514432e-a535-493f-a4b6-c4b86e9f9916.jpg",
       "category": "movie",
-      "brief": "2018 film directed by Cao Baoping",
       "url": "/movie/6mm951dJwKaWZdT2HkhBEM",
       "rating": 8.2,
       "release_date": "2013"
@@ -2214,10 +2059,9 @@
   {
     "item": {
       "uuid": "7gCiNfJpt4IfYMKVhf0UqT",
-      "title": "Better Days",
+      "title": "少年的你，如此美丽",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/153dcbfdda-18ce-4e61-9e13-1345dda39ccd.jpg",
       "category": "movie",
-      "brief": "A bullied teenage girl forms an unlikely friendship with a mysterious young man who protects her from her assailants, while she copes with the pressures of her final examinations.",
       "url": "/movie/7gCiNfJpt4IfYMKVhf0UqT",
       "rating": 7.6,
       "release_date": "2019"
@@ -2227,10 +2071,9 @@
   {
     "item": {
       "uuid": "5PWw5ydIB4wy4fKRxgH6aw",
-      "title": "Nymphomaniac: Volume I",
+      "title": "性爱成瘾的女人(台)",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/1587c2bfec-90cc-4aea-a5a1-1b54bef78252.jpg",
       "category": "movie",
-      "brief": "A man named Seligman finds a fainted wounded woman in an alley and he brings her home. She tells him that her name is Joe and that she is nymphomaniac. Joe tells her life and sexual experiences with hundreds of men since she was a young teenager while Seligman tells about his hobbies, such as fly fishing, reading about Fibonacci numbers or listening to organ music.",
       "url": "/movie/5PWw5ydIB4wy4fKRxgH6aw",
       "rating": 8,
       "release_date": "2013"
@@ -2241,11 +2084,22 @@
   },
   {
     "item": {
+      "uuid": "41hu6dGjvqucCpVGzMtIbi",
+      "title": "婊子",
+      "cover_image_url": "https://neodb.social/m/movie/2021/09/162fd98049-f91a-41bc-96bd-9b921003e897.jpg",
+      "category": "movie",
+      "url": "/movie/41hu6dGjvqucCpVGzMtIbi",
+      "rating": 6.6,
+      "release_date": "2011"
+    },
+    "created_time": "2019-07-20T13:54:00Z"
+  },
+  {
+    "item": {
       "uuid": "41vd12aKzk9eGROSWwzcBN",
-      "title": "The Chinese Mayor",
+      "title": "大同",
       "cover_image_url": "https://neodb.social/m/movie/2021/10/06ed304dca-63f9-46ed-b123-b5b6a4b67f61.jpg",
       "category": "movie",
-      "brief": "DATONG follows the life and work of a controversial Chinese Communist Mayor GENG YANBO to tell the story about how he takes a radical reform to demolish 140,000 households and relocate half a million people to give way to restoration of Ancient relic walls in order to adopt a clean economic growth from tourism and culture, which he believes will do good to DA TONG citizen in the long term. With two years in the footsteps of GENG, along with the changing ideology and confrontations from the public, the film is trying to draw a looming shape of future of China.",
       "url": "/movie/41vd12aKzk9eGROSWwzcBN",
       "rating": 9,
       "release_date": "2014"
@@ -2256,24 +2110,10 @@
   },
   {
     "item": {
-      "uuid": "0HNjzxnZt4jIbRfsNAiVRE",
-      "title": "Purple Butterfly",
-      "cover_image_url": "https://neodb.social/m/movie/2021/09/16c63b5f93-947b-4b16-b948-35d6b53e27bb.jpg",
-      "category": "movie",
-      "brief": "Ding Hui is a member of Purple Butterfly, a powerful resistance group in Japanese occupied Shanghai. An unexpected encounter reunites her with Itami, an ex-lover and officer with a secret police unit tasked with dismantling Purple Butterfly.",
-      "url": "/movie/0HNjzxnZt4jIbRfsNAiVRE",
-      "rating": 6.9,
-      "release_date": "2003"
-    },
-    "created_time": "2019-07-20T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "25npThklfAPzcUR1hj1xli",
-      "title": "Platform",
+      "title": "站台",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/155e022d46-a30a-40ec-ba34-7e4bf9491ce2.jpg",
       "category": "movie",
-      "brief": "2000 Chinese film directed by Jia Zhangke",
       "url": "/movie/25npThklfAPzcUR1hj1xli",
       "rating": 8.3,
       "release_date": "2000"
@@ -2282,24 +2122,10 @@
   },
   {
     "item": {
-      "uuid": "41hu6dGjvqucCpVGzMtIbi",
-      "title": "Love and Bruises",
-      "cover_image_url": "https://neodb.social/m/movie/2021/09/162fd98049-f91a-41bc-96bd-9b921003e897.jpg",
-      "category": "movie",
-      "brief": "2011 film directed by Lou Ye",
-      "url": "/movie/41hu6dGjvqucCpVGzMtIbi",
-      "rating": 6.6,
-      "release_date": "2011"
-    },
-    "created_time": "2019-07-20T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "2RvYofkkyDRLz4WZid9Mn6",
-      "title": "Blind Shaft",
+      "title": "盲井",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2025/01/23/79ffd6de-30f3-40ca-a2d5-0c03eaf97e37.webp",
       "category": "movie",
-      "brief": "2003 film by Li Yang",
       "url": "/movie/2RvYofkkyDRLz4WZid9Mn6",
       "rating": 8.8,
       "release_date": "2003"
@@ -2308,11 +2134,22 @@
   },
   {
     "item": {
+      "uuid": "0HNjzxnZt4jIbRfsNAiVRE",
+      "title": "紫蝴蝶",
+      "cover_image_url": "https://neodb.social/m/movie/2021/09/16c63b5f93-947b-4b16-b948-35d6b53e27bb.jpg",
+      "category": "movie",
+      "url": "/movie/0HNjzxnZt4jIbRfsNAiVRE",
+      "rating": 6.9,
+      "release_date": "2003"
+    },
+    "created_time": "2019-07-20T13:54:00Z"
+  },
+  {
+    "item": {
       "uuid": "5jsADC9sGUhv0s3cPXPkRQ",
-      "title": "Hibiscus Town",
+      "title": "芙蓉镇",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/131f51610c-f166-4ba3-a734-bf089151525e.jpg",
       "category": "movie",
-      "brief": "1986 Chinese film directed by Xie Jin",
       "url": "/movie/5jsADC9sGUhv0s3cPXPkRQ",
       "rating": 9.2,
       "release_date": "1987"
@@ -2324,10 +2161,9 @@
   {
     "item": {
       "uuid": "6FpTOxsFDSGT97gAIudALr",
-      "title": "The Wandering Earth",
+      "title": "流浪地球：飞跃2020特别版",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/02/08/ae20a88a-7c4a-4483-9f5f-50fffc51b623.jpeg",
       "category": "movie",
-      "brief": "2019 science fiction film directed by Frant Gwo",
       "url": "/movie/6FpTOxsFDSGT97gAIudALr",
       "rating": 7,
       "release_date": "2019"
@@ -2338,10 +2174,9 @@
   {
     "item": {
       "uuid": "0OsXZTIt1UOOveQi3UXBil",
-      "title": "Inception",
+      "title": "记忆魔方",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2023/01/30/eb0c8821-ae0e-4438-b629-a2c769c161cb.jpg",
       "category": "movie",
-      "brief": "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
       "url": "/movie/0OsXZTIt1UOOveQi3UXBil",
       "rating": 9.1,
       "release_date": "2010"
@@ -2352,10 +2187,9 @@
   {
     "item": {
       "uuid": "5LoChWiSRbdY3OtLoleuvf",
-      "title": "Kokuhaku",
+      "title": "母亲",
       "cover_image_url": "https://neodb.social/m/item/movie/2026/07/24/880df1d0-d426-49ea-b401-2bf4a7f06c38.jpeg",
       "category": "movie",
-      "brief": "2010 film directed by Tetsuya Nakashima",
       "url": "/movie/5LoChWiSRbdY3OtLoleuvf",
       "rating": 8.5,
       "release_date": "2010"
@@ -2365,24 +2199,10 @@
   },
   {
     "item": {
-      "uuid": "1WCun1QjbF6OsYYqo6duVG",
-      "title": "Still Life",
-      "cover_image_url": "https://neodb.social/m/movie/2021/09/149d4cd475-f8ea-4ac5-ab7c-4912f9549d29.jpg",
-      "category": "movie",
-      "brief": "2006 Chinese film directed by Jia Zhangke",
-      "url": "/movie/1WCun1QjbF6OsYYqo6duVG",
-      "rating": 8.5,
-      "release_date": "2006"
-    },
-    "created_time": "2018-07-20T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "5urtESshPrL5VhvGlLfDxA",
-      "title": "The Pickpocket",
+      "title": "小武",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/149960f691-d808-4bdb-9417-3c99b3256a2d.jpg",
       "category": "movie",
-      "brief": "1997 film by Jia Zhangke",
       "url": "/movie/5urtESshPrL5VhvGlLfDxA",
       "rating": 8.7,
       "release_date": "1998"
@@ -2391,11 +2211,22 @@
   },
   {
     "item": {
+      "uuid": "1WCun1QjbF6OsYYqo6duVG",
+      "title": "长江哀歌",
+      "cover_image_url": "https://neodb.social/m/movie/2021/09/149d4cd475-f8ea-4ac5-ab7c-4912f9549d29.jpg",
+      "category": "movie",
+      "url": "/movie/1WCun1QjbF6OsYYqo6duVG",
+      "rating": 8.5,
+      "release_date": "2006"
+    },
+    "created_time": "2018-07-20T13:54:00Z"
+  },
+  {
+    "item": {
       "uuid": "3amXplud7SzmETp0HuNncC",
-      "title": "Summer Palace",
+      "title": "颐和园",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15373ade56-2812-4c51-bfbc-b617ddde6c69.jpg",
       "category": "movie",
-      "brief": "2006 film directed by Lou Ye",
       "url": "/movie/3amXplud7SzmETp0HuNncC",
       "rating": 8.7,
       "release_date": "2006"
@@ -2405,10 +2236,9 @@
   {
     "item": {
       "uuid": "29mf8PCGorJIHEPlKyxSq9",
-      "title": "The Gate of Heavenly Peace",
+      "title": "天安门",
       "cover_image_url": "https://neodb.social/m/movie/2021/12/207ac7e9d6-eadc-4c20-800a-6f19e3522f57.jpg",
       "category": "movie",
-      "brief": "1995 film by Carma Hinton",
       "url": "/movie/29mf8PCGorJIHEPlKyxSq9",
       "rating": 9.4,
       "release_date": "1995"
