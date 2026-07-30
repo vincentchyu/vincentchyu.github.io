@@ -174,18 +174,6 @@
   },
   {
     "item": {
-      "uuid": "33LOjfwbrV4tp9hrTm0qFA",
-      "title": "卧虎藏龙",
-      "cover_image_url": "https://neodb.social/m/item/movie/2026/02/03/8317d9db-5a1a-41a8-81a7-41f401a5142a.jpeg",
-      "category": "movie",
-      "url": "/movie/33LOjfwbrV4tp9hrTm0qFA",
-      "rating": 8.3,
-      "release_date": "2000-05-16"
-    },
-    "created_time": "2025-07-20T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "3JBBQZPu26Fg1R3Wgsqh1n",
       "title": "蓝风筝",
       "cover_image_url": "https://neodb.social/m/movie/2021/10/03d9dfe1ce-52a9-4492-8b23-2c5dfc9fe42e.jpg",
@@ -193,6 +181,18 @@
       "url": "/movie/3JBBQZPu26Fg1R3Wgsqh1n",
       "rating": 8.7,
       "release_date": "1993"
+    },
+    "created_time": "2025-07-20T13:54:00Z"
+  },
+  {
+    "item": {
+      "uuid": "33LOjfwbrV4tp9hrTm0qFA",
+      "title": "卧虎藏龙",
+      "cover_image_url": "https://neodb.social/m/item/movie/2026/02/03/8317d9db-5a1a-41a8-81a7-41f401a5142a.jpeg",
+      "category": "movie",
+      "url": "/movie/33LOjfwbrV4tp9hrTm0qFA",
+      "rating": 8.3,
+      "release_date": "2000-05-16"
     },
     "created_time": "2025-07-20T13:54:00Z"
   },
@@ -292,7 +292,7 @@
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15f62c4093-b3be-4829-87e9-320449e3a5f9.jpg",
       "category": "movie",
       "url": "/movie/6B0zuW9QkAApwjKD3ZLSi4",
-      "rating": 7.7,
+      "rating": 7.6,
       "release_date": "2021"
     },
     "created_time": "2023-07-18T13:54:00Z"
