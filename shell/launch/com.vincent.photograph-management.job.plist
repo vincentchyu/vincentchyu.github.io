@@ -16,7 +16,7 @@
 		<string>./shell/bin/photograph-management</string>
 	</array>
     <key>WorkingDirectory</key>
-    <string>/Users/vincent/Developer/code/go_code/src/github.com/vincenty1ung/vincenty1ung.github.io/</string>
+    <string>/Users/vincent/Sites/vincentchyu.github.io</string>
     <!-- 在登录时自动启动 -->
 	<key>RunAtLoad</key>
 	<true/>

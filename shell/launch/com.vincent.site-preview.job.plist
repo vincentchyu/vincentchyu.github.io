@@ -14,7 +14,7 @@
 		<string>./shell/bin/site-preview</string>
 	</array>
     <key>WorkingDirectory</key>
-    <string>/Users/vincent/Developer/code/go_code/src/github.com/vincenty1ung/vincenty1ung.github.io/</string>
+    <string>/Users/vincent/Sites/vincentchyu.github.io</string>
 	<key>RunAtLoad</key>
 	<true/>
     <key>KeepAlive</key>
