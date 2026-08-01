@@ -94,20 +94,6 @@
   },
   {
     "item": {
-      "uuid": "6goVLEBDJriCkGCNWFXkgM",
-      "title": "迷失北京",
-      "cover_image_url": "https://neodb.social/m/movie/2021/09/14d954636e-b569-4627-9358-d072d2a858e4.jpg",
-      "category": "movie",
-      "url": "/movie/6goVLEBDJriCkGCNWFXkgM",
-      "rating": 6.7,
-      "release_date": "2007"
-    },
-    "created_time": "2026-07-14T13:54:00Z",
-    "comment_text": "人物刻画饱满的是梁家辉的角色，演绎的也是酣畅淋漓，在坏的人也有善的一面再好的人也有恶的一面，菩提生两面。",
-    "rating_grade": 7
-  },
-  {
-    "item": {
       "uuid": "6QkfDyZjTtF8q4DkUeHvrc",
       "title": "大只佬",
       "cover_image_url": "https://neodb.social/m/movie/2021/09/150aa0acb5-2985-4b42-a466-9c0f26b22d1d.jpg",
@@ -118,6 +104,20 @@
     },
     "created_time": "2026-07-14T13:54:00Z",
     "comment_text": "活在当下，种下因得果，尊重自己的内心与做人的操守。",
+    "rating_grade": 7
+  },
+  {
+    "item": {
+      "uuid": "6goVLEBDJriCkGCNWFXkgM",
+      "title": "迷失北京",
+      "cover_image_url": "https://neodb.social/m/movie/2021/09/14d954636e-b569-4627-9358-d072d2a858e4.jpg",
+      "category": "movie",
+      "url": "/movie/6goVLEBDJriCkGCNWFXkgM",
+      "rating": 6.7,
+      "release_date": "2007"
+    },
+    "created_time": "2026-07-14T13:54:00Z",
+    "comment_text": "人物刻画饱满的是梁家辉的角色，演绎的也是酣畅淋漓，在坏的人也有善的一面再好的人也有恶的一面，菩提生两面。",
     "rating_grade": 7
   },
   {
@@ -655,7 +655,7 @@
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15a9bcdbe8-a45f-45e9-9304-288ebf4fc604.jpg",
       "category": "movie",
       "url": "/movie/740JqS74BdBsL7EIcnI1RG",
-      "rating": 7.2,
+      "rating": 7.1,
       "release_date": "2012"
     },
     "created_time": "2019-12-31T05:29:09Z"
@@ -1087,7 +1087,7 @@
       "cover_image_url": "https://neodb.social/m/movie/2021/09/15230a57b3-212f-43d6-a508-2da9daad45fc.jpg",
       "category": "movie",
       "url": "/movie/5oHFtDtbvqNlN2AgB1ZPxL",
-      "rating": 6,
+      "rating": 6.1,
       "release_date": "2017"
     },
     "created_time": "2019-12-30T15:46:43Z"
@@ -2127,7 +2127,7 @@
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2025/01/23/79ffd6de-30f3-40ca-a2d5-0c03eaf97e37.webp",
       "category": "movie",
       "url": "/movie/2RvYofkkyDRLz4WZid9Mn6",
-      "rating": 8.8,
+      "rating": 8.9,
       "release_date": "2003"
     },
     "created_time": "2019-07-20T13:54:00Z"
