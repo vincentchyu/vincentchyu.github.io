@@ -35,7 +35,12 @@ func NewUpdater(rootDir string, token string, opts ...UpdaterOption) (*Updater, 
 	}
 
 	cfg := updaterConfig{
-		httpClient: &http.Client{Timeout: 15 * time.Second},
+		httpClient: &http.Client{
+			Transport: &http.Transport{
+				// Proxy: http.ProxyFromEnvironment,
+			},
+			Timeout: 15 * time.Second,
+		},
 		categories: append([]string(nil), defaultCategories...),
 		dataDir:    filepath.Join(rootDir, "web", "media", "data"),
 	}

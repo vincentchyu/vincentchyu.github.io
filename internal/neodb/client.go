@@ -82,7 +82,7 @@ func (c *Client) EnrichReleaseDates(category string, records []Record) {
 }
 
 func (c *Client) fetchShelfPage(category string, page int) (ShelfResponse, error) {
-	url := fmt.Sprintf("%s/me/shelf/complete?category=%s&page=%d", baseURL, category, page)
+	url := fmt.Sprintf("%s/me/shelf/complete?category=%s&page=%d&page_size=%d", baseURL, category, page, 20)
 	req, err := c.newRequest(url)
 	if err != nil {
 		return ShelfResponse{}, err
