@@ -1,10 +1,10 @@
 (function () {
   const categories = [
     { id: "music", label: "音乐", coverHeightRatio: 1 },
-    { id: "book", label: "书籍", coverHeightRatio: 1.5 },
     { id: "movie", label: "电影", coverHeightRatio: 1.5 },
     { id: "tv", label: "剧集", coverHeightRatio: 1.5 },
     { id: "game", label: "游戏", coverHeightRatio: 1.5 },
+    { id: "book", label: "书籍", coverHeightRatio: 1.5 },
     { id: "podcast", label: "播客", coverHeightRatio: 1.5 },
   ];
 
