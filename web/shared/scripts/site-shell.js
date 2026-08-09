@@ -203,19 +203,179 @@
     }
   }
 
+  /* --- System-level Music Player Component --- */
+  let cplayerLoaded = false;
+
+  function loadCplayer(callback) {
+    if (window.cplayer) {
+      if (callback) callback();
+      return;
+    }
+    if (cplayerLoaded) {
+      const checkInterval = setInterval(() => {
+        if (window.cplayer) {
+          clearInterval(checkInterval);
+          if (callback) callback();
+        }
+      }, 50);
+      return;
+    }
+    cplayerLoaded = true;
+
+    const script = document.createElement("script");
+    script.src = "/web/photography/dist/cplayer.min.js";
+    script.onload = function () {
+      if (callback) callback();
+    };
+    script.onerror = function () {
+      console.error("Failed to load cplayer.min.js");
+      document.querySelectorAll(".audio-loading").forEach((el) => {
+        el.innerHTML = '<span style="color: #999;">音乐播放器加载失败</span>';
+      });
+    };
+    document.body.appendChild(script);
+  }
+
+  function initMusicPlayerInContainer(container) {
+    if (!container) return;
+    const tooltip = container.querySelector(".music-player-tooltip");
+    if (!tooltip) return;
+    const playerTarget = tooltip.querySelector(".app2-music-player") || tooltip.querySelector("#app2");
+    if (!playerTarget) return;
+
+    loadCplayer(() => {
+      if (playerTarget.dataset.initialized) return;
+      playerTarget.dataset.initialized = "true";
+
+      try {
+        const player = new window.cplayer({
+          element: playerTarget,
+          playlist: [
+            {
+              src: "/web/photography/src/music/music-02.m4a",
+              poster: "/web/photography/src/music/cover-02.jpg",
+              name: "Welcome Home, Son",
+              artist: "Radical Face",
+              lyric: "",
+              sublyric: "",
+            },
+            {
+              src: "/web/photography/src/music/music-01.m4a",
+              poster: "/web/photography/src/music/cover-01.jpg",
+              name: "旅途愉快",
+              artist: "寸铁",
+              lyric: "",
+              sublyric: "",
+            },
+          ],
+        });
+        player.mode = "listloop";
+        const loading = tooltip.querySelector(".audio-loading");
+        if (loading) loading.style.display = "none";
+      } catch (err) {
+        console.error("Error initializing cplayer:", err);
+      }
+    });
+  }
+
+  function attachMusicPlayerToContainer(container) {
+    if (!container || container.dataset.musicPlayerAttached) return;
+    container.dataset.musicPlayerAttached = "true";
+    if (!container.classList.contains("site-header-music-container") && !container.classList.contains("portfolio-header-container")) {
+      container.classList.add("site-header-music-container");
+    }
+
+    let tooltip = container.querySelector(".music-player-tooltip");
+    if (!tooltip) {
+      tooltip = document.createElement("div");
+      tooltip.className = "music-player-tooltip";
+      tooltip.innerHTML = `
+        <div class="audio-loading">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span style="margin-left: 0.5rem;">音乐加载中...</span>
+        </div>
+        <div class="app2-music-player"></div>
+      `;
+      container.appendChild(tooltip);
+    }
+
+    // Hover Event (Desktop)
+    container.addEventListener("mouseenter", () => {
+      initMusicPlayerInContainer(container);
+    });
+
+    // Click Event (Mobile Toggle)
+    let isMobileOpen = false;
+    container.addEventListener("click", (e) => {
+      if (window.innerWidth <= 768) {
+        if (e.target.closest(".app2-music-player") || e.target.closest("#app2") || e.target.closest(".audio-loading")) {
+          return;
+        }
+        isMobileOpen = !isMobileOpen;
+        if (isMobileOpen) {
+          tooltip.classList.add("mobile-show");
+          initMusicPlayerInContainer(container);
+        } else {
+          tooltip.classList.remove("mobile-show");
+        }
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (window.innerWidth <= 768 && isMobileOpen) {
+        if (!container.contains(e.target)) {
+          tooltip.classList.remove("mobile-show");
+          isMobileOpen = false;
+        }
+      }
+    });
+  }
+
+  function autoAttachHeaderMusicPlayer() {
+    const explicitContainers = document.querySelectorAll(".portfolio-header-container, .site-header-music-container, [data-music-player]");
+    if (explicitContainers.length > 0) {
+      explicitContainers.forEach(attachMusicPlayerToContainer);
+    } else {
+      const mainTitle = pageAnchor();
+      if (mainTitle && mainTitle.tagName === "H1") {
+        let parent = mainTitle.parentElement;
+        if (!parent.classList.contains("portfolio-header-container") && !parent.classList.contains("site-header-music-container")) {
+          if (parent.children.length === 1 && (parent.tagName === "DIV" || parent.tagName === "HEADER")) {
+            attachMusicPlayerToContainer(parent);
+          } else {
+            const wrapper = document.createElement("div");
+            wrapper.className = "site-header-music-container";
+            mainTitle.parentNode.insertBefore(wrapper, mainTitle);
+            wrapper.appendChild(mainTitle);
+            attachMusicPlayerToContainer(wrapper);
+          }
+        } else {
+          attachMusicPlayerToContainer(parent);
+        }
+      }
+    }
+  }
+
   window.SiteShell = {
     pageAnchor,
     pageAnchorTop,
     schedulePageAnchorScroll,
     scrollToPageAnchor,
+    attachHeaderMusicPlayer: attachMusicPlayerToContainer,
+    autoAttachHeaderMusicPlayer,
   };
 
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-site-shell]").forEach(renderShell);
+    autoAttachHeaderMusicPlayer();
   });
 
   document.addEventListener("site-shell:content-ready", () => {
+    autoAttachHeaderMusicPlayer();
     if (!pendingPageAnchorScroll) return;
     schedulePageAnchorScroll({ behavior: "auto" });
   });
 })();
+
