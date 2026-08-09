@@ -9,7 +9,7 @@
     <meta property="og:type" content="website" />
     <meta
       property="og:description"
-      content="Vincent Chyu 的数字世界，包含摄影作品集、开发者工具箱和个人博客。"
+      content="Vincent Chyu 的数字世界，涵盖 Golang 后端开发、尼康摄影作品集、Sonic Lens 音乐听歌记录、Media Journal 书影音与开发者工具箱。"
     />
     <meta
       property="og:url"
@@ -32,7 +32,7 @@
     <meta name="twitter:title" content="VINCENT CHYU 个人主页" />
     <meta
       name="twitter:description"
-      content="Vincent Chyu 的数字世界，包含摄影作品集、开发者工具箱和个人博客。"
+      content="Vincent Chyu 的数字世界，涵盖 Golang 后端开发、尼康摄影作品集、Sonic Lens 音乐听歌记录、Media Journal 书影音与开发者工具箱。"
     />
     <meta
       name="twitter:image"
@@ -44,7 +44,7 @@
     <meta itemprop="name" content="VINCENT CHYU 个人主页" />
     <meta
       itemprop="description"
-      content="Vincent Chyu 的数字世界，包含摄影作品集、开发者工具箱和个人博客。"
+      content="Vincent Chyu 的数字世界，涵盖 Golang 后端开发、尼康摄影作品集、Sonic Lens 音乐听歌记录、Media Journal 书影音与开发者工具箱。"
     />
     <meta
       itemprop="image"
@@ -55,7 +55,7 @@
     <meta name="wechat:title" content="VINCENT CHYU 个人主页" />
     <meta
       name="wechat:description"
-      content="Vincent Chyu 的数字世界，包含摄影作品集、开发者工具箱和个人博客。"
+      content="Vincent Chyu 的数字世界，涵盖 Golang 后端开发、尼康摄影作品集、Sonic Lens 音乐听歌记录、Media Journal 书影音与开发者工具箱。"
     />
     <meta
       name="wechat:image"
@@ -220,18 +220,14 @@
             #footer {
                 position: relative;
                 bottom: auto;
-                margin-bottom: 0;
+                margin-top: 30px;
+                margin-bottom: 20px;
                 width: 100%;
-                /* Use flexbox to fix float issues */
                 display: flex;
-                justify-content: space-between;
+                justify-content: center;
+                text-align: center;
                 padding: 0 20px;
                 box-sizing: border-box;
-            }
-
-            #footer a {
-                float: none !important; /* Override desktop floats */
-                margin: 0;
             }
             
             /* Hide manual controls on mobile since we enabled autoplay */
@@ -307,24 +303,75 @@
 
         #footer {
             position: absolute;
-            bottom: 0;
+            bottom: 20px;
             left: 0;
             right: 0;
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
         }
 
-        #footer a {
-            color: rgba(255, 255, 255, 0.5);
-            text-decoration: none;
-            margin: 10px;
-            font-size: 12px;
+        .site-running-info {
+            display: inline-block;
+            pointer-events: auto;
         }
 
-        #footer a:first-child {
-            float: left;
+        .site-running-info .info {
+            color: rgba(255, 255, 255, 0.38);
+            font-size: 11px;
+            margin-top: 3px;
+            line-height: 1.4;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
         }
 
-        #footer a:last-child {
-            float: right;
+        .site-running-info:hover .info {
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        /* Language Switcher Styles */
+        .lang-switch-wrapper {
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .lang-toggle-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            padding: 5px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .lang-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .lang-toggle-btn .lang-option {
+            opacity: 0.5;
+            transition: opacity 0.3s ease, font-weight 0.3s ease;
+        }
+
+        .lang-toggle-btn .lang-option.active {
+            opacity: 1;
+            font-weight: 700;
+        }
+
+        .lang-toggle-btn .lang-divider {
+            margin: 0 6px;
+            opacity: 0.4;
         }
     </style>
 
@@ -355,29 +402,34 @@
 
     <section id="main_content">
         <div id="head">
-            <p class="info">Code mirrors life, striving for the perfect logical loop</p>
-            <br>
-            <p class="info"></p>
-            <p class="sub_head">📷 Capturing light through the lens, building tools with code, honoring every commitment with integrity</p><br>
-            <p class="sub_head">🎸 Rock is attitude, Jazz is freedom, Alternative is a manifesto against mediocrity</p><br>
-            <p class="sub_head">🏃 Hiking, Running, Gym, Badminton, Skateboarding... nearly every sport imaginable 🤦‍♂️</p><br>
-            <p class="sub_head">💻 Featuring a photography portfolio, developer tools, and a rational soul passionate about life</p><br>
-            <p class="sub_head">🎯 Values: Rigorous logic, closed-loop thinking, walking the talk, and endless tinkering</p>
-            <br>
             <div class="site-header-music-container">
-              <h1 class="sub_head" style="font-size: 18px; font-weight: normal; margin-bottom: 0;">Welcome to my digital world</h1>
+                <h1 class="sub_head" style="font-size: 18px; font-weight: normal; margin-bottom: 0;" data-en="Welcome to my digital world" data-zh="欢迎来到我的数字世界">Welcome to my digital world</h1>
             </div>
-            <p class="info"><span id="sitetime"></span></p>
-            <p class="info">since 2019</p>
+            <br><br>
+            <p class="sub_head" data-en="📷 <b>Photographer:</b> Capturing light and raw emotion through lenses" data-zh="📷 <b>光绘记录员：</b> 用镜头捕捉光影与真实情感">📷 <b>Nikon Photographer:</b> Capturing light and raw emotion through lenses</p><br>
+            <p class="sub_head" data-en="💻 <b>Golang Architect:</b> Engineering high-performance services, clean APIs & developer tools" data-zh="💻 <b>Golang 程序员：</b> 打造高性能微服务、干净 API 与开发者工具集">💻 <b>Golang Architect:</b> Engineering high-performance services, clean APIs & developer tools</p><br>
+            <p class="sub_head" data-en="🎸 <b>Sonic Lens:</b> Rock attitude, Jazz freedom, recording life" data-zh="🎸 <b>Sonic Lens 音乐：</b> 摇滚态度，爵士自由，将生活记录">🎸 <b>Sonic Lens:</b> Rock attitude, Jazz freedom, recording life</p><br>
+            <p class="sub_head" data-en="📚 <b>Media Journal:</b> Cataloging books, movies, games, podcasts & personal thoughts" data-zh="📚 <b>Media Journal 书影音：</b> 归档阅读、电影、游戏、播客与个人思考">📚 <b>Media Journal:</b> Cataloging books, movies, games, podcasts & personal thoughts</p><br>
+            <p class="sub_head" data-en="🏃 <b>Life Explorer:</b> Running, hiking, gym, badminton, skateboarding... living with endless curiosity" data-zh="🏃 <b>生活探索者：</b> 跑步、徒步、健身、羽毛球、滑板... 带着无尽好奇拥抱生活">🏃 <b>Life Explorer:</b> Running, hiking, gym, badminton, skateboarding... living with endless curiosity</p><br>
+            <p class="sub_head" data-en="🎯 <b>Core Values:</b> Rigorous logic, closed-loop thinking, walking the talk, and endless tinkering" data-zh="🎯 <b>核心价值观：</b> 严密逻辑、闭环思维、知行合一与终身折腾">🎯 <b>Core Values:</b> Rigorous logic, closed-loop thinking, walking the talk, and endless tinkering</p>
+            <br>
+            <div class="lang-switch-wrapper">
+                <button id="lang_toggle" class="lang-toggle-btn" type="button" aria-label="Toggle Language">
+                    <span class="lang-option lang-zh">中</span>
+                    <span class="lang-divider">/</span>
+                    <span class="lang-option lang-en">EN</span>
+                </button>
+            </div>
+           <!-- <p class="info" data-en="Code mirrors life, striving for high-concurrency logical loops" data-zh="代码即生活，追求高并发与完美的逻辑闭环">Code mirrors life, striving for high-concurrency logical loops</p>-->
         </div>
-       <!-- <div id="links">
-            &lt;!&ndash;<a href="web/before/html/index_cydia.html">cydia packages</a>&ndash;&gt;
-            <a href="web/tools/">developer tools</a>
-            <a href="web/sonic-lens">sonic lens</a>
-            <a href="web/media/">media journal</a>
-            <a href="web/photography/">photography portfolio</a>
-        </div>-->
     </section>
+
+    <footer id="footer">
+        <div class="site-running-info">
+            <p class="info"><span id="sitetime"></span></p>
+            <p class="info" data-en="since 1993" data-zh="始于 1993 年">since 1993</p>
+        </div>
+    </footer>
 </div>
 
 
@@ -385,6 +437,52 @@
 <script src="web/home/scripts/main.js"></script>
 
 <script>
+    (function () {
+        function getPreferredLanguage() {
+            var saved = localStorage.getItem('site_lang');
+            if (saved === 'zh' || saved === 'en') return saved;
+            return navigator.language && navigator.language.toLowerCase().startsWith('zh') ? 'zh' : 'en';
+        }
+
+        function setLanguage(lang) {
+            document.querySelectorAll('[data-zh]').forEach(function (el) {
+                var text = el.getAttribute('data-' + lang);
+                if (text) {
+                    el.innerHTML = text;
+                }
+            });
+
+            var btn = document.getElementById('lang_toggle');
+            if (btn) {
+                var zhOption = btn.querySelector('.lang-zh');
+                var enOption = btn.querySelector('.lang-en');
+                if (zhOption && enOption) {
+                    if (lang === 'zh') {
+                        zhOption.classList.add('active');
+                        enOption.classList.remove('active');
+                    } else {
+                        enOption.classList.add('active');
+                        zhOption.classList.remove('active');
+                    }
+                }
+            }
+            localStorage.setItem('site_lang', lang);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var currentLang = getPreferredLanguage();
+            setLanguage(currentLang);
+
+            var toggleBtn = document.getElementById('lang_toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    currentLang = (currentLang === 'zh') ? 'en' : 'zh';
+                    setLanguage(currentLang);
+                });
+            }
+        });
+    })();
+
     if (window.location.host.indexOf('github.io') !== -1 && window.location.protocol !== "https:") {
         window.location.protocol = "https";
     }
