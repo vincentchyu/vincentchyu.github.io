@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-12
+
+### 重构
+
+- 摄影页瀑布流布局架构全面重构为 JS 绝对定位流 (`Absolute Positioned Waterfall`)，废弃原有的列容器 (`.waterfall-column`) 架构：
+  - 照片 DOM 卡片改为统一在主容器中按时间序列平铺，通过 `transform: translate3d` 计算 `(x, y)` 坐标，完美支持“从左到右，再逐行”的时间顺序排列
+  - 移除有毒的列底部 `.waterfall-column-spacer` 空白垫片，彻底消除分片数据追加时产生的“大片白板未加载”问题
+  - 优化 Resize/屏幕断点重排性能：窗口尺寸改变时直接基于 GPU 硬件加速重计算坐标，无需摧毁或拔插 DOM 节点
+  - 重构滚动加载哨兵节点 (`sentinel`) 定位机制：使其在数据加载中精确贴合当前已渲染照片的真实底端高度，并在全量年份数据加载完毕后动态卸载预估 `min-height`，彻底消除相册末尾的留白区
+- 运行 `go run ./cmd/build-photography-assets` 更新前端压缩产物 `web/photography/dist/gallery.bundle.min.js`，并升级 `index.html` 的资源版本控制后缀
+
 ## 2026-07-17
 
 ### 新功能
