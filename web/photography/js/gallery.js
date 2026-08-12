@@ -214,7 +214,6 @@ function appendLoadedPhotos(photos) {
         return;
     }
 
-    const viewportAnchor = GalleryLayoutApi.captureVisiblePhotoAnchor(galleryWaterfall);
     const columnWidth = galleryWaterfall.columns[0]?.clientWidth || 320;
     const columnHeights = GalleryLayoutApi.normalizeWaterfallColumnBaselines(galleryWaterfall);
 
@@ -253,11 +252,7 @@ function appendLoadedPhotos(photos) {
     galleryWaterfall.heights = [...columnHeights];
 
     requestAnimationFrame(() => {
-        GalleryLayoutApi.restoreVisiblePhotoAnchor(galleryWaterfall, viewportAnchor);
         GalleryTimelineApi.refreshTimelineToc();
-        requestAnimationFrame(() => {
-            GalleryLayoutApi.restoreVisiblePhotoAnchor(galleryWaterfall, viewportAnchor);
-        });
     });
 }
 

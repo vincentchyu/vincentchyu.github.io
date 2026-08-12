@@ -94,16 +94,23 @@ window.GalleryLayout = (() => {
                 top: placeholderTop,
             });
 
-            let monthOffset = 48;
+            let runningPhotoCount = 0;
+            const totalYearPhotos = Math.max(
+                1,
+                Number(album.count) ||
+                    monthEntries.reduce((sum, entry) => sum + (Number(entry.count) || 0), 0) ||
+                    1
+            );
             monthEntries.forEach((entry) => {
-                const estimatedMonthHeight = estimateMonthHeight(entry, state.columnCount);
+                const fraction = runningPhotoCount / totalYearPhotos;
+                const monthTop = placeholderTop + Math.floor(fraction * estimatedYearHeight);
                 upsertOutlineHeading(state, {
                     id: `section-${album.year}-${entry.month}`,
                     level: 3,
                     label: formatTimelineMonth(entry.month),
-                    top: placeholderTop + monthOffset,
+                    top: monthTop,
                 });
-                monthOffset += estimatedMonthHeight;
+                runningPhotoCount += Number(entry.count) || 1;
             });
 
             placeholderTop += estimatedYearHeight;
@@ -113,20 +120,31 @@ window.GalleryLayout = (() => {
     function estimateMonthHeight(monthEntry, columnCount) {
         const photoCount = Math.max(1, Number(monthEntry?.count) || 1);
         const estimatedRows = Math.max(1, Math.ceil(photoCount / Math.max(columnCount, 1)));
-        return estimatedRows * 220;
+        return estimatedRows * 210;
     }
 
     function estimateYearHeight(album, columnCount) {
-        const monthEntries = getAlbumMonthEntries(album);
-        if (monthEntries.length === 0) {
+        const cols = Math.max(1, Number(columnCount) || 1);
+        let totalCount = 0;
+
+        if (typeof album.count === "number" && album.count > 0) {
+            totalCount = album.count;
+        } else if (Array.isArray(album.photos) && album.photos.length > 0) {
+            totalCount = album.photos.length;
+        } else {
+            const monthEntries = getAlbumMonthEntries(album);
+            totalCount = monthEntries.reduce(
+                (sum, entry) => sum + (Number(entry.count) || 0),
+                0
+            );
+        }
+
+        if (totalCount <= 0) {
             return 240;
         }
 
-        const monthHeights = monthEntries.reduce(
-            (sum, monthEntry) => sum + estimateMonthHeight(monthEntry, columnCount),
-            0
-        );
-        return Math.max(320, monthHeights + 80);
+        const estimatedRows = Math.ceil(totalCount / cols);
+        return Math.max(280, estimatedRows * 210 + 40);
     }
 
     function upsertOutlineHeading(state, {id, level, label, top}) {
