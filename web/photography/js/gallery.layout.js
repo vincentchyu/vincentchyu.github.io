@@ -364,7 +364,7 @@ window.GalleryLayout = (() => {
 
     function createPhotoCard(photo) {
         const wrapper = document.createElement("div");
-        wrapper.className = "photo-card relative";
+        wrapper.className = "photo-card relative w-full";
         wrapper.dataset.index = photo.waterfallIndex;
 
         const width = photo.width || 300;
@@ -381,7 +381,7 @@ window.GalleryLayout = (() => {
             : `data-src="${photo.thumbnail}" loading="lazy" fetchpriority="low"`;
 
         wrapper.innerHTML = `
-    <div class="overflow-hidden w-full h-full relative img-skeleton-bg rounded-lg safari-rounded-fix">
+    <div class="overflow-hidden absolute inset-0 w-full h-full img-skeleton-bg rounded-lg safari-rounded-fix">
       <div class="img-skeleton absolute inset-0 z-10">
         <span class="dot"></span>
         <span class="dot"></span>
@@ -397,6 +397,7 @@ window.GalleryLayout = (() => {
           alt="${photo.alt || ""}"
           width="${width}"
           height="${height}"
+          style="aspect-ratio: ${aspectRatio};"
           class="block w-full h-full object-cover object-center opacity-0 animate-fade-in transition duration-300 img-hover-zoom img-loading rounded-lg"
           decoding="async"
           ${thumbnailAttributes}
