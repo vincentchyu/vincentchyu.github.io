@@ -23,16 +23,7 @@ window.GalleryLayout = (() => {
         outlineLayer.className = "gallery-outline-layer";
         outlineLayer.setAttribute("aria-hidden", "true");
         const waterfallContainer = document.createElement("div");
-        waterfallContainer.className = "waterfall-container";
-
-        const columns = [];
-        const heights = new Array(columnCount).fill(0);
-        for (let i = 0; i < columnCount; i++) {
-            const column = document.createElement("div");
-            column.className = "waterfall-column";
-            waterfallContainer.appendChild(column);
-            columns.push(column);
-        }
+        waterfallContainer.className = "waterfall-container relative w-full";
 
         shell.appendChild(outlineLayer);
         shell.appendChild(waterfallContainer);
@@ -43,8 +34,8 @@ window.GalleryLayout = (() => {
             outlineLayer,
             headingMap: new Map(),
             container: waterfallContainer,
-            columns,
-            heights,
+            heights: new Array(columnCount).fill(0),
+            renderedCards: [],
         };
     }
 
@@ -75,6 +66,25 @@ window.GalleryLayout = (() => {
         });
     }
 
+    function updateWaterfallTotalMinHeight(state, albums) {
+        if (!state || !state.container || !Array.isArray(albums) || albums.length === 0) {
+            return 0;
+        }
+
+        const columnCount = state.columnCount || getColumnCount();
+        let totalEstimatedHeight = 0;
+
+        albums.forEach((album) => {
+            totalEstimatedHeight += estimateYearHeight(album, columnCount);
+        });
+
+        if (totalEstimatedHeight > 0) {
+            state.container.style.minHeight = `${Math.ceil(totalEstimatedHeight)}px`;
+        }
+
+        return totalEstimatedHeight;
+    }
+
     function buildTimelineOutline(state, albums) {
         if (!state || !state.outlineLayer) {
             return;
@@ -82,6 +92,8 @@ window.GalleryLayout = (() => {
 
         state.outlineLayer.innerHTML = "";
         state.headingMap.clear();
+
+        updateWaterfallTotalMinHeight(state, albums);
 
         let placeholderTop = 0;
         albums.forEach((album) => {
@@ -167,15 +179,14 @@ window.GalleryLayout = (() => {
         }
     }
 
-    function updateOutlineHeadingPositions(state, sectionHeadings, card) {
-        if (!state || !Array.isArray(sectionHeadings) || sectionHeadings.length === 0 || !card) {
+    function updateOutlineHeadingPositions(state, sectionHeadings, topPos) {
+        if (!state || !Array.isArray(sectionHeadings) || sectionHeadings.length === 0 || topPos === undefined) {
             return;
         }
 
         requestAnimationFrame(() => {
-            const cardTop = card.offsetTop;
             sectionHeadings.forEach((heading) => {
-                upsertOutlineHeading(state, {...heading, top: cardTop});
+                upsertOutlineHeading(state, {...heading, top: topPos});
             });
             dependencies.refreshTimelineToc();
         });
@@ -293,6 +304,9 @@ window.GalleryLayout = (() => {
 
     function renderWaterfallLayout(state, photos, galleryItems) {
         galleryItems.length = 0;
+        state.renderedCards = [];
+        state.heights = new Array(state.columnCount).fill(0);
+        state.container.innerHTML = "";
 
         photos.forEach((photo) => {
             photo.waterfallIndex = galleryItems.length;
@@ -304,24 +318,65 @@ window.GalleryLayout = (() => {
                 filename: photo.filename || "",
                 Subject: photo.Subject || [],
             });
+
+            const photoCard = createPhotoCard(photo);
+            state.container.appendChild(photoCard);
+            state.renderedCards.push({ photo, card: photoCard, sectionHeadings: photo.sectionHeadings });
         });
 
-        const columns = createWaterfallLayout(photos, state.columnCount);
-
-        columns.forEach((columnPhotos, colIndex) => {
-            const columnDiv = state.columns[colIndex];
-
-            columnPhotos.forEach((photo) => {
-                const photoCard = createPhotoCard(photo);
-                columnDiv.appendChild(photoCard);
-                updateOutlineHeadingPositions(state, photo.sectionHeadings, photoCard);
-            });
-        });
+        reflowAbsoluteWaterfall(state);
 
         dependencies.queueThumbnailLoads(state.container);
         requestAnimationFrame(() => {
             dependencies.refreshTimelineToc();
         });
+    }
+
+    function reflowAbsoluteWaterfall(state) {
+        if (!state || !state.container || !state.renderedCards) return;
+
+        state.columnCount = getColumnCount();
+        state.heights = new Array(state.columnCount).fill(0);
+        
+        const containerWidth = state.container.clientWidth;
+        if (containerWidth === 0 && state.renderedCards.length > 0) {
+            requestAnimationFrame(() => reflowAbsoluteWaterfall(state));
+            return;
+        }
+
+        const gap = 16;
+        const totalGapWidth = gap * (state.columnCount - 1);
+        const columnWidth = (containerWidth - totalGapWidth) / state.columnCount;
+
+        state.renderedCards.forEach(({ photo, card, sectionHeadings }) => {
+            let minIndex = 0;
+            let minHeight = state.heights[0];
+            for (let i = 1; i < state.columnCount; i++) {
+                if (state.heights[i] < minHeight) {
+                    minHeight = state.heights[i];
+                    minIndex = i;
+                }
+            }
+
+            const x = minIndex * (columnWidth + gap);
+            const y = minHeight;
+
+            card.style.position = "absolute";
+            card.style.width = `${columnWidth}px`;
+            card.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+            card.style.left = "0";
+            card.style.top = "0";
+
+            const photoPhysicalHeight = calculatePhotoHeight(photo, columnWidth);
+            state.heights[minIndex] += photoPhysicalHeight + gap;
+
+            if (sectionHeadings && sectionHeadings.length > 0) {
+                updateOutlineHeadingPositions(state, sectionHeadings, y);
+            }
+        });
+
+        const maxHeight = Math.max(...state.heights, 0);
+        state.container.style.height = `${maxHeight}px`;
     }
 
     function buildOutlineAlbumsFromLoadedPhotos(photos) {
@@ -481,67 +536,19 @@ window.GalleryLayout = (() => {
         });
     }
 
-    function normalizeWaterfallColumnBaselines(state) {
-        if (!state || !Array.isArray(state.columns) || state.columns.length === 0) {
-            return [];
-        }
-
-        const measuredHeights = state.columns.map((column) => column.offsetHeight || 0);
-        const baselineHeight = Math.max(...measuredHeights, 0);
-        const normalizedHeights = measuredHeights.map(() => baselineHeight);
-
-        state.columns.forEach((column, index) => {
-            const gap = baselineHeight - measuredHeights[index];
-            if (gap <= 1) {
-                return;
-            }
-
-            const spacer = document.createElement("div");
-            spacer.className = "waterfall-column-spacer";
-            spacer.setAttribute("aria-hidden", "true");
-            spacer.style.height = `${gap}px`;
-            column.appendChild(spacer);
-        });
-
-        return normalizedHeights;
-    }
-
-    function createWaterfallLayout(photos, columnCount) {
-        const columnHeights = new Array(columnCount).fill(0);
-        const columns = Array.from({length: columnCount}, () => []);
-        const gap = 8;
-
-        photos.forEach((photo) => {
-            let minHeight = columnHeights[0];
-            let minIndex = 0;
-
-            for (let i = 1; i < columnCount; i++) {
-                if (columnHeights[i] < minHeight) {
-                    minHeight = columnHeights[i];
-                    minIndex = i;
-                }
-            }
-
-            columns[minIndex].push(photo);
-
-            const aspectRatio =
-                photo.width && photo.height ? photo.width / photo.height : 1.5;
-            const relativeHeight = 1000 / aspectRatio;
-            columnHeights[minIndex] += relativeHeight + gap;
-        });
-
-        return columns;
-    }
+    // normalizeWaterfallColumnBaselines and createWaterfallLayout removed for absolute positioned waterfall
 
     return {
         configure,
         createWaterfallState,
         buildTimelineOutline,
+        updateWaterfallTotalMinHeight,
         preparePhotosForRender,
         upsertOutlineHeading,
         updateOutlineHeadingPositions,
         renderGallery,
         renderWaterfallLayout,
+        reflowAbsoluteWaterfall,
         buildOutlineAlbumsFromLoadedPhotos,
         extractYearFromDate,
         createPhotoCard,
@@ -549,6 +556,5 @@ window.GalleryLayout = (() => {
         calculatePhotoHeight,
         captureVisiblePhotoAnchor,
         restoreVisiblePhotoAnchor,
-        normalizeWaterfallColumnBaselines,
     };
 })();

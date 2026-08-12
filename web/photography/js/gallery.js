@@ -214,9 +214,6 @@ function appendLoadedPhotos(photos) {
         return;
     }
 
-    const columnWidth = galleryWaterfall.columns[0]?.clientWidth || 320;
-    const columnHeights = GalleryLayoutApi.normalizeWaterfallColumnBaselines(galleryWaterfall);
-
     photos.forEach((photo) => {
         galleryPhotoRecords.push(photo);
         photo.waterfallIndex = galleryItems.length;
@@ -229,27 +226,15 @@ function appendLoadedPhotos(photos) {
             Subject: photo.Subject || [],
         });
 
-        let minIndex = 0;
-        for (let i = 1; i < columnHeights.length; i++) {
-            if (columnHeights[i] < columnHeights[minIndex]) {
-                minIndex = i;
-            }
-        }
-
         const card = GalleryLayoutApi.createPhotoCard(photo);
-        galleryWaterfall.columns[minIndex].appendChild(card);
-        GalleryLayoutApi.updateOutlineHeadingPositions(
-            galleryWaterfall,
-            photo.sectionHeadings,
-            card
-        );
+        galleryWaterfall.container.appendChild(card);
+        galleryWaterfall.renderedCards.push({ photo, card, sectionHeadings: photo.sectionHeadings });
+
         GalleryThumbnailApi.queueThumbnailLoads(card);
         GalleryThumbnailApi.bindImageLoadEvents(card);
-
-        columnHeights[minIndex] += GalleryLayoutApi.calculatePhotoHeight(photo, columnWidth) + 8;
     });
 
-    galleryWaterfall.heights = [...columnHeights];
+    GalleryLayoutApi.reflowAbsoluteWaterfall(galleryWaterfall);
 
     requestAnimationFrame(() => {
         GalleryTimelineApi.refreshTimelineToc();
@@ -392,22 +377,21 @@ function handleLayoutChange() {
     const newWidth = window.innerWidth;
     const newColumnCount = GalleryLayoutApi.getColumnCount();
 
-    // Skip if this is the first time (currentColumnCount not yet set)
     if (currentColumnCount === null) {
         currentColumnCount = newColumnCount;
         lastWindowWidth = newWidth;
         return;
     }
 
-    // 只有当真正的窗口宽度发生改变且列数断点变化时才重绘
-    if (newWidth !== lastWindowWidth && newColumnCount !== currentColumnCount) {
-        currentColumnCount = newColumnCount;
+    if (newWidth !== lastWindowWidth) {
         lastWindowWidth = newWidth;
-        if (!rerenderCurrentGalleryLayout()) {
+        currentColumnCount = newColumnCount;
+        
+        if (galleryWaterfall && galleryWaterfall.container) {
+            GalleryLayoutApi.reflowAbsoluteWaterfall(galleryWaterfall);
+        } else {
             loadGallery();
         }
-    } else {
-        lastWindowWidth = newWidth;
     }
 }
 

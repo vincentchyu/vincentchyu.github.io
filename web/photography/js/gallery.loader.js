@@ -142,9 +142,58 @@ window.GalleryLoader = (() => {
         }
     }
 
+    const galleryShardCache = new Map();
+
+    async function prefetchRemainingYearShards(manifest, token) {
+        if (!manifest || !Array.isArray(manifest.years)) {
+            return;
+        }
+
+        const remainingYears = manifest.years.filter(
+            (entry) => entry && entry.year && !galleryShardCache.has(entry.year)
+        );
+
+        if (remainingYears.length === 0) {
+            return;
+        }
+
+        const schedulePrefetch = window.requestIdleCallback
+            ? (cb) => window.requestIdleCallback(cb, {timeout: 1500})
+            : (cb) => setTimeout(cb, 200);
+
+        schedulePrefetch(async () => {
+            const currentState = dependencies.getState();
+            if (token !== currentState.galleryLoadToken) {
+                return;
+            }
+
+            const fetchPromises = remainingYears.map(async (entry) => {
+                if (galleryShardCache.has(entry.year)) {
+                    return;
+                }
+                const shardUrl = dependencies.dataApi.resolveGalleryShardUrl(entry.year);
+                try {
+                    const response = await fetch(
+                        shardUrl,
+                        dependencies.dataApi.getGalleryFetchOptions()
+                    );
+                    if (response.ok) {
+                        const album = await response.json();
+                        galleryShardCache.set(entry.year, album);
+                    }
+                } catch (err) {
+                    console.warn(`Background prefetch failed for year ${entry.year}:`, err);
+                }
+            });
+
+            await Promise.allSettled(fetchPromises);
+        });
+    }
+
     async function loadShardedGallery(manifest, timelineContainer, galleryContainer) {
         const state = dependencies.getState();
         const token = (state.galleryLoadToken || 0) + 1;
+        galleryShardCache.clear();
 
         dependencies.setState({
             galleryLoadToken: token,
@@ -188,6 +237,8 @@ window.GalleryLoader = (() => {
         dependencies.lightboxApi.parseAndOpenPhotoFromUrl(
             dependencies.getState().galleryItems
         );
+
+        prefetchRemainingYearShards(manifest, token);
     }
 
     function scheduleYearLoad({
@@ -317,6 +368,13 @@ window.GalleryLoader = (() => {
 
         const hasMoreYears = state.galleryNextYearCursor < state.galleryPendingYearEntries.length;
         state.galleryLoadMoreSentinel.style.display = hasMoreYears ? "block" : "none";
+        if (hasMoreYears && state.galleryWaterfall && Array.isArray(state.galleryWaterfall.heights)) {
+            const currentRenderedHeight = Math.max(...state.galleryWaterfall.heights, 0);
+            state.galleryLoadMoreSentinel.style.position = "absolute";
+            state.galleryLoadMoreSentinel.style.left = "0";
+            state.galleryLoadMoreSentinel.style.right = "0";
+            state.galleryLoadMoreSentinel.style.top = `${currentRenderedHeight}px`;
+        }
     }
 
     async function loadYearShard(entry, token) {
@@ -325,67 +383,73 @@ window.GalleryLoader = (() => {
             return;
         }
 
-        const shardUrl = dependencies.dataApi.resolveGalleryShardUrl(entry.year);
-        try {
-            const response = await fetch(
-                shardUrl,
-                dependencies.dataApi.getGalleryFetchOptions()
-            );
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const album = await response.json();
-            const latestState = dependencies.getState();
-            if (token !== latestState.galleryLoadToken) {
-                return;
-            }
-
-            const visiblePhotos = (album.photos || [])
-                .filter((photo) => !photo.is_hidden)
-                .map((photo) => dependencies.dataApi.normalizeGalleryPhoto(photo));
-
-            if (visiblePhotos.length === 0) {
-                if (latestState.galleryWaterfall && latestState.galleryWaterfall.outlineLayer) {
-                    const currentBottom = latestState.galleryWaterfall.container.offsetHeight;
-                    dependencies.layoutApi.upsertOutlineHeading(latestState.galleryWaterfall, {
-                        id: `year-${entry.year}`,
-                        level: 2,
-                        label: String(entry.year),
-                        top: currentBottom,
-                    });
+        let album = galleryShardCache.get(entry.year);
+        if (!album) {
+            const shardUrl = dependencies.dataApi.resolveGalleryShardUrl(entry.year);
+            try {
+                const response = await fetch(
+                    shardUrl,
+                    dependencies.dataApi.getGalleryFetchOptions()
+                );
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const loadedYears = new Set(latestState.galleryLoadedYears);
-                loadedYears.add(entry.year);
-                dependencies.setState({
-                    galleryLoadedYears: loadedYears,
-                });
+                album = await response.json();
+                galleryShardCache.set(entry.year, album);
+            } catch (error) {
+                console.warn(`Failed to load shard ${entry.year}:`, error);
                 return;
             }
+        }
 
-            const preparedPhotos = dependencies.layoutApi.preparePhotosForRender(
-                entry.year,
-                visiblePhotos
-            );
+        const latestState = dependencies.getState();
+        if (token !== latestState.galleryLoadToken || !album) {
+            return;
+        }
 
-            dependencies.appendLoadedPhotos(preparedPhotos);
+        const visiblePhotos = (album.photos || [])
+            .filter((photo) => !photo.is_hidden)
+            .map((photo) => dependencies.dataApi.normalizeGalleryPhoto(photo));
 
-            const afterRenderState = dependencies.getState();
-            const loadedYears = new Set(afterRenderState.galleryLoadedYears);
+        if (visiblePhotos.length === 0) {
+            if (latestState.galleryWaterfall && latestState.galleryWaterfall.outlineLayer) {
+                const currentBottom = latestState.galleryWaterfall.container.offsetHeight;
+                dependencies.layoutApi.upsertOutlineHeading(latestState.galleryWaterfall, {
+                    id: `year-${entry.year}`,
+                    level: 2,
+                    label: String(entry.year),
+                    top: currentBottom,
+                });
+            }
+
+            const loadedYears = new Set(latestState.galleryLoadedYears);
             loadedYears.add(entry.year);
             dependencies.setState({
                 galleryLoadedYears: loadedYears,
             });
-
-            dependencies.updateGalleryLoadMoreSentinel();
-
-            dependencies.lightboxApi.parseAndOpenPhotoFromUrl(
-                dependencies.getState().galleryItems
-            );
-        } catch (error) {
-            console.warn(`Failed to load shard ${entry.year}:`, error);
+            return;
         }
+
+        const preparedPhotos = dependencies.layoutApi.preparePhotosForRender(
+            entry.year,
+            visiblePhotos
+        );
+
+        dependencies.appendLoadedPhotos(preparedPhotos);
+
+        const afterRenderState = dependencies.getState();
+        const loadedYears = new Set(afterRenderState.galleryLoadedYears);
+        loadedYears.add(entry.year);
+        dependencies.setState({
+            galleryLoadedYears: loadedYears,
+        });
+
+        updateGalleryLoadMoreSentinel();
+
+        dependencies.lightboxApi.parseAndOpenPhotoFromUrl(
+            dependencies.getState().galleryItems
+        );
     }
 
     return {
