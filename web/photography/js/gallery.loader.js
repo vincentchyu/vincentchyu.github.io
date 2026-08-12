@@ -374,6 +374,10 @@ window.GalleryLoader = (() => {
             state.galleryLoadMoreSentinel.style.left = "0";
             state.galleryLoadMoreSentinel.style.right = "0";
             state.galleryLoadMoreSentinel.style.top = `${currentRenderedHeight}px`;
+        } else if (!hasMoreYears && state.galleryWaterfall && state.galleryWaterfall.container) {
+            // 当所有照片加载完毕，真实的物理高度已完全确定，
+            // 此时需卸载开局为了防跳动而设置的粗略预估 minHeight，避免产生额外的底部白板
+            state.galleryWaterfall.container.style.minHeight = "0px";
         }
     }
 
