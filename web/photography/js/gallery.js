@@ -133,6 +133,7 @@ GalleryLoaderApi.configure({
     bindGalleryItemClicks: (container, items) => bindGalleryItemClicks(container, items),
     bindImageLoadEvents: (root) => GalleryThumbnailApi.bindImageLoadEvents(root),
     rerenderCurrentGalleryLayout: () => rerenderCurrentGalleryLayout(),
+    appendLoadedPhotos: (photos) => appendLoadedPhotos(photos),
 });
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -390,34 +391,38 @@ function debounce(func, wait) {
  * Handle layout changes (orientation change or significant resize)
  */
 let currentColumnCount = null; // Will be set after first gallery load
+let lastWindowWidth = typeof window !== "undefined" ? window.innerWidth : 0;
 
 function handleLayoutChange() {
+    const newWidth = window.innerWidth;
     const newColumnCount = GalleryLayoutApi.getColumnCount();
 
     // Skip if this is the first time (currentColumnCount not yet set)
     if (currentColumnCount === null) {
         currentColumnCount = newColumnCount;
+        lastWindowWidth = newWidth;
         return;
     }
 
-    if (newColumnCount !== currentColumnCount) {
+    // 只有当真正的窗口宽度发生改变且列数断点变化时才重绘
+    if (newWidth !== lastWindowWidth && newColumnCount !== currentColumnCount) {
         currentColumnCount = newColumnCount;
+        lastWindowWidth = newWidth;
         if (!rerenderCurrentGalleryLayout()) {
             loadGallery();
         }
+    } else {
+        lastWindowWidth = newWidth;
     }
 }
 
-// Use orientationchange for mobile devices (more reliable than resize)
-// This only fires when device is actually rotated, not when scrolling
+// 统一绑定 resize 和 orientationchange 事件，通过宽度及列数断点防止非必要的布局重绘
+window.addEventListener("resize", debounce(handleLayoutChange, 300));
 if ("onorientationchange" in window) {
     window.addEventListener(
         "orientationchange",
         debounce(handleLayoutChange, 300)
     );
-} else {
-    // Fallback to resize for desktop
-    window.addEventListener("resize", debounce(handleLayoutChange, 300));
 }
 
 /**

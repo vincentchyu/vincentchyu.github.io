@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/vincentchyu/vincentchyu.github.io/internal/neodb"
@@ -26,5 +27,11 @@ func main() {
 	}
 	if err := updater.Run(); err != nil {
 		log.Fatalf("Update NeoDB data error: %v", err)
+	}
+}
+
+func init() {
+	http.DefaultClient = &http.Client{
+		Transport: http.DefaultTransport,
 	}
 }

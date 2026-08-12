@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 var defaultCategories = []string{"book", "movie", "tv", "music", "game", "podcast"}
@@ -35,12 +34,7 @@ func NewUpdater(rootDir string, token string, opts ...UpdaterOption) (*Updater, 
 	}
 
 	cfg := updaterConfig{
-		httpClient: &http.Client{
-			Transport: &http.Transport{
-				// Proxy: http.ProxyFromEnvironment,
-			},
-			Timeout: 15 * time.Second,
-		},
+		httpClient: http.DefaultClient,
 		categories: append([]string(nil), defaultCategories...),
 		dataDir:    filepath.Join(rootDir, "web", "media", "data"),
 	}

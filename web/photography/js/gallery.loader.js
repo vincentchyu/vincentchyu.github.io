@@ -17,6 +17,7 @@ window.GalleryLoader = (() => {
         bindGalleryItemClicks: () => {},
         bindImageLoadEvents: () => {},
         rerenderCurrentGalleryLayout: () => false,
+        appendLoadedPhotos: () => {},
     };
 
     function configure(overrides = {}) {
@@ -367,18 +368,8 @@ window.GalleryLoader = (() => {
                 entry.year,
                 visiblePhotos
             );
-            const viewportAnchor = dependencies.layoutApi.captureVisiblePhotoAnchor(
-                latestState.galleryWaterfall
-            );
 
-            dependencies.setState({
-                galleryPhotoRecords: [
-                    ...latestState.galleryPhotoRecords,
-                    ...preparedPhotos,
-                ],
-            });
-
-            dependencies.rerenderCurrentGalleryLayout();
+            dependencies.appendLoadedPhotos(preparedPhotos);
 
             const afterRenderState = dependencies.getState();
             const loadedYears = new Set(afterRenderState.galleryLoadedYears);
@@ -387,20 +378,7 @@ window.GalleryLoader = (() => {
                 galleryLoadedYears: loadedYears,
             });
 
-            requestAnimationFrame(() => {
-                const currentState = dependencies.getState();
-                dependencies.layoutApi.restoreVisiblePhotoAnchor(
-                    currentState.galleryWaterfall,
-                    viewportAnchor
-                );
-                requestAnimationFrame(() => {
-                    const laterState = dependencies.getState();
-                    dependencies.layoutApi.restoreVisiblePhotoAnchor(
-                        laterState.galleryWaterfall,
-                        viewportAnchor
-                    );
-                });
-            });
+            dependencies.updateGalleryLoadMoreSentinel();
 
             dependencies.lightboxApi.parseAndOpenPhotoFromUrl(
                 dependencies.getState().galleryItems
