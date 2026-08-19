@@ -157,17 +157,6 @@
   },
   {
     "item": {
-      "uuid": "0Werew8NUykF6PXzJoVp7l",
-      "title": "第二次超级机器人大战G",
-      "cover_image_url": "https://neodb.social/m/item/doubangame/2024/09/06/e944f704-dfdd-42f6-af0b-72ed58d5bf7b.jpg",
-      "category": "game",
-      "url": "/game/0Werew8NUykF6PXzJoVp7l",
-      "release_date": "1995-09-03"
-    },
-    "created_time": "2007-07-26T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "63WGvcPRp7H1h6oRpTnsz5",
       "title": "机甲战士",
       "cover_image_url": "https://neodb.social/m/item/doubangame/2024/07/16/e880e2d9-1021-415f-9e0c-9c78ec9bdd05.jpg",
@@ -178,6 +167,17 @@
     },
     "created_time": "2007-07-26T13:54:00Z",
     "rating_grade": 9
+  },
+  {
+    "item": {
+      "uuid": "0Werew8NUykF6PXzJoVp7l",
+      "title": "第二次超级机器人大战G",
+      "cover_image_url": "https://neodb.social/m/item/doubangame/2024/09/06/e944f704-dfdd-42f6-af0b-72ed58d5bf7b.jpg",
+      "category": "game",
+      "url": "/game/0Werew8NUykF6PXzJoVp7l",
+      "release_date": "1995-09-03"
+    },
+    "created_time": "2007-07-26T13:54:00Z"
   },
   {
     "item": {
