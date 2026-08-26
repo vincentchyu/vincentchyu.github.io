@@ -414,6 +414,13 @@
     },
 
     /**
+     * 判断是否为本地环境
+     */
+    isLocalHost() {
+      return isLocalHost();
+    },
+
+    /**
      * 注册/覆盖 Provider
      */
     registerProvider(provider) {

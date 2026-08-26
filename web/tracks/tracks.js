@@ -1274,6 +1274,14 @@
     });
   }
 
+  function isLocalEnv() {
+    if (window.MapSourceRegistry && typeof window.MapSourceRegistry.isLocalHost === "function") {
+      return window.MapSourceRegistry.isLocalHost();
+    }
+    const h = window.location.hostname;
+    return h === "localhost" || h === "127.0.0.1" || h === "::1" || h.endsWith(".local");
+  }
+
   /**
    * 图源设置模态框交互逻辑
    */
@@ -1296,6 +1304,13 @@
     if (backdrop) {
       backdrop.addEventListener("click", closeMapSettingsModal);
     }
+
+    // 支持 ESC 键关闭弹窗
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal && modal.style.display === "flex") {
+        closeMapSettingsModal();
+      }
+    });
 
     // Thunderforest Token 保存与清除
     const inputTf = document.getElementById("input_token_thunderforest");
@@ -1359,14 +1374,18 @@
     const modal = document.getElementById("map_settings_modal");
     if (!modal) return;
 
-    // 回显 Token
-    const inputTf = document.getElementById("input_token_thunderforest");
-    if (inputTf && window.CredentialStore) {
-      inputTf.value = window.CredentialStore.get(window.CredentialStore.KEYS.THUNDERFOREST);
-    }
+    try {
+      // 回显 Token
+      const inputTf = document.getElementById("input_token_thunderforest");
+      if (inputTf && window.CredentialStore) {
+        inputTf.value = window.CredentialStore.get(window.CredentialStore.KEYS.THUNDERFOREST);
+      }
 
-    updateSettingsStatusUI();
-    renderCustomSourcesList();
+      updateSettingsStatusUI();
+      renderCustomSourcesList();
+    } catch (err) {
+      console.warn("更新设置面板状态异常:", err);
+    }
     modal.style.display = "flex";
   }
 

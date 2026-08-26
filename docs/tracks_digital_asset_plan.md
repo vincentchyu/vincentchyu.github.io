@@ -1,65 +1,99 @@
-# 🌲 足迹（Footprint）数字资产地图全栈设计与实施方案
+# 🌲 山河足迹（FOOTPRINT）数字资产地图全栈设计与实施方案
 
-## 1. 目标与定位 (Vision & Core Decisions)
+## 1. 目标与定位 (Vision & Core Architecture)
 
-将个人所有户外与出行轨迹（越野跑、路跑、徒步、骑行、自驾、火车/旅行等）转化为高质量的个人**数字足迹资产（Footprint Digital Assets）**，并与全站摄影作品完成时空闭环联动。
+将个人所有户外与出行轨迹（徒步、越野跑、路跑、骑行、自驾、行走、旅行等）转化为高质量的个人**数字足迹资产（Footprint Digital Assets）**，并与全站摄影作品完成时空闭环联动。
 
 ### 核心决策与已落地特性
-1. **统一公共源存储**：原始 GPX 文件统一存放在用户目录 `~/.config/gpx/`，供所有工具与项目公共复用。
-2. **模块与导航命名**：全站命名为 **`FOOTPRINT`（山河足迹）**，中文版与全站导航无缝融合。
-3. **多重底图主题切换**：默认采用**高对比度暗黑地形（Dark Topo）**，并提供**户外等高线（Outdoor Topo）**与**卫星影像（Satellite）**一键无缝切换。
-4. **单轨迹聚焦弱化机制 (Focus Isolation & Dimming)**：选中某条轨迹时，其余所有背景轨迹自动降色至 0.08 透明度与暗灰低调色，消除视觉杂乱，起终点标出 🟢 S 与 🏁 F。
-5. **运动心率完整持久化与展示**：提取并保存 `avg_hr`、`max_hr` 及逐点心率，在列表卡片、Profile HUD 和高程图 Tooltip 中实时联动。
-6. **摄影作品与户外轨迹时空自动对齐系统 (Photo & Track Synergy)**：
-   - 自动扫描相册照片元数据（EXIF 拍摄时间、GPS DMS 经纬度、尼康机身与镜头参数）。
-   - 时空双重锚定与线性插值对齐，在地图轨迹线上精准渲染 📷 相机图钉。
-   - 提供沿途照片胶片轮播栏（Photo Strip），点击照片地图平滑飞至拍摄地，支持呼出原生大图灯箱预览（Lightbox Modal）。
-7. **Canonical UI/UX 架构与视口自适应**：
-   - 遵循 `site-shell-page`、`site-shell-header` 与 `site-shell-main` 栅格规范。
-   - 页面支持自然上下平滑滚动，顶部菜单栏随时可见可切换。
-   - 纯正简体中文文案与格式化输出。
+1. **两阶段轨迹管理流水线 (Two-Stage Workflow)**：
+   - **待整理池 (`~/.config/gpx/pending/`)**：`go run cmd/update-tracks/main.go --suggest-rename [--run]` 自动扫描，联动本地 `photools geodata` 3D KD-Tree 逆地理编码引擎反查省市并执行预重命名；
+   - **人工审核与移动**：用户微调后移动至正式目录 `~/.config/gpx/`；
+   - **正式目录独立扫描**：`go run cmd/update-tracks/main.go` 严格仅扫描 `~/.config/gpx/` 根目录（跳过 `pending/`），杜绝脏数据污染。
+2. **标准 5 段文件名精准拆解与人工干预优先 (Human-in-the-Loop Override)**：
+   - 严格按 `{运动类型}-{国家}-{省份}-{路线/地点名称}-{YYYYMMDD}.gpx` 拆解属性；
+   - 提取纯净路线标题（去除下划线与多余前缀），运动类型与省份 100% 严格使用人工确认结果，杜绝被速度或算法重新推算覆盖。
+3. **全底图多图源抽象层与凭据解耦 (`map-sources.js`)**：
+   - 专业 GIS 四层架构解耦 (Provider / Style / Overlay / Engine)；
+   - 原生接入 **OpenFreeMap**（开源街道/明快风格）、**OpenTopoMap**（全球开放高精度等高线）、**Thunderforest**（暗黑地形、户外等高线、骑行脉络、自然地貌）与 **Esri World Imagery**（全球高分卫星影像）；
+   - **静态部署零凭据泄露设计 (`CredentialStore`)**：纯前端将 Thunderforest API Key 等敏感凭据隔离保存在浏览器端 `localStorage`，GitHub Pages 源码不包含任何个人 Key；
+   - **底图热插拔与图层保活机制 (Hot Swap)**：切换图源时只替换底层栅格切片源与图层，杜绝调用 `map.setStyle()` 摧毁 GeoJSON 轨迹数据与交互监听，彻底消除图层闪烁与状态重置问题。
+4. **全底图自适应高对比度三层复合轨迹渲染体系**：
+   - **底层高对比度描边 (`selected-track-casing`)**：9px 深黑半透明轮廓（`#090d16`），在任何浅色、白色等高线底图上构建坚固边缘，彻底根除白底撞色隐形问题；
+   - **中层运动主题色立体光晕 (`selected-track-glow`)**：6px 运动分类专属高饱和荧光色（徒步翡翠绿、骑行极光紫、自驾琥珀金、越野跑燃橙）；
+   - **顶层立体芯线 (`selected-track-core`)**：2.5px 亮白发光芯线，形成立体通透的激光脉络质感。
+5. **全站统一摄影数据源公共组件 (`web/shared/scripts/photo-source.js`)**：
+   - 全站解耦 TOS/R2 域名硬编码，根据 `gallery-source.json` 动态决定活跃主源（`active_source: "r2" | "tos"`）与对应 Public Base URL；
+   - 预览场景优先拉取 WebP 压缩缩略图（`pages/thumbnails/*.webp`，约 100KB 毫秒级秒开），大图灯箱（Lightbox）按需加载 4K 原片，提供双 CDN 互相容灾降级（Fallback）。
+6. **路线详情 HUD 折叠收起与悬浮唤起重构**：
+   - 点击底部高程剖面 HUD 右上角 `✕` 时，保留当前轨迹高亮图层、沿途相机图钉与地图焦点；
+   - 底部浮现悬浮唤起按钮（`📊 路线名称`），点击随时重新滑出展开高程剖面、运动指标与胶片相册。
+7. **全屏沉浸模式与 ESC 快捷键**：
+   - `!important` 样式强覆盖动态计算行内高度，彻底清除全屏黑边与底部死区；
+   - 键盘按下 `ESC` 键即可退出全屏并自动重算视口高度。
+8. **日间/夜间双模 UI 与动态统计联动**：
+   - 浅色日间（Light Mode）与深色夜间（Dark Mode）自适应毛玻璃主题；
+   - 顶部统计条随运动分类 Tab 实时动态聚合计算。
 
 ```mermaid
 graph TD
-    A["公共轨迹库 ~/.config/gpx/<br/>(多项目复用 GPX 源)"] --> B["Go 处理流水线 cmd/update-tracks"]
-    P["摄影作品库 web/photography/data/photos/"] --> B
-    B --> C["智能解析器<br/>GPX 内部 Metadata / 心率扩展 / 规范文件名"]
-    B --> D["算法优化<br/>Douglas-Peucker 抽稀 + 高程平滑 + 摄影时空对齐"]
-    B --> E["分片产物输出<br/>web/tracks/data/manifest.json<br/>web/tracks/data/tracks/{id}.json"]
-    E --> F["MapLibre GL WebGL 地图<br/>(web/tracks/ - FOOTPRINT)"]
-    F --> G["暗黑底图 + 轨迹弱化聚焦 + 高程心率 HUD + 📷 相机图钉 & 大图灯箱"]
+    subgraph 轨迹整理与构建流水线 (Go Pipeline)
+        A1["待整理池 ~/.config/gpx/pending/"] -->|--suggest-rename| B1["photools geodata<br/>3D KD-Tree 逆地理编码"]
+        B1 -->|预重命名建议| A1
+        A1 -->|人工微调后移动| A2["正式库 ~/.config/gpx/"]
+        A2 -->|标准5段文件名拆解| P1["cmd/update-tracks"]
+        PH["摄影库 web/photography/data/photos/*.json"] -->|时空双重锚定| P1
+        P1 -->|Douglas-Peucker 抽稀| OUT["生成分片<br/>manifest.json & tracks/{id}.json"]
+    end
+
+    subgraph 前端渲染与交互 (MapLibre GL & Web)
+        OUT --> MAP["MapLibre GL WebGL 地图"]
+        SRC["map-sources.js<br/>(OpenFreeMap / OpenTopoMap / Thunderforest / Esri)"] --> MAP
+        PHOTO["photo-source.js<br/>(动态 CDN 决策 & WebP 缩略图优先)"] --> MAP
+        MAP --> RENDER["三层高对比度轨迹 (Casing + Glow + Core)"]
+        RENDER --> UI["双向联动 HUD (高程/心率) + 📷 胶片条 & 大图灯箱"]
+    end
 ```
 
 ---
 
-## 2. 数据流水线与时空对齐架构 (Pipeline Architecture)
+## 2. 数据流水线与规范契约 (Pipeline Architecture)
 
-### 2.1 存储路径
-- 原始 GPX 集中存放路径：`~/.config/gpx/`
-- 相册元数据输入路径：`web/photography/data/photos/*.json`
-- 分片产物输出目录：`web/tracks/data/manifest.json` 与 `web/tracks/data/tracks/*.json`
+### 2.1 存储与文件命名规范
+- **待整理池**：`~/.config/gpx/pending/`
+- **正式 GPX 存放目录**：`~/.config/gpx/`（仅根目录，不递归扫描子文件夹）
+- **标准 5 段命名格式**：
+  ```
+  {运动类型}-{国家}-{省份}-{路线/地点名称}-{YYYYMMDD}.gpx
+  ```
+  *示例：`徒步-中国-新疆-孟克特古道-20260614.gpx`*
+- **相册元数据输入路径**：`web/photography/data/photos/*.json`
+- **分片产物输出目录**：`web/tracks/data/manifest.json` 与 `web/tracks/data/tracks/{id}.json`
 
 ### 2.2 核心算法与数据模型
 - **Haversine 大圆距离**：计算累计里程与瞬时距离。
 - **Douglas-Peucker 智能抽稀**：
-  - 全景底图（Manifest）：8米容差，将整体数据量压缩 80% 以上，保证全景首屏秒开；
-  - 详情分片（TrackDetail）：2.5米容差，完整保留山野细节、高程与逐点心率。
+  - 全景底图（Manifest）：8 米容差，将整体数据量压缩 80% 以上，保证全景首屏秒开；
+  - 详情分片（TrackDetail）：2.5 米容差，完整保留山野细节、高程与逐点心率。
 - **摄影时空匹配引擎 (`photo_matcher.go`)**：
   - 提取照片 EXIF 时间戳与 DMS 经纬度；
   - 若照片无 GPS，根据时间在轨迹坐标中做线性插值计算经纬度；
-  - 支持多级 CDN 回退（本地原始文件 -> 火山引擎 TOS -> Cloudflare R2）。
+  - 接入全站公共 `PhotoSource` 组件实现动态 CDN 解析与多级回退。
 
 ---
 
-## 3. 前端交互与视觉规范 (UI/UX Specification)
+## 3. 前端架构与视觉规范 (UI/UX Specification)
 
-- **页面骨架**：
-  - `header[data-site-shell]`：统一顶栏，`FOOTPRINT` 高亮激活；
-  - `section.footprint-hero`：标题 `FOOTPRINT` 与 `#site-page-anchor` 锚点；
-  - `nav.footprint-tabs`：分类选项卡（全部、徒步、越野跑、路跑、骑行、行走）；
-  - `div.footprint-intro-row`：介绍与数据概要 Strip；
-  - `section.footprint-workspace`：内嵌式 WebGL 地图工作区，支持一键全屏模式。
-- **交互联动**：
-  - 左侧轨迹卡片列表与地图双向 Hover/Click 响应；
-  - Canvas 渲染高程渐变图，滑动光标实时指示距离、海拔与心率（❤️ 165 bpm）；
-  - 点击地图 📷 相机图钉或沿途胶片条弹出大图灯箱预览（支持 ESC 键关闭）。
+### 3.1 模块与文件组成
+- `web/tracks/index.html`：山河足迹页面骨架与 UI 组件；
+- `web/tracks/tracks.css`：日间/夜间双模自适应毛玻璃设计系统；
+- `web/tracks/tracks.js`：MapLibre 地图控制器、高程 Canvas HUD、图层控制与交互状态机；
+- `web/tracks/map-sources.js`：多图源注册表（`MapSourceRegistry`）与客户端凭据隔离管理（`CredentialStore`）；
+- `web/tracks/test-map-sources.js`：图源注册、解析与凭据管理单元测试套件；
+- `web/shared/scripts/photo-source.js`：全站统一摄影数据源与媒体 URL 解析引擎；
+- `web/shared/scripts/test-photo-source.js`：摄影数据源动态解析单元测试套件。
+
+### 3.2 交互规范
+- **全底图高对比度渲染**：9px 深黑描边 + 6px 运动主题色 + 2.5px 纯白发光芯线，在暗黑、等高线、明快街道和卫星图下均清晰立体；
+- **HUD 折叠与悬浮唤起**：关闭按钮 `✕` 保留高亮与图钉，底部浮现悬浮呼出按钮，随时一键重新展开；
+- **双向联动高程 HUD**：Canvas 渐变图与地图光标实时同步，支持展开沿途作品胶片相册；
+- **原生大图灯箱预览**：点击地图相机图钉或胶片条可呼出大图弹窗，支持 EXIF 参数查看与 ESC 快捷退出。
