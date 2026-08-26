@@ -2,21 +2,24 @@
 
 ## 项目概览
 
-这是一个以 GitHub Pages 为主的个人网站仓库，核心内容分成五块：
+这是一个以 GitHub Pages 为主的个人网站仓库，核心内容分成六块：
 
 1. 主页与站点入口，主要在仓库根目录的 `index.html`，以及 `web/home/`、`web/tools/`、`web/shared/`。
 2. 摄影站点，主要在 `web/photography/`，包含源码、构建产物、照片目录以及分片索引文件（本地工作区的 `data/photos-manifest.json` 和 `data/photos/*.json`，线上发布前缀为 `pages/photos-manifest.json` 和 `pages/photos/*.json`）。
-3. 照片管理后台，主要在 `web/admin/`，由 Go 后端提供 API，支持分页列表、虚拟滚动和批量编辑。
-4. 历史兼容页面，主要在 `web/legacy/`，旧入口保留在 `web/before/` 作为 redirect shim。
-5. SonicLens 子站，主要在 `web/sonic-lens/`，使用 Cloudflare Pages Functions。
+3. 山河足迹（FOOTPRINT），主要在 `web/tracks/`，包含全景 WebGL 地图、暗黑/等高线/卫星多底图、轨迹焦点弱化、高程与心率双向联动 HUD、以及与摄影作品时空对齐关联（数据在 `web/tracks/data/manifest.json` 与 `tracks/*.json`）。
+4. 照片管理后台，主要在 `web/admin/`，由 Go 后端提供 API，支持分页列表、虚拟滚动和批量编辑。
+5. 历史兼容页面，主要在 `web/legacy/`，旧入口保留在 `web/before/` 作为 redirect shim。
+6. SonicLens 子站，主要在 `web/sonic-lens/`，使用 Cloudflare Pages Functions。
 
-仓库同时包含 Go 工具链、Cloudflare R2/KV 访问逻辑、EXIF/缩略图处理、以及 macOS 启动脚本。
+仓库同时包含 Go 工具链、Cloudflare R2/KV 访问逻辑、EXIF/缩略图处理、GPX 轨迹解析与时空对齐流水线、以及 macOS 启动脚本。
 
 ## 关键目录
 
 - `cmd/static/`：本地静态站点预览服务，默认监听 `:3000`。
 - `cmd/admin/`：照片管理后台服务，默认监听 `:3002`。
 - `cmd/update-photos/`：照片扫描、EXIF 提取、缩略图生成、R2 上传和分片索引生成入口。
+- `cmd/update-tracks/`：轨迹扫描、Douglas-Peucker 抽稀、心率提取、摄影时空对齐与分片索引生成入口（默认扫描源 `~/.config/gpx/`）。
+- `internal/track/`：轨迹数据模型、Haversine 测距、Douglas-Peucker 抽稀算法、GPX 智能解析器与相册照片时空匹配对齐引擎。
 - `internal/photo/`：照片处理主逻辑，负责扫描 `web/photography/gallery_images/`、生成/更新 `web/photography/data/photos-manifest.json` 与 `web/photography/data/photos/*.json`、合并旧元数据、上传原图和缩略图。
 - `internal/imaging/`：缩略图和大图压缩逻辑，输出 WebP 为主。
 - `internal/storage/`：Cloudflare R2、Cloudflare API/KV 访问封装。
@@ -24,6 +27,7 @@
 - `pkg/config/`：`.env` 加载入口。
 - `web/home/`：主页专属资源与脚本。
 - `web/tools/`：开发者工具页。
+- `web/tracks/`：山河足迹前端页面，`data/manifest.json` 和 `data/tracks/*.json` 为轨迹索引与分片数据。
 - `web/legacy/`：历史页面和兼容内容。
 - `web/shared/`：跨页面共享的脚本、样式、字体和媒体资源。
 - `web/admin/`：管理后台前端。
@@ -37,6 +41,7 @@
 - `go run cmd/static/main.go`：本地预览静态站点，`http://localhost:3000`。
 - `go run cmd/admin/main.go`：启动照片管理后台，`http://localhost:3002`。
 - `go run cmd/update-photos/main.go`：手动执行照片更新流程。
+- `go run cmd/update-tracks/main.go`：手动执行轨迹与摄影时空关联更新流程。
 - `./run.sh init`：生成并安装 macOS LaunchAgent。
 - `./run.sh start`：同时启动后台服务和本地博客预览。
 - `./run.sh stop`：同时停止后台服务和本地博客预览。

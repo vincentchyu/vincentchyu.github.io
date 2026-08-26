@@ -9,6 +9,7 @@ main site. Historical public URLs are preserved through compatibility shims in
 - `home/`: homepage-owned assets and scripts used by the root `index.html`
 - `tools/`: developer tools page source
 - `media/`: NeoDB-powered media journal page and generated per-category JSON
+- `tracks/`: digital footprint & tracks map page, generated manifest and chunks
 - `photography/`: photography site and generated data
 - `admin/`: photo admin frontend
 - `legacy/`: historical compatibility layer
@@ -18,6 +19,7 @@ main site. Historical public URLs are preserved through compatibility shims in
 
 - `/index.html` remains the homepage entrypoint
 - `/web/media/` is the media journal entrypoint
+- `/web/tracks/` is the digital footprint & tracks entrypoint
 - `/web/tools/` is the developer tools entrypoint
 - `/web/photography/` remains the photography entrypoint
 - `/web/admin/` remains the admin entrypoint
@@ -35,6 +37,6 @@ main site. Historical public URLs are preserved through compatibility shims in
 
 - Public pages should use `web/shared/styles/site-shell.css` and
   `web/shared/scripts/site-shell.js` for the canonical `VINCENT CHYU` header
-- The canonical primary navigation is `HOME`, `MEDIA JOURNAL`, `PORTFOLIO`,
-  `SONIC LENS`, `DEVELOPER TOOLS`, `ABOUT ME`, `CONTACT`
+- The canonical primary navigation is `HOME`, `ABOUT ME`, `CONTACT`, `MEDIA`,
+  `PORTFOLIO`, `FOOTPRINT`, `SONIC LENS`, `TOOLS`
 - Page-local navigation should stay secondary to this shared shell

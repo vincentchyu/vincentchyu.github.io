@@ -1,5 +1,60 @@
 # Changelog
 
+## 2026-08-26
+
+### 新功能 & 架构重构
+
+- **全站统一摄影数据源与媒体 URL 解析公共组件 (`web/shared/scripts/photo-source.js`)**：
+  - **动态数据源联动 (Dynamic Source Resolution)**：彻底消除在业务页面硬编码火山引擎 TOS 或 Cloudflare R2 域名的做法，根据线上 `pages/gallery-source.json`（或本地 `web/photography/data/gallery-source.json`）动态确定当前活跃源（`active_source: "r2" | "tos"`）与对应 Public Base URL。
+  - **缩略图极速分级加载规范 (WebP Thumbnail First)**：针对地图弹窗、胶片轮播栏等预览场景，一律优先拉取高压缩比的 WebP 缩略图（`pages/thumbnails/*.webp`，约 100KB 毫秒级秒开），大图灯箱（Lightbox）按需加载 4K 原片，提供双 CDN 互相容灾降级（Fallback）。
+  - **跨页面全站复用**：已无缝接入山河足迹（Tracks）与摄影画廊（Photography），并提供独立单元测试套件 `test-photo-source.js`。
+
+- **山河足迹日间/夜间双模 UI 颜色与对比度重构 (`web/tracks/tracks.css`)**：
+  - 全面基于 CSS 变量重构浅色日间（Light Mode）与深色夜间（Dark Mode）自适应主题，侧边栏、卡片、输入框、下拉菜单、高程 HUD 和图源弹窗在白天模式下自动呈现明亮清爽的浅白毛玻璃质感，夜间呈现深邃暗黑磨砂玻璃，彻底解决日夜混杂视觉割裂问题。
+  - 高程剖面 Canvas Tooltip 与参考线自适应浅色与深色渲染；运动类型 Tab 切换实时动态联动汇总统计条。
+
+- **山河足迹两阶段轨迹管理工作流与标准文件名精准拆解 (`cmd/update-tracks` & `internal/track`)**：
+  - **待整理池与正式目录解耦 (Two-Stage Workflow)**：
+    - 阶段一：`go run cmd/update-tracks/main.go --suggest-rename [--run]` 优先扫描待整理池 `~/.config/gpx/pending/`，自动联动本地 `photools geodata` 3D KD-Tree 逆地理编码引擎反查省市并执行预重命名。
+    - 阶段二：用户人工微调核对后移动至正式目录 `~/.config/gpx/`。
+    - 阶段三：`go run cmd/update-tracks/main.go` 严格仅扫描 `~/.config/gpx/` 根目录（自动跳过 `pending/` 子目录），绝不污染正式数据。
+  - **人工干预最高优先级 (Human-in-the-Loop Override)**：
+    - 新增标准 5 段文件名解析引擎 (`ParseStandardFilename`)：严格按 `{运动类型}-{国家}-{省份}-{路线/地点名称}-{YYYYMMDD}.gpx` 拆解属性。
+    - 路线标题纯净提取（去除下划线与多余前缀，彻底解决列表标题出现前缀串的问题），运动分类、省份与国家 100% 严格使用人工确认结果，杜绝被速度或算法重新推算覆盖。
+
+- **山河足迹（FOOTPRINT）多图源抽象层与凭据解耦架构重构 (`web/tracks/`)**：
+  - **专业 GIS 四层架构解耦 (Provider / Style / Overlay / Engine)**：
+    - 引入 `map-sources.js` 统一图源注册表 (`MapSourceRegistry`)，将底图提供商、具体风格样式、业务叠加层和 MapLibre GL 渲染引擎彻底解耦。
+    - **支持多图源生态**：原生接入 **OpenFreeMap**（开源街道/明快风格）、**OpenTopoMap**（全球开放高精度等高线）、**Thunderforest**（暗黑地形、户外等高线、骑行脉络、自然地貌）与 **Esri World Imagery**（全球高分卫星影像）。
+    - **静态部署零凭据泄露设计 (`CredentialStore`)**：纯前端将 Thunderforest API Key 等敏感凭据隔离保存在浏览器端 `localStorage`，GitHub Pages 源码不包含任何个人 Key；支持在本地开发代理模式与线上 Token 模式间智能自适应。
+    - **底图热插拔与图层保活机制 (Hot Swap)**：切换图源时只替换底层栅格切片源与图层，杜绝调用 `map.setStyle()` 摧毁 GeoJSON 轨迹数据与交互监听，彻底消除图层闪烁与状态重置问题。
+    - **独立业务图层控制 (Overlay Control)**：支持在顶部工具栏中自由开启/关闭「全量轨迹底网」、「沿途摄影图钉」与「起终点标记」，状态持久化存储。
+    - **图源配置模态框 (Map Settings Modal)**：提供可视化的 API Token 配置、状态检测（已配置/未配置/本地代理）与自定义 XYZ 切片源扩展能力。
+  - **单元测试与质量验证 (`test-map-sources.js`)**：全量覆盖 Provider 注册、Style 检索、Auth 校验、URL 解析与 Token 动态注入。
+
+- 新增 **`FOOTPRINT`（山河足迹）** 轨迹数字资产系统与全屏 WebGL 地图页面 (`web/tracks/`)：
+  - **摄影作品与户外轨迹时空自动对齐系统 (Photo & Track Synergy)**：
+    - 流水线自动扫描 `web/photography/data/photos/*.json` 中的作品元数据（包含 EXIF 拍摄时间、GPS 经纬度、相机型号与镜头参数）
+    - 采用“时空双重锚定 + 轨迹点线性插值”算法，将相册照片精准匹配至对应轨迹（如孟克特古道、赛里木湖、夏特古道、喀拉峻等已精准对齐 58+ 张摄影大片）
+    - **双模图片 URL 解析与多级回退机制**：本地开发环境直接读取 `/web/photography/gallery_images/` 原图，线上环境无缝走火山引擎 TOS 与 Cloudflare R2 CDN，附带 `onerror` 自动容灾降级
+    - **原生大图灯箱预览 (Photo Lightbox)**：点击地图 📷 相机图钉或底部胶片条，可一键呼出沉浸式大图弹窗，查看 4K 原片、尼康机镜 EXIF 参数与拍摄时间，支持 ESC 键与点击关闭
+    - **沿途照片胶片轮播栏 (Photo Strip)**：Profile HUD 支持展开沿途作品胶片相册，点击任意照片地图镜头平滑飞至 (`flyTo`) 拍摄经纬度并高亮弹窗
+  - **规范化 UI/UX 架构与导航滚动自由重构**：
+    - 完全融入全站 Canonical 页面规范（`site-shell-page`、`site-shell-header` 与 `site-shell-main` 栅格对齐）
+    - **平滑双向滚动与顶栏菜单随时访问**：去除强制 body 锁死，恢复全局自然垂直滚动能力，无论页面处于何处均可随时向上滑动看到并点击顶部菜单栏切换页面
+    - **动态自适应地图高度计算**：根据当前视口可用空间自动计算地图高度 (`adjustWorkspaceHeight` + `window.onresize`)，在桌面大屏上实现一屏沉浸展示，在笔记本与移动端上实现自然滚动
+    - 包含标准的 `h1.footprint-title`、`#site-page-anchor` 锚点联动、分类 Tabs 选项卡与数据概要 Strip，支持一键切换全屏沉浸模式
+  - 支持 **暗黑地形 (Dark Topo)**、**户外等高线 (Outdoor Topo)** 与 **卫星影像 (Satellite)** 三重底图无缝实时切换，默认采用高对比度暗黑地形，荧光轨迹极为醒目
+  - 实现 **轨迹焦点弱化机制 (Focus Isolation & Dimming)**：点击某条轨迹进入详情时，其余所有背景轨迹自动降色至 0.08 透明度与暗灰低调色，选中轨迹以双层呼吸发光高亮展示，彻底消除视觉杂乱
+  - 实现双向联动高程剖面 HUD (Elevation Profile)：Canvas 渲染高程渐变图，鼠标在剖面图上滑动时地图光标与海拔/里程/实时心率气泡实时同步移动
+  - 完整解析并持久化运动心率数据（兼容 Garmin / Strava / 两步路等各类 GPX 扩展），在总清单、分片、列表卡片与 Profile HUD 中展示平均心率与最大心率 (bpm)
+  - 实现全景足迹热力总览、多运动分类过滤（徒步、越野跑、路跑、骑行、自驾、行走）、关键词搜索与轨迹平滑飞行推进 (FlyTo)
+  - 新增 Go 轨迹处理流水线与 CLI (`cmd/update-tracks` 与 `internal/track`)：
+    - 读取公共源 `~/.config/gpx/`，支持 Garmin、Strava、两步路等各类 GPX 格式
+    - 采用 **Douglas-Peucker 算法** 智能抽稀（全景 8m、详情 2.5m 容差），生成高保真轻量分片 JSON (`web/tracks/data/manifest.json` 与 `tracks/{id}.json`)
+    - 采用“规范文件名优先 + XML 元数据/物理特征智能兜底”双模推断运动类型，支持离线省份识别与 `--suggest-rename` 规范命名建议
+  - 全站 site-shell 导航栏新增 `FOOTPRINT` 入口，并在主页 `index.html` 整合足迹资产链接与中英文双语适配
+
 ## 2026-08-12
 
 ### 重构

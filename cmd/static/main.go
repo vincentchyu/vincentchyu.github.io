@@ -2,12 +2,16 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/vincentchyu/vincentchyu.github.io/pkg/config"
 )
@@ -18,13 +22,30 @@ func main() {
 		log.Fatal(err)
 	}
 
+	token := os.Getenv("THUNDERFOREST_API_TOKEN")
+	if token == "" {
+		token = os.Getenv("THUNDERFORESR_API_TOKEN")
+	}
+	if token != "" {
+		log.Println("✓ Thunderforest tile proxy enabled")
+	} else {
+		log.Println("⚠ Warning: THUNDERFOREST_API_TOKEN not found in .env, tile requests may fail")
+	}
+
+	http.HandleFunc("/api/tiles/", func(w http.ResponseWriter, r *http.Request) {
+		handleTileProxy(w, r, token)
+	})
+
 	http.HandleFunc(
 		"/", func(w http.ResponseWriter, r *http.Request) {
 			serveStaticWithLocalTag(w, r, rootDir)
 		},
 	)
 
-	port := "3000"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
 	log.Printf("Starting local server at http://localhost:%s\n", port)
 	log.Printf("Serving files from: %s\n", rootDir)
 	log.Println("Press Ctrl+C to stop")
@@ -33,6 +54,92 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+var tileClient = createTileClient()
+
+func createTileClient() *http.Client {
+	proxyURLStr := os.Getenv("https_proxy")
+	if proxyURLStr == "" {
+		proxyURLStr = os.Getenv("HTTPS_PROXY")
+	}
+	if proxyURLStr == "" {
+		proxyURLStr = os.Getenv("http_proxy")
+	}
+	if proxyURLStr == "" {
+		proxyURLStr = os.Getenv("HTTP_PROXY")
+	}
+	if proxyURLStr == "" {
+		proxyURLStr = os.Getenv("all_proxy")
+	}
+
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+	}
+
+	if proxyURLStr != "" {
+		if parsed, err := url.Parse(proxyURLStr); err == nil {
+			transport.Proxy = http.ProxyURL(parsed)
+			log.Printf("✓ Tile proxy using network proxy: %s\n", proxyURLStr)
+		}
+	} else {
+		// 尝试自动检测常见本地 Clash 端口
+		if clashURL, err := url.Parse("http://127.0.0.1:7897"); err == nil {
+			transport.Proxy = func(req *http.Request) (*url.URL, error) {
+				// 先尝试环境变量，若无则使用本地 Clash 端口
+				if p, err := http.ProxyFromEnvironment(req); err == nil && p != nil {
+					return p, nil
+				}
+				return clashURL, nil
+			}
+			log.Println("✓ Tile proxy fallback to local Clash proxy: http://127.0.0.1:7897")
+		}
+	}
+
+	return &http.Client{
+		Timeout:   15 * time.Second,
+		Transport: transport,
+	}
+}
+
+func handleTileProxy(w http.ResponseWriter, r *http.Request, token string) {
+	if token == "" {
+		http.Error(w, "THUNDERFOREST_API_TOKEN is not configured", http.StatusBadGateway)
+		return
+	}
+
+	tileSubpath := strings.TrimPrefix(r.URL.Path, "/api/tiles/")
+	tileSubpath = strings.TrimPrefix(tileSubpath, "/")
+	if tileSubpath == "" {
+		http.Error(w, "Invalid tile path", http.StatusBadRequest)
+		return
+	}
+
+	targetURL := fmt.Sprintf("https://tile.thunderforest.com/%s?apikey=%s", tileSubpath, url.QueryEscape(token))
+
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, targetURL, nil)
+	if err != nil {
+		http.Error(w, "Failed to create upstream request", http.StatusInternalServerError)
+		return
+	}
+
+	req.Header.Set("User-Agent", "VincentChyuFootprint/1.0")
+
+	resp, err := tileClient.Do(req)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Upstream tile request failed: %v", err), http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+
+	for k, vv := range resp.Header {
+		for _, v := range vv {
+			w.Header().Add(k, v)
+		}
+	}
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.WriteHeader(resp.StatusCode)
+	_, _ = io.Copy(w, resp.Body)
 }
 
 /*

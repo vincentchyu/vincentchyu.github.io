@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VINCENT CHYU - 山河足迹 FOOTPRINT</title>
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="VINCENT CHYU - 山河足迹 FOOTPRINT" />
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="记录山野越野跑、户外徒步、公路骑行与自驾巡游的数字轨迹资产。" />
+  <meta property="og:url" content="https://blog-vincent.chyu.org/web/tracks/" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="VINCENT CHYU Portfolio" />
+  <meta property="og:image" content="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png" />
+  <link rel="icon" href="https://photography.tos-cn-guangzhou.volces.com/info/favicon.png" />
+
+  <!-- Shared Site Shell Styles -->
+  <link rel="stylesheet" href="../shared/styles/site-shell.css?v=2026071724" />
+
+  <!-- MapLibre GL JS -->
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+
+  <!-- Page Styles -->
+  <link rel="stylesheet" href="tracks.css" />
+  <script defer src="../shared/scripts/site-shell.js?v=2026071750"></script>
+</head>
+<body class="footprint-page site-shell-page">
+  <!-- Canonical Global Navigation Header -->
+  <header data-site-shell data-site-root="../../" data-site-active="footprint"></header>
+
+  <!-- Main Content Container with standard Site Shell Alignment -->
+  <main class="site-shell-main footprint-main">
+    <!-- Page Hero / Anchor -->
+    <section class="footprint-hero">
+      <div class="site-header-music-container">
+        <h1 class="footprint-title" id="site-page-anchor" data-site-page-anchor>FOOTPRINT</h1>
+      </div>
+    </section>
+
+    <!-- Activity Filter Tabs -->
+    <nav class="footprint-tabs" id="filter_tabs" role="tablist" aria-label="足迹运动分类">
+      <button class="footprint-tab is-active" data-type="all" type="button">
+        <span>全部</span>
+        <span class="tab-count" id="count_all">0</span>
+      </button>
+      <button class="footprint-tab" data-type="hiking" type="button">
+        <span class="tab-dot" style="background: var(--color-hiking)"></span>
+        <span>徒步</span>
+        <span class="tab-count" id="count_hiking">0</span>
+      </button>
+      <button class="footprint-tab" data-type="trail_running" type="button">
+        <span class="tab-dot" style="background: var(--color-trail)"></span>
+        <span>越野跑</span>
+        <span class="tab-count" id="count_trail_running">0</span>
+      </button>
+      <button class="footprint-tab" data-type="running" type="button">
+        <span class="tab-dot" style="background: var(--color-running)"></span>
+        <span>路跑</span>
+        <span class="tab-count" id="count_running">0</span>
+      </button>
+      <button class="footprint-tab" data-type="cycling" type="button">
+        <span class="tab-dot" style="background: var(--color-cycling)"></span>
+        <span>骑行</span>
+        <span class="tab-count" id="count_cycling">0</span>
+      </button>
+      <button class="footprint-tab" data-type="driving" type="button">
+        <span class="tab-dot" style="background: var(--color-driving)"></span>
+        <span>自驾</span>
+        <span class="tab-count" id="count_driving">0</span>
+      </button>
+      <button class="footprint-tab" data-type="walking" type="button">
+        <span class="tab-dot" style="background: var(--color-walking)"></span>
+        <span>行走</span>
+        <span class="tab-count" id="count_walking">0</span>
+      </button>
+      <button class="footprint-tab" data-type="transit" type="button">
+        <span class="tab-dot" style="background: var(--color-transit)"></span>
+        <span>旅行</span>
+        <span class="tab-count" id="count_transit">0</span>
+      </button>
+    </nav>
+
+    <!-- Intro Text & Meta Stats Summary -->
+    <div class="footprint-intro-row">
+      <p class="footprint-intro">
+        记录山野越野跑、户外徒步、公路骑行与自驾巡游的数字轨迹资产。用脚步丈量大地，将山河光影归档为终身资产。
+      </p>
+      <div class="footprint-summary-strip">
+        <span class="summary-item">📍 累计探索 <b id="stat_total_dist">0.0</b> km</span>
+        <span class="summary-divider">·</span>
+        <span class="summary-item">▲ 累计爬升 <b id="stat_total_ele">0</b> m</span>
+        <span class="summary-divider">·</span>
+        <span class="summary-item">🏃 <b id="stat_total_count">0</b> 条记录</span>
+        <span class="summary-divider">·</span>
+        <span class="summary-item">🗺️ 点亮 <b id="stat_total_provinces">0</b> 个省份</span>
+      </div>
+    </div>
+
+    <!-- Interactive Footprint Workspace -->
+    <section class="footprint-workspace" id="footprint_workspace">
+      <!-- Embedded Full Map Canvas -->
+      <div id="map" class="footprint-map"></div>
+
+      <!-- Map Toolbar (BaseMap Dropdown, Overlays, Settings & Fullscreen) -->
+      <div class="map-toolbar">
+        <!-- Base Map Dropdown Selector (Grouped by Provider) -->
+        <div class="dropdown-wrapper">
+          <button id="btn_toggle_basemap" class="toolbar-btn active-basemap-btn" type="button" title="切换底图">
+            <span id="active_basemap_icon">🌙</span>
+            <span id="active_basemap_name">暗黑地形</span>
+            <span class="dropdown-arrow">▾</span>
+          </button>
+          <div id="basemap_dropdown" class="dropdown-menu basemap-menu" style="display: none;">
+            <!-- Provider: Thunderforest -->
+            <div class="dropdown-group-title">
+              <span>Thunderforest</span>
+              <span class="group-tag">专业户外</span>
+            </div>
+            <button class="menu-item theme-btn" data-theme="dark-topo" type="button">
+              <span class="item-icon">🌙</span>
+              <span class="item-name">暗黑地形</span>
+              <span class="item-check">✓</span>
+            </button>
+            <button class="menu-item theme-btn" data-theme="outdoor-topo" type="button">
+              <span class="item-icon">⛰️</span>
+              <span class="item-name">等高线</span>
+              <span class="item-check">✓</span>
+            </button>
+            <button class="menu-item theme-btn" data-theme="cycling" type="button">
+              <span class="item-icon">🚲</span>
+              <span class="item-name">骑行脉络</span>
+              <span class="item-check">✓</span>
+            </button>
+            <button class="menu-item theme-btn" data-theme="landscape" type="button">
+              <span class="item-icon">🌲</span>
+              <span class="item-name">自然地貌</span>
+              <span class="item-check">✓</span>
+            </button>
+
+            <!-- Provider: OpenFreeMap -->
+            <div class="dropdown-group-title">
+              <span>OpenFreeMap</span>
+              <span class="group-tag free">免费开源</span>
+            </div>
+            <button class="menu-item theme-btn" data-theme="openfreemap" type="button">
+              <span class="item-icon">🗺️</span>
+              <span class="item-name">开源街道</span>
+              <span class="item-check">✓</span>
+            </button>
+
+            <!-- Provider: OpenTopoMap -->
+            <div class="dropdown-group-title">
+              <span>OpenTopoMap</span>
+              <span class="group-tag free">免费地形</span>
+            </div>
+            <button class="menu-item theme-btn" data-theme="opentopomap" type="button">
+              <span class="item-icon">🏔️</span>
+              <span class="item-name">开放等高线</span>
+              <span class="item-check">✓</span>
+            </button>
+
+            <!-- Provider: Esri Satellite -->
+            <div class="dropdown-group-title">
+              <span>Esri</span>
+              <span class="group-tag free">高分卫星</span>
+            </div>
+            <button class="menu-item theme-btn" data-theme="satellite" type="button">
+              <span class="item-icon">🛰️</span>
+              <span class="item-name">卫星影像</span>
+              <span class="item-check">✓</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar-actions">
+          <!-- Overlays Dropdown Control -->
+          <div class="dropdown-wrapper">
+            <button id="btn_toggle_overlays" class="toolbar-btn" type="button" title="图层控制">
+              <span>👁️</span>
+              <span>图层</span>
+              <span class="dropdown-arrow">▾</span>
+            </button>
+            <div id="overlays_dropdown" class="dropdown-menu overlays-menu" style="display: none;">
+              <div class="dropdown-header">图层叠加控制</div>
+              <label class="overlay-option">
+                <input type="checkbox" id="chk_overlay_tracks" checked />
+                <span>📍 全量轨迹底网</span>
+              </label>
+              <label class="overlay-option">
+                <input type="checkbox" id="chk_overlay_photos" checked />
+                <span>📷 沿途摄影图钉</span>
+              </label>
+              <label class="overlay-option">
+                <input type="checkbox" id="chk_overlay_waypoints" checked />
+                <span>🚩 起终点标记</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Map Settings Modal Trigger -->
+          <button id="btn_open_map_settings" class="toolbar-btn" type="button" title="图源与 Token 配置">
+            <span>⚙️</span>
+            <span>设置</span>
+          </button>
+
+          <!-- Fullscreen Trigger -->
+          <button id="btn_toggle_fullscreen" class="fullscreen-btn" type="button" title="全屏模式">
+            <span id="fullscreen_icon">⛶</span>
+            <span>全屏</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Embedded Sidebar Drawer -->
+      <aside id="sidebar" class="footprint-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title-row">
+            <span class="sidebar-title">轨迹列表</span>
+            <button id="sidebar_close_btn" class="sidebar-close-btn" type="button" aria-label="收起列表">✕</button>
+          </div>
+          <div class="search-box">
+            <input id="search_input" class="search-input" type="text" placeholder="搜索线路、地点或省份..." />
+          </div>
+        </div>
+
+        <div id="track_list" class="track-list">
+          <!-- Dynamic Track Cards -->
+        </div>
+      </aside>
+
+      <!-- Sidebar Reopen Button -->
+      <button id="sidebar_toggle_btn" class="sidebar-toggle-btn" type="button" aria-label="展开轨迹列表">
+        <span>🗺️</span>
+        <span>轨迹列表</span>
+      </button>
+
+      <!-- Bottom Elevation Profile HUD -->
+      <div id="profile_hud" class="profile-hud">
+        <div class="profile-hud-header">
+          <div class="profile-hud-title">
+            <span id="profile_track_type_badge" class="track-card-badge">徒步</span>
+            <span id="profile_track_title">--</span>
+          </div>
+          <div class="profile-hud-actions">
+            <button id="btn_toggle_photos" class="action-btn" type="button" style="display: none;">
+              <span>📷</span>
+              <span id="photo_count_btn_text">沿途作品 (0)</span>
+            </button>
+            <button id="btn_toggle_3d" class="action-btn" type="button">
+              <span>⛰️</span>
+              <span>3D 俯视</span>
+            </button>
+            <button id="btn_play_track" class="action-btn" type="button">
+              <span>▶️</span>
+              <span>轨迹漫游</span>
+            </button>
+            <button id="btn_close_profile" class="action-btn" type="button" aria-label="关闭详情">✕</button>
+          </div>
+        </div>
+
+        <div class="profile-canvas-container">
+          <canvas id="elevation_canvas"></canvas>
+        </div>
+
+        <!-- Film Strip for Linked Photography Assets -->
+        <div id="photo_strip" class="photo-strip-container"></div>
+
+        <div class="profile-hud-stats">
+          <div>里程: <b id="profile_stat_dist">--</b> km</div>
+          <div>爬升: <b id="profile_stat_gain">--</b> m</div>
+          <div>最高海拔: <b id="profile_stat_max_ele">--</b> m</div>
+          <div>用时: <b id="profile_stat_duration">--</b></div>
+          <div>均速: <b id="profile_stat_speed">--</b> km/h</div>
+          <div id="profile_hr_wrapper" style="display: none;">心率: <b id="profile_stat_hr">--</b> bpm</div>
+        </div>
+      </div>
+
+      <!-- Profile Reopen Button (路线详情收起后的展开按钮) -->
+      <button id="profile_toggle_btn" class="profile-toggle-btn" type="button" aria-label="展开路线详情">
+        <span>📊</span>
+        <span id="profile_toggle_title">路线详情</span>
+      </button>
+    </section>
+  </main>
+
+  <!-- Photo Lightbox Modal -->
+  <div id="photo_lightbox" class="photo-lightbox" style="display: none;">
+    <button id="lightbox_close" class="lightbox-close-btn" type="button" aria-label="关闭预览">✕</button>
+    <div class="lightbox-content">
+      <img id="lightbox_img" class="lightbox-img" src="" alt="照片预览" />
+      <div class="lightbox-meta">
+        <div id="lightbox_title" class="lightbox-title">--</div>
+        <div id="lightbox_exif" class="lightbox-exif">--</div>
+        <div id="lightbox_time" class="lightbox-time">--</div>
+        <a id="lightbox_gallery_link" href="/web/photography/" class="lightbox-link" target="_blank">📷 在摄影画廊中查看高清原图 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map Settings Modal -->
+  <div id="map_settings_modal" class="map-settings-modal" style="display: none;">
+    <div class="map-settings-backdrop" id="map_settings_backdrop"></div>
+    <div class="map-settings-dialog">
+      <div class="map-settings-header">
+        <div class="map-settings-title">
+          <span>⚙️</span>
+          <span>地图图源与凭据配置</span>
+        </div>
+        <button id="btn_close_settings" class="map-settings-close-btn" type="button" aria-label="关闭设置">✕</button>
+      </div>
+
+      <div class="map-settings-body">
+        <div class="settings-intro">
+          在 GitHub Pages 静态部署模式下，API Token 仅保存在当前浏览器的 <code>localStorage</code> 中，不会上传至任何后端或代码仓库，保证凭据私密安全。
+        </div>
+
+        <!-- Thunderforest Token Section -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="provider-info">
+              <span class="provider-badge">Thunderforest</span>
+              <span class="provider-title">专业户外等高线与暗黑地形</span>
+            </div>
+            <a href="https://www.thunderforest.com/docs/apikeys/" class="settings-link" target="_blank" rel="noopener noreferrer">获取免费 API Key ↗</a>
+          </div>
+          <p class="provider-desc">提供 <code>暗黑地形 (Transport Dark)</code>、<code>户外等高线 (Outdoors)</code>、<code>骑行脉络 (Cycle)</code> 与 <code>自然地貌 (Landscape)</code> 高清瓦片。</p>
+          
+          <div class="form-group">
+            <label for="input_token_thunderforest" class="form-label">API Key / Token</label>
+            <div class="input-with-action">
+              <input type="password" id="input_token_thunderforest" class="form-input" placeholder="输入 Thunderforest API Key..." autocomplete="off" />
+              <button id="btn_save_tf_token" class="btn-primary" type="button">保存</button>
+              <button id="btn_clear_tf_token" class="btn-secondary" type="button">清除</button>
+            </div>
+            <div id="tf_token_status" class="status-tip">状态: 检查中...</div>
+          </div>
+        </div>
+
+        <!-- Free & Open Providers Status -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="provider-info">
+              <span class="provider-badge free-badge">免 Token 图源</span>
+              <span class="provider-title">开箱即用的开放地理数据</span>
+            </div>
+          </div>
+          <ul class="free-provider-list">
+            <li><b>OpenTopoMap</b>：全球开放高精度等高线与地形晕渲。</li>
+            <li><b>OpenFreeMap</b>：开源免费全要素矢量与栅格街道地图。</li>
+            <li><b>Esri World Imagery</b>：全球米级高分辨率卫星正射影像。</li>
+          </ul>
+        </div>
+
+        <!-- Custom XYZ Tile Source Section (预留) -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="provider-info">
+              <span class="provider-badge custom-badge">自定义 XYZ 图源</span>
+              <span class="provider-title">私有/第三方瓦片服务器</span>
+            </div>
+          </div>
+          <p class="provider-desc">可输入任何支持标准 <code>{z}/{x}/{y}</code> 切片规范的 URL 模板。</p>
+          <div class="custom-source-inputs">
+            <input type="text" id="input_custom_source_name" class="form-input" placeholder="图源名称 (如: 我的私有卫星)" />
+            <input type="text" id="input_custom_source_url" class="form-input" placeholder="瓦片 URL 模板 (如: https://.../{z}/{x}/{y}.png)" />
+            <button id="btn_add_custom_source" class="btn-secondary" type="button">＋ 添加自定义源</button>
+          </div>
+          <div id="custom_sources_list" class="custom-sources-list"></div>
+        </div>
+      </div>
+
+      <div class="map-settings-footer">
+        <button id="btn_done_settings" class="btn-primary" type="button">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared Core Utilities -->
+  <script src="/web/shared/scripts/photo-source.js?v=20260826_v13"></script>
+  <!-- Footprint Logic (Map Sources Abstraction & App Controller) -->
+  <script src="map-sources.js?v=20260826_v13"></script>
+  <script src="tracks.js?v=20260826_v13"></script>
+</body>
+</html>

@@ -28,6 +28,9 @@ case "$1" in
   updatep)
     go run cmd/update-photos/main.go
     ;;
+  updatet)
+    go run cmd/update-tracks/main.go
+    ;;
   updaten)
     go run cmd/update-neodb/main.go
     ;;
@@ -37,19 +40,20 @@ case "$1" in
     ;;
   restart)
     go run ./cmd/build-photography-assets
-    go run ./cmd/update-neodb/main.go
+    # go run ./cmd/update-neodb/main.go
     sh "$SCRIPT_DIR/stop_photograph-management.sh"
     sh "$SCRIPT_DIR/build_photograph-management_launchctl.sh"
     sh "$SCRIPT_DIR/start_photograph-management.sh"
     ;;
   *)
-    echo "用法: $0 {init|start|stop|updatep|updaten|verify|restart}"
-    echo "  init   初始化并安装 admin + 静态预览的 LaunchAgent"
-    echo "  start  同时启动照片管理后台(:3002)和本地博客预览(:3000)"
-    echo "  stop   停止上述两个本地服务"
+    echo "用法: $0 {init|start|stop|updatep|updatet|updaten|verify|restart}"
+    echo "  init    初始化并安装 admin + 静态预览的 LaunchAgent"
+    echo "  start   同时启动照片管理后台(:3002)和本地博客预览(:3000)"
+    echo "  stop    停止上述两个本地服务"
     echo "  updatep 运行照片更新"
+    echo "  updatet 运行山河足迹轨迹更新与摄影时空对齐"
     echo "  updaten 运行 NeoDB 书影音数据更新"
-    echo "  verify 校验摄影 bundle 是否最新，并运行 Go 测试"
+    echo "  verify  校验摄影 bundle 是否最新，并运行 Go 测试"
     exit 1
     ;;
 esac

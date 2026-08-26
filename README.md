@@ -18,6 +18,7 @@
 
 主要包含以下部分：
 - **Home**: 主页入口与站点导航。
+- **Footprint**: 山河足迹，记录户外徒步、越野跑、骑行、自驾等数字轨迹，并与摄影作品时空对齐。
 - **Media Journal**: 从 NeoDB 定时同步的书影音记录。
 - **Tools**: 在线开发者工具。
 - **Photography**: 摄影作品画廊，支持按年份归档、EXIF 信息展示和沉浸式预览。
@@ -27,18 +28,18 @@
 
 ## 技术栈
 
-- **前端**: 原生 HTML/CSS/JavaScript (无重型框架依赖)
-- **样式**: Material Design Lite (MDL) + 自定义 CSS
-- **交互**: 原生 HTML/CSS/JavaScript，照片后台采用虚拟滚动和懒加载
+- **前端**: 原生 HTML/CSS/JavaScript (无重型框架依赖)，WebGL 地图由 MapLibre GL JS 驱动
+- **样式**: Site Shell + 自定义 CSS (支持高对比度户外暗黑模式)
+- **交互**: 原生 HTML/CSS/JavaScript，照片后台采用虚拟滚动和懒加载，足迹底图热插拔与 Canvas HUD
 - **评论**: Valine
-- **自动化**: Go (用于照片处理和数据生成)
-- **存储**: Cloudflare R2 (图片 CDN)
+- **自动化**: Go (用于照片处理、EXIF 提取、GPX 解析、时空对齐与数据生成)
+- **存储**: Cloudflare R2 / 火山引擎 TOS (图片 CDN)
 
 ## 站点框架与导航
 
 公开页面统一使用 `web/shared/styles/site-shell.css` 与
 `web/shared/scripts/site-shell.js` 注入 `VINCENT CHYU` 基础菜单：
-`HOME`、`MEDIA JOURNAL`、`PORTFOLIO`、`SONIC LENS`、`DEVELOPER TOOLS`、
+`HOME`、`MEDIA JOURNAL`、`FOOTPRINT`、`PORTFOLIO`、`SONIC LENS`、`DEVELOPER TOOLS`、
 `ABOUT ME`、`CONTACT`。新增公开页面应优先接入这套共享 shell，再添加页面自己的内容区。
 
 ## 摄影工作流 (Photography Workflow)
@@ -66,6 +67,67 @@
 -   **实时重建**: 可视化的重建进度与实时日志输出，上传/编辑/删除会同步更新对应年份分片和 manifest。
 
 详细的脚本使用方式请参考本文件下方的 `run.sh` 章节。
+
+## 山河足迹工作流 (Footprint & Track Workflow)
+
+`web/tracks/` 是山河足迹全景数字资产系统，结合了 WebGL 多图源地图渲染、GPX 智能抽稀、双向联动高程/心率 HUD、以及与摄影作品的时空对齐关联。
+
+### 1. 两阶段轨迹管理工作流 (Two-Stage Workflow)
+
+为了避免算法推测与用户人工微调冲突，山河足迹采用清晰的**待整理池 ➔ 人工确认 ➔ 正式构建**工作流：
+
+```text
+原始 GPX 轨迹
+  │
+  ├── ① 放入待整理池 (~/.config/gpx/pending/)
+  │      ↓
+  ├── ② 执行预重命名: go run cmd/update-tracks/main.go --suggest-rename --run
+  │      ↓ (系统自动调用 photools 逆地理反查省份、推算速度、生成标准 5 段文件名)
+  │
+  ├── ③ 人工核对与微调 (如修正实际运动类型、优化路线标题)
+  │      ↓
+  ├── ④ 移动至正式目录 (~/.config/gpx/)
+  │      ↓
+  └── ⑤ 正式构建数据: go run cmd/update-tracks/main.go
+         (严格按文件名 5 段拆解，100% 保留人工干预结果，不读取 pending 目录)
+```
+
+- **待整理池预处理**:
+  - `go run cmd/update-tracks/main.go --suggest-rename`（预览重命名建议）
+  - `go run cmd/update-tracks/main.go --suggest-rename --run`（自动扫描 `pending/` 目录并批量应用标准命名）
+- **正式构建**:
+  - `go run cmd/update-tracks/main.go`（仅扫描 `~/.config/gpx/` 根目录下的正式 `.gpx` 文件，不递归 `pending/`）
+- **智能抽稀与摄影对齐**:
+  - 采用 **Douglas-Peucker 算法** 进行双精度几何抽稀（全景底图 8m 容差，详情高保真 2.5m 容差），体积缩减 70%+。
+  - 自动将单反摄影照片 EXIF 拍摄时间与 GPS 轨迹点做时空线性插值关联，在地图上生成 📷 照片图钉与 Profile HUD 联动胶片轮播栏。
+- **输出分片数据**: 生成总览索引 `web/tracks/data/manifest.json` 与单条高保真分片 `web/tracks/data/tracks/{id}.json`。
+
+### 2. 轨迹文件命名规范与拆解机制 (Track Naming & Parsing)
+
+#### 🌟 推荐标准格式 (Standard 5-Part Format)
+
+```text
+{运动类型}-{国家}-{省份}-{路线/地点名称}-{YYYYMMDD}.gpx
+```
+
+#### 📌 字段解析机制（人工干预最高优先级）
+
+当文件名为上述标准 5 段格式时，构建引擎将**直接严格按段拆解**，绝对不被任何算法推算或 GPX 内置标签覆盖：
+
+| 字段 | 示例 | 最终渲染机制 |
+| :--- | :--- | :--- |
+| **{运动类型}** | `hiking`、`cycling`、`driving`、`trail_running`、`walking`、`transit` | 严格采用该运动类型与荧光配色，不被平均速度算法覆盖。 |
+| **{国家}** | `中国` | 严格采用该国家标签。 |
+| **{省份}** | `新疆`、`四川`、`广东` | 严格采用该省份标签并点亮地图对应省份。 |
+| **{路线/地点名称}** | `喀拉峻鲜花台深度`、`夏特古道`、`火凤线` | 严格提取为卡片与 HUD 主标题（自动将下划线替换为空格，绝不拼接类型与省份前缀）。 |
+| **{YYYYMMDD}** | `20260610` | 提取为基准活动日期，用于时间倒序索引与照片时空匹配。 |
+
+#### 💡 规范命名范例
+
+- 🥾 **户外徒步**: `hiking-中国-新疆-喀拉峻鲜花台深度-20260610.gpx`
+- 🚗 **公路自驾**: `driving-中国-新疆-独库公路自驾巡游-20260613.gpx`
+- 🚲 **绿道骑行**: `cycling-中国-广东-从化流溪河绿道-20251115.gpx`
+- 🏃 **山野越野跑**: `trail_running-中国-四川-四姑娘山长坪沟-20260710.gpx`
 
 ## 书影音工作流 (Media Journal Workflow)
 
@@ -145,6 +207,7 @@ chmod +x run.sh
 -   `start`: 启动服务。通过 `launchctl` 同时加载并启动后台和本地博客预览。
 -   `stop`: 停止服务。卸载并停止后台和本地博客预览。
 -   `updatep`: 手动运行照片库更新逻辑 (执行 `cmd/update-photos`)。
+-   `updatet`: 手动运行山河足迹轨迹更新与摄影时空关联 (执行 `cmd/update-tracks`)。
 -   `updaten`: 手动运行 NeoDB 书影音数据更新逻辑 (执行 `cmd/update-neodb`)。
 -   `verify`: 校验摄影页 bundle 是否为最新构建结果，并运行 `go test ./...`。
 

@@ -7,6 +7,7 @@
     { id: "contact", label: "CONTACT", href: "web/photography/dist/contact.html" },
     { id: "media", label: "MEDIA", href: "web/media/" },
     { id: "portfolio", label: "PORTFOLIO", href: "web/photography/" },
+    { id: "footprint", label: "FOOTPRINT", href: "web/tracks/" },
     { id: "sonic", label: "SONIC LENS", href: "web/sonic-lens/" },
     // { id: "tools", label: "DEVELOPER TOOLS", href: "web/tools/" },
   ];
