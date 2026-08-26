@@ -65,6 +65,9 @@
 - `web/admin` 的照片列表 API 支持分页查询，默认页面应优先用 `format=page` 的 cursor 分页模式。
 - 约定：`web/photography/data/photos-manifest.json` 只作为本地开发和工作区生成产物；线上读取对应的 `pages/photos-manifest.json`，年份分片对应 `pages/photos/{year}.json`。
 - 约定：正常更新流程不再写入 `web/photography/photos.json`，它只作为迁移期间的旧版读取兜底。
+- 约定：全站任何页面（摄影、足迹、后台）消费照片媒体资源时，严禁硬编码 TOS 或 R2 域名，统一使用 `web/shared/scripts/photo-source.js`（`window.PhotoSource.resolvePhotoUrls(p)`）进行动态解析与双源容灾降级；预览场景优先加载 WebP 压缩缩略图。
+- 约定：山河足迹多图源注册表 (`web/tracks/map-sources.js`) 统一管理所有底图 Provider 与 Style，个人 API Key 隔离保存于浏览器 localStorage，源码严禁包含敏感凭据。
+- 约定：山河足迹高亮轨迹采用三层复合渲染架构（`casing` 深黑描边 + `glow` 运动主题色光晕 + `core` 亮白芯线），确保在暗黑、等高线、街道、卫星全底图下均保持高对比度与穿透力。
 - 约定：`go run cmd/static/main.go` 只用于本地调试，并会注入 `local` 数据模式；生产环境不应依赖它来发布摄影数据。
 - 约定：`web/ARCHITECTURE.md` 代表当前前端 canonical 目录树，`web/before/` 仅保留兼容跳转。
 - 约定：凡是涉及目录重组、前后端分层、运行方式、API 契约、性能模型等较大的变动，都要同步更新 `CHANGELOG.md`，保持变更记录与代码一致。

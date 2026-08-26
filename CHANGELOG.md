@@ -4,9 +4,25 @@
 
 ### 新功能 & 架构重构
 
+- **山河足迹全底图自适应三层复合轨迹渲染体系 (`web/tracks/tracks.js`)**：
+  - **三层高保真立体渲染架构 (Casing + Glow + Core)**：
+    - 底层高对比度描边 (`selected-track-casing`，9px 深黑半透明轮廓 `#090d16`)：构建坚固轮廓边界，彻底根除在浅色等高线（OpenTopoMap）或浅白街道（OpenFreeMap）底图上因纯白核心线导致的撞色隐形问题。
+    - 中层运动专属高饱和发光晕 (`selected-track-glow`，6px 荧光绿/燃橙/极光紫/琥珀金)。
+    - 顶层立体发光芯线 (`selected-track-core`，2.5px 纯白高亮光芯)，形成激光脉络般的立体视觉穿透力。
+  - **底图层级硬隔离 (`switchTheme`)**：底图栅格瓦片严格插入在所有 GeoJSON 轨迹图层之下，杜绝底图热切换时遮挡轨迹线条。
+
+- **路线详情 HUD 收起折叠与悬浮呼出重构 (`web/tracks/`)**：
+  - **收起不销毁轨迹焦点**：点击底部高程剖面 HUD 的 `✕` 时，保留当前轨迹高亮图层、沿途相机图钉与地图焦点。
+  - **悬浮唤起按钮 (`.profile-toggle-btn`)**：收起后在底部浮现类似轨迹列表的悬浮按钮（如 `📊 孟克特古道`），点击随时重新滑出展开高程剖面、运动指标与胶片相册。
+
+- **全屏沉浸模式与视口自适应修复**：
+  - **样式权重强覆盖**：为 `.footprint-workspace.is-fullscreen` 赋予强约束 `!important`，彻底消除动态计算行内高度造成的屏幕底部黑边死区，实现真正的 100% 满屏 WebGL 渲染。
+  - **生命周期状态机与 ESC 支持**：重构 `setFullscreenMode`，退出全屏自动恢复垂直滚动并重算视口高度，支持按下 `ESC` 键快捷退出。
+
 - **全站统一摄影数据源与媒体 URL 解析公共组件 (`web/shared/scripts/photo-source.js`)**：
   - **动态数据源联动 (Dynamic Source Resolution)**：彻底消除在业务页面硬编码火山引擎 TOS 或 Cloudflare R2 域名的做法，根据线上 `pages/gallery-source.json`（或本地 `web/photography/data/gallery-source.json`）动态确定当前活跃源（`active_source: "r2" | "tos"`）与对应 Public Base URL。
   - **缩略图极速分级加载规范 (WebP Thumbnail First)**：针对地图弹窗、胶片轮播栏等预览场景，一律优先拉取高压缩比的 WebP 缩略图（`pages/thumbnails/*.webp`，约 100KB 毫秒级秒开），大图灯箱（Lightbox）按需加载 4K 原片，提供双 CDN 互相容灾降级（Fallback）。
+  - **生命周期就绪保障**：`loadManifest` 与 `selectTrack` 显式 `await ensureSourceConfig()`，确保渲染前活跃源 100% 就绪；`getDataUrl` 绝对路径加固防止路由末尾缺斜杠导致 404。
   - **跨页面全站复用**：已无缝接入山河足迹（Tracks）与摄影画廊（Photography），并提供独立单元测试套件 `test-photo-source.js`。
 
 - **山河足迹日间/夜间双模 UI 颜色与对比度重构 (`web/tracks/tracks.css`)**：

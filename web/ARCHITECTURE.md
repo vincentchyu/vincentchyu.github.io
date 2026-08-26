@@ -9,11 +9,11 @@ main site. Historical public URLs are preserved through compatibility shims in
 - `home/`: homepage-owned assets and scripts used by the root `index.html`
 - `tools/`: developer tools page source
 - `media/`: NeoDB-powered media journal page and generated per-category JSON
-- `tracks/`: digital footprint & tracks map page, generated manifest and chunks
-- `photography/`: photography site and generated data
+- `tracks/`: digital footprint & tracks WebGL map page, multi-source raster basemap engine, elevation profile HUD, and generated manifest / per-track JSON chunks
+- `photography/`: photography site and generated gallery data
 - `admin/`: photo admin frontend
 - `legacy/`: historical compatibility layer
-- `shared/`: shared scripts, media, fonts, styles, site shell, and vendor files
+- `shared/`: shared scripts (site shell, unified `photo-source.js` media resolution engine), media, fonts, styles, and vendor files
 
 ## Canonical URLs
 
