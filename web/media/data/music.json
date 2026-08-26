@@ -723,17 +723,6 @@
   },
   {
     "item": {
-      "uuid": "4mOdqqLQk2uP9TJfULwXgv",
-      "title": "Tell Them, I'm Here - EP",
-      "cover_image_url": "https://neodb.social/m/item/musicbrainz_releasegroup/2026/08/07/bb5e756b-ae31-4452-9ab1-ca50685ab8ee.jpg",
-      "category": "music",
-      "url": "/album/4mOdqqLQk2uP9TJfULwXgv",
-      "release_date": "2025-11-14"
-    },
-    "created_time": "2025-08-07T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "2ICAZT4ZmNW2vyjqt5jCKw",
       "title": "十万个为什么",
       "cover_image_url": "https://neodb.social/m/album/2021/09/15e2e5b405-f5c9-42fd-ac98-072b10c70c60.jpg",
@@ -741,6 +730,17 @@
       "url": "/album/2ICAZT4ZmNW2vyjqt5jCKw",
       "rating": 7.5,
       "release_date": "2020-09-24"
+    },
+    "created_time": "2025-08-07T13:54:00Z"
+  },
+  {
+    "item": {
+      "uuid": "4mOdqqLQk2uP9TJfULwXgv",
+      "title": "Tell Them, I'm Here - EP",
+      "cover_image_url": "https://neodb.social/m/item/musicbrainz_releasegroup/2026/08/07/bb5e756b-ae31-4452-9ab1-ca50685ab8ee.jpg",
+      "category": "music",
+      "url": "/album/4mOdqqLQk2uP9TJfULwXgv",
+      "release_date": "2025-11-14"
     },
     "created_time": "2025-08-07T13:54:00Z"
   },
@@ -760,29 +760,15 @@
   },
   {
     "item": {
-      "uuid": "2JijjtZBJhIH8uahKKKQtz",
-      "title": "OK Computer",
-      "cover_image_url": "https://neodb.social/m/album/2021/09/15b7c2da05-75f9-4d79-a1af-ec3025467aec.jpg",
+      "uuid": "568rH4yOPt64wqhbZ3GF6m",
+      "title": "他们说忘了摇滚有问题",
+      "cover_image_url": "https://neodb.social/m/album/2021/09/159912b1c2-524b-4494-be90-a57cce9ee11c.jpg",
       "category": "music",
-      "url": "/album/2JijjtZBJhIH8uahKKKQtz",
-      "rating": 9.3,
-      "release_date": "1997-05-21"
+      "url": "/album/568rH4yOPt64wqhbZ3GF6m",
+      "rating": 9.2,
+      "release_date": "2008-01-30"
     },
     "created_time": "2025-07-17T13:54:00Z",
-    "rating_grade": 9
-  },
-  {
-    "item": {
-      "uuid": "0Sa1TZeTpWcNZvM8lT6ikt",
-      "title": "不正常飞船",
-      "cover_image_url": "https://neodb.social/m/album/2022/09/269ee61d95-8afd-4367-9f2c-6800f7ed40bb.jpg",
-      "category": "music",
-      "url": "/album/0Sa1TZeTpWcNZvM8lT6ikt",
-      "rating": 7.8,
-      "release_date": "2022-09-23"
-    },
-    "created_time": "2025-07-17T13:54:00Z",
-    "comment_text": "爵士入门",
     "rating_grade": 7
   },
   {
@@ -800,16 +786,30 @@
   },
   {
     "item": {
-      "uuid": "568rH4yOPt64wqhbZ3GF6m",
-      "title": "他们说忘了摇滚有问题",
-      "cover_image_url": "https://neodb.social/m/album/2021/09/159912b1c2-524b-4494-be90-a57cce9ee11c.jpg",
+      "uuid": "0Sa1TZeTpWcNZvM8lT6ikt",
+      "title": "不正常飞船",
+      "cover_image_url": "https://neodb.social/m/album/2022/09/269ee61d95-8afd-4367-9f2c-6800f7ed40bb.jpg",
       "category": "music",
-      "url": "/album/568rH4yOPt64wqhbZ3GF6m",
-      "rating": 9.2,
-      "release_date": "2008-01-30"
+      "url": "/album/0Sa1TZeTpWcNZvM8lT6ikt",
+      "rating": 7.8,
+      "release_date": "2022-09-23"
     },
     "created_time": "2025-07-17T13:54:00Z",
+    "comment_text": "爵士入门",
     "rating_grade": 7
+  },
+  {
+    "item": {
+      "uuid": "2JijjtZBJhIH8uahKKKQtz",
+      "title": "OK Computer",
+      "cover_image_url": "https://neodb.social/m/album/2021/09/15b7c2da05-75f9-4d79-a1af-ec3025467aec.jpg",
+      "category": "music",
+      "url": "/album/2JijjtZBJhIH8uahKKKQtz",
+      "rating": 9.3,
+      "release_date": "1997-05-21"
+    },
+    "created_time": "2025-07-17T13:54:00Z",
+    "rating_grade": 9
   },
   {
     "item": {
@@ -887,18 +887,6 @@
   },
   {
     "item": {
-      "uuid": "0nYoEnclI2s3y5nKiuBzGJ",
-      "title": "0.7",
-      "cover_image_url": "https://neodb.social/m/album/2021/09/159931d404-70b6-4fca-8755-153f81f5512c.jpg",
-      "category": "music",
-      "url": "/album/0nYoEnclI2s3y5nKiuBzGJ",
-      "rating": 9.1,
-      "release_date": "2012-06-08"
-    },
-    "created_time": "2024-08-07T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "3hvIvTo1rXa6jL9MSjkzln",
       "title": "救命啊！",
       "cover_image_url": "https://neodb.social/m/album/2021/09/153b0a0e1d-7fd3-475e-8e91-e4dd7dbdf9fa.jpg",
@@ -906,6 +894,18 @@
       "url": "/album/3hvIvTo1rXa6jL9MSjkzln",
       "rating": 9.3,
       "release_date": "1965-01-01"
+    },
+    "created_time": "2024-08-07T13:54:00Z"
+  },
+  {
+    "item": {
+      "uuid": "0nYoEnclI2s3y5nKiuBzGJ",
+      "title": "0.7",
+      "cover_image_url": "https://neodb.social/m/album/2021/09/159931d404-70b6-4fca-8755-153f81f5512c.jpg",
+      "category": "music",
+      "url": "/album/0nYoEnclI2s3y5nKiuBzGJ",
+      "rating": 9.1,
+      "release_date": "2012-06-08"
     },
     "created_time": "2024-08-07T13:54:00Z"
   },
@@ -925,16 +925,14 @@
   },
   {
     "item": {
-      "uuid": "0Fl7n0KXkuqpT3d3GA0ns5",
-      "title": "成長小說",
-      "cover_image_url": "https://neodb.social/m/item/apple_music/2023/12/25/673d422a-a4f5-4893-976c-05b3ff9e14c8.jpg",
+      "uuid": "2vm9Z0SN2k6sKLQd9gGaPF",
+      "title": "Double Vision",
+      "cover_image_url": "https://neodb.social/m/item/doubanmusic/2025/07/20/7a223dce-d334-4446-b143-a7ea63833a18.jpg",
       "category": "music",
-      "url": "/album/0Fl7n0KXkuqpT3d3GA0ns5",
-      "rating": 6.8,
-      "release_date": "2020-07-24"
+      "url": "/album/2vm9Z0SN2k6sKLQd9gGaPF",
+      "release_date": "1990-10-25"
     },
-    "created_time": "2024-07-17T13:54:00Z",
-    "rating_grade": 6
+    "created_time": "2024-07-17T13:54:00Z"
   },
   {
     "item": {
@@ -951,27 +949,30 @@
   },
   {
     "item": {
-      "uuid": "2vm9Z0SN2k6sKLQd9gGaPF",
-      "title": "Double Vision",
-      "cover_image_url": "https://neodb.social/m/item/doubanmusic/2025/07/20/7a223dce-d334-4446-b143-a7ea63833a18.jpg",
+      "uuid": "0Fl7n0KXkuqpT3d3GA0ns5",
+      "title": "成長小說",
+      "cover_image_url": "https://neodb.social/m/item/apple_music/2023/12/25/673d422a-a4f5-4893-976c-05b3ff9e14c8.jpg",
       "category": "music",
-      "url": "/album/2vm9Z0SN2k6sKLQd9gGaPF",
-      "release_date": "1990-10-25"
-    },
-    "created_time": "2024-07-17T13:54:00Z"
-  },
-  {
-    "item": {
-      "uuid": "51KBR3PaaKPhOJEvuDdhFl",
-      "title": "Before The Applause",
-      "cover_image_url": "https://neodb.social/m/album/2021/09/1658a59a7c-15b8-46f8-a3ef-2e7805474d89.jpg",
-      "category": "music",
-      "url": "/album/51KBR3PaaKPhOJEvuDdhFl",
-      "rating": 8.2,
-      "release_date": "2017-09-15"
+      "url": "/album/0Fl7n0KXkuqpT3d3GA0ns5",
+      "rating": 6.8,
+      "release_date": "2020-07-24"
     },
     "created_time": "2024-07-17T13:54:00Z",
     "rating_grade": 6
+  },
+  {
+    "item": {
+      "uuid": "5mPJQuIs9SO8eTMoerVX9q",
+      "title": "切掉!",
+      "cover_image_url": "https://neodb.social/m/album/2021/09/1696e3763d-5706-4247-bc27-f3e8d0c63369.jpg",
+      "category": "music",
+      "url": "/album/5mPJQuIs9SO8eTMoerVX9q",
+      "rating": 8.6,
+      "release_date": "2005-01-01"
+    },
+    "created_time": "2024-07-17T13:54:00Z",
+    "comment_text": "遗世独立，时代印记。",
+    "rating_grade": 9
   },
   {
     "item": {
