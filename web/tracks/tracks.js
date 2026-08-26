@@ -6,6 +6,7 @@
 (function () {
   let map = null;
   let manifestData = null;
+  let overviewGeoJSON = null;
   let activeTrackId = null;
   let activeTrackDetail = null;
   let currentFilterType = "all";
@@ -433,9 +434,25 @@
       updateHUDStats(currentFilterType);
       updateFilterCounts(data.stats);
       renderTrackList();
-      renderMapTracks();
+      // 异步非阻塞加载全景骨架底网
+      loadOverviewTracks();
     } catch (err) {
       console.error("Error loading tracks manifest:", err);
+    }
+  }
+
+  async function loadOverviewTracks() {
+    try {
+      const res = await fetch(getDataUrl("data/overview.geojson"));
+      if (!res.ok) throw new Error(`HTTP ${res.status} loading overview geojson`);
+      const data = await res.json();
+      overviewGeoJSON = data;
+      // 始终触发渲染：消费可能在加载期间排队的待渲染标记
+      renderMapTracks();
+    } catch (err) {
+      console.warn("Failed to load overview tracks:", err);
+      // 即使加载失败，也清除待渲染标记避免永久挂起
+      pendingMapRender = false;
     }
   }
 
@@ -518,7 +535,9 @@
 
     tracks.forEach((t) => {
       const card = document.createElement("div");
-      card.className = "track-card" + (t.id === activeTrackId ? " active" : "");
+      const hasTrack = t.has_track !== false;
+      const isCardActive = hasTrack && t.id === activeTrackId;
+      card.className = "track-card" + (isCardActive ? " active" : "") + (!hasTrack ? " is-no-track" : "");
       card.dataset.id = t.id;
       const color = activityColors[t.type] || "#94a3b8";
       card.style.setProperty("--card-color", color);
@@ -527,74 +546,96 @@
       const dateStr = t.start_time ? t.start_time.substring(0, 10) : "";
       const hrStr = t.avg_hr > 0 ? `<span>❤️ ${t.avg_hr} bpm</span>` : "";
       const photoStr = t.photo_count > 0 ? `<span>📷 ${t.photo_count}张照片</span>` : "";
+      const privacyBadge = !hasTrack ? `<span class="track-card-badge is-muted" title="短途隐私保护，仅展示统计数据">仅统计</span>` : "";
 
       card.innerHTML = `
         <div class="track-card-header">
           <span class="track-card-title" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
-          <span class="track-card-badge" style="color:${color}">${typeLabel}</span>
+          <div class="track-card-badges">
+            ${privacyBadge}
+            <span class="track-card-badge" style="color:${color}">${typeLabel}</span>
+          </div>
         </div>
         <div class="track-card-meta">
           <span>📅 ${dateStr}</span>
           <span>📍 ${t.distance_km} km</span>
-          <span>▲ ${Math.round(t.elevation_gain_m)} m</span>
+          <span>▲ ${Math.round(t.elevation_gain_m || 0)} m</span>
           ${hrStr}
           ${photoStr}
         </div>
       `;
 
-      card.addEventListener("click", () => {
-        selectTrack(t.id);
-      });
+      if (hasTrack) {
+        card.addEventListener("click", () => {
+          selectTrack(t.id);
+        });
+      }
 
       listEl.appendChild(card);
     });
   }
 
+  // 标记是否有待执行的地图渲染（在 overviewGeoJSON 尚未加载完成时排队）
+  let pendingMapRender = false;
+
   function renderMapTracks() {
-    if (!map || !manifestData || !mapLayersReady) return;
+    if (!map || !mapLayersReady) return;
+    if (!overviewGeoJSON) {
+      // overview 数据尚未加载完成，标记待渲染，等数据到达后自动触发
+      pendingMapRender = true;
+      return;
+    }
+    pendingMapRender = false;
+
     const source = map.getSource("all-tracks");
     if (!source) return;
 
-    const filtered = getFilteredTracks();
-    const features = filtered.map((t) => {
-      return {
-        type: "Feature",
-        properties: {
-          id: t.id,
-          title: t.title,
-          type: t.type,
-          color: activityColors[t.type] || "#94a3b8",
-        },
-        geometry: {
-          type: "LineString",
-          coordinates: t.coords || [],
-        },
-      };
-    });
+    const filteredTracks = getFilteredTracks().filter((t) => t.has_track !== false);
+    const validTrackIds = new Set(filteredTracks.map((t) => t.id));
+
+    const filteredFeatures = (overviewGeoJSON.features || [])
+      .filter((f) => f.properties && validTrackIds.has(f.properties.id))
+      .map((f) => {
+        const type = f.properties.type;
+        return {
+          type: "Feature",
+          properties: {
+            ...f.properties,
+            color: activityColors[type] || "#94a3b8",
+          },
+          geometry: f.geometry,
+        };
+      });
 
     source.setData({
       type: "FeatureCollection",
-      features: features,
+      features: filteredFeatures,
     });
 
-    if (!activeTrackId && filtered.length > 0) {
-      fitAllTracks(filtered);
+    if (!activeTrackId && filteredTracks.length > 0) {
+      fitAllTracks(filteredTracks);
     }
   }
 
   function fitAllTracks(tracks) {
     if (!tracks || tracks.length === 0) return;
     let minLon = 180, maxLon = -180, minLat = 90, maxLat = -90;
+    let validCount = 0;
     tracks.forEach((t) => {
-      if (t.bbox) {
+      if (
+        t.has_track !== false &&
+        t.bbox &&
+        (t.bbox[0] !== 0 || t.bbox[1] !== 0 || t.bbox[2] !== 0 || t.bbox[3] !== 0)
+      ) {
         if (t.bbox[0] < minLon) minLon = t.bbox[0];
         if (t.bbox[1] < minLat) minLat = t.bbox[1];
         if (t.bbox[2] > maxLon) maxLon = t.bbox[2];
         if (t.bbox[3] > maxLat) maxLat = t.bbox[3];
+        validCount++;
       }
     });
 
-    if (minLon <= maxLon && minLat <= maxLat) {
+    if (validCount > 0 && minLon <= maxLon && minLat <= maxLat) {
       map.fitBounds(
         [[minLon, minLat], [maxLon, maxLat]],
         { padding: { top: 60, bottom: 60, left: 340, right: 60 }, maxZoom: 14, duration: 1400 }
@@ -622,13 +663,17 @@
 
   async function selectTrack(id) {
     if (activeTrackId === id) return;
+    const item = manifestData && manifestData.tracks ? manifestData.tracks.find((t) => t.id === id) : null;
+    if (item && item.has_track === false) {
+      // 保护隐私或无轨迹记录，不允许进入轨迹详情
+      return;
+    }
     activeTrackId = id;
 
     document.querySelectorAll(".track-card").forEach((card) => {
       card.classList.toggle("active", card.dataset.id === id);
     });
 
-    const item = manifestData && manifestData.tracks ? manifestData.tracks.find((t) => t.id === id) : null;
     if (item && item.bbox && map) {
       map.fitBounds(
         [[item.bbox[0], item.bbox[1]], [item.bbox[2], item.bbox[3]]],
@@ -636,7 +681,8 @@
       );
     }
 
-    applyFocusDimming(true);
+    // 注意：不在此处调用 applyFocusDimming(true)
+    // 延迟到 fetch 成功并确认渲染后再淡化底网，防止 fetch 失败时地图呈现空白
 
     if (window.PhotoSource && typeof window.PhotoSource.ensureSourceConfig === "function") {
       try {
@@ -644,17 +690,29 @@
       } catch (_) {}
     }
 
-    fetch(getDataUrl(`data/tracks/${id}.json`))
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status} loading track ${id}`);
-        return res.json();
-      })
-      .then((detail) => {
-        activeTrackDetail = detail;
-        renderSelectedTrackOnMap(detail);
-        showProfileHUD(detail);
-      })
-      .catch((err) => console.error("Failed to load track detail:", err));
+    try {
+      const res = await fetch(getDataUrl(`data/tracks/${id}.json`));
+      if (!res.ok) throw new Error(`HTTP ${res.status} loading track ${id}`);
+      const detail = await res.json();
+      // 防止在 fetch 期间用户已切换到其他轨迹或取消选择
+      if (activeTrackId !== id) return;
+      activeTrackDetail = detail;
+      renderSelectedTrackOnMap(detail);
+      applyFocusDimming(true);
+      showProfileHUD(detail);
+    } catch (err) {
+      console.error("Failed to load track detail:", err);
+      // fetch 失败时恢复状态，不留下空白地图
+      if (activeTrackId === id) {
+        activeTrackId = null;
+        activeTrackDetail = null;
+        document.querySelectorAll(".track-card").forEach((c) => c.classList.remove("active"));
+        applyFocusDimming(false);
+        if (map && map.getSource("selected-track")) {
+          map.getSource("selected-track").setData({ type: "FeatureCollection", features: [] });
+        }
+      }
+    }
   }
 
   function resetTrackSelection() {

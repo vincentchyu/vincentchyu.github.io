@@ -73,6 +73,11 @@
 - 约定：凡是涉及目录重组、前后端分层、运行方式、API 契约、性能模型等较大的变动，都要同步更新 `CHANGELOG.md`，保持变更记录与代码一致。
 - 现有注释和 UI 文案中中英文混用较多，新增内容尽量跟随所在文件的既有语言风格。
 - 保留用户已经做过的未提交改动，不要回滚不相关文件。
+- ⚠️ **约定（反回归约束）：山河足迹 `web/tracks/tracks.js` 存在三路异步竞态（`style.load`、`loadOverviewTracks`、`selectTrack` fetch），历史上每次新增需求改动后多次引发"点击轨迹后无轨迹显示"的回归 Bug。任何对该文件的修改必须严格遵守以下防御规则**：
+  1. **`selectTrack` 中的 `applyFocusDimming(true)` 必须在 `fetch(tracks/{id}.json)` 成功并确认 `activeTrackId` 未变更之后调用**，严禁在 fetch 发起前或 `.then` 外部调用。fetch 失败时必须恢复 `activeTrackId = null` 并调用 `applyFocusDimming(false)` 还原底网可见性。
+  2. **`renderMapTracks()` 必须在 `overviewGeoJSON` 未加载时设置 `pendingMapRender = true` 并 return**，由 `loadOverviewTracks()` 在数据到达后自动消费并重新调用 `renderMapTracks()`。严禁静默丢弃渲染请求。
+  3. **`style.load` handler 中必须同时尝试恢复 `overviewGeoJSON` 底网和 `activeTrackDetail` 选中轨迹**，不可假设任何一方的加载时序。
+  4. **修改后必须运行 `node --check web/tracks/tracks.js` 验证语法**，并在浏览器中实际测试以下场景：首次加载全景底网→切换分类→点击轨迹→fetch 成功渲染→返回全景→再次切换分类。
 
 ## 测试与验证
 

@@ -4,6 +4,28 @@
 
 ### 新功能 & 架构重构
 
+- **山河足迹全景渐进式分层加载与首屏性能架构重构 (`internal/track` & `web/tracks/`)**：
+  - **三层渐进式加载架构 (Three-Tier Progressive Loading Pipeline)**：
+    - **第 1 层（首屏秒开，~40KB）**：`manifest.json` 彻底剔除大体积坐标数组，转为极轻量纯元数据清单，包含 ID、标题、类型、里程、心率、时长与 BBox，实现左侧列表与顶部 HUD 统计瞬间毫秒级秒开呈现。
+    - **第 2 层（全景底网异步加载，~140KB）**：单独生成 `web/tracks/data/overview.geojson`，由 Go 工具链聚合所有具备轨迹的活动骨架线段；前端首屏渲染后异步非阻塞拉取，丝滑浮现全国山河足迹脉络。
+    - **第 3 层（单条高保真按需加载）**：点击卡片时才按需请求 `tracks/{id}.json`，获取 2.5 米高精度点位、等距高程心率剖面与沿途摄影作品。
+  - **动态联动过滤与自适应视野**：
+    - 切换运动分类或搜索路线时，前端基于 `overview.geojson` 内存数据即刻同步过滤底网线段并自适应缩放地图视野，无需发起额外网络请求。
+
+- **短途跑步与行走隐私保护与轻量化统计重构 (`internal/track` & `web/tracks/`)**：
+  - **家庭周边隐私安全防护机制 (Privacy-Preserving Track Policy)**：
+    - 针对跑步（`running`）与城市行走（`walking`）距离低于 10km 的短途记录，主动剥离经纬度点位、抽稀坐标和详细高程剖面，杜绝暴露起终点及家庭住址周边轨迹路线。
+    - 10km 及以上长距离记录或山野户外类型（如越野跑、徒步、登山、骑行、自驾）完整解析并展示 WebGL 轨迹与高程剖面。
+  - **统一 `has_track` 标志与数据契约**：
+    - `TrackManifestItem` 与 `TrackDetail` 新增 `has_track: bool` 标识。
+    - 短途隐私记录 `has_track: false`，不生成冗余详情分片 JSON 文件（节约磁盘与网络开销 80%+），起终点与 BoundingBox 安全置零。
+  - **总里程与分类里程 100% 统计无损保留**：
+    - 隐私保护记录仍完整保留总公里数（`distance_km`）、平均心率（`avg_hr`）、最大心率（`max_hr`）、总时长（`duration_s`）与均速。
+    - 该里程与活动次数完整计入对应运动类型（`running`/`walking`）及全站足迹总公里数。
+  - **前端差异化状态渲染与不可点击约束 (`web/tracks/tracks.js` & `tracks.css`)**：
+    - 轨迹列表针对 `has_track: false` 卡片渲染浅灰「仅统计」徽章，光标呈现默认状态并禁用点击查看轨迹与地图定位，防止误触。
+    - 全景底图（`all-tracks`）自动过滤无轨迹数据，自适应包围盒（`fitAllTracks`）智能排除 0 坐标干扰。
+
 - **山河足迹全底图自适应三层复合轨迹渲染体系 (`web/tracks/tracks.js`)**：
   - **三层高保真立体渲染架构 (Casing + Glow + Core)**：
     - 底层高对比度描边 (`selected-track-casing`，9px 深黑半透明轮廓 `#090d16`)：构建坚固轮廓边界，彻底根除在浅色等高线（OpenTopoMap）或浅白街道（OpenFreeMap）底图上因纯白核心线导致的撞色隐形问题。

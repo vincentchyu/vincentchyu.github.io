@@ -726,6 +726,12 @@ body.footprint-page {
   max-width: 180px;
 }
 
+.track-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .track-card-badge {
   font-size: 9px;
   padding: 2px 6px;
@@ -733,6 +739,30 @@ body.footprint-page {
   background: var(--hud-badge-bg);
   font-weight: 600;
   text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.track-card-badge.is-muted {
+  color: var(--hud-subtext);
+  background: var(--hud-badge-bg);
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.track-card.is-no-track {
+  cursor: default;
+  opacity: 0.88;
+}
+
+.track-card.is-no-track:hover {
+  background: var(--hud-card-bg);
+  border-color: var(--hud-card-border);
+  transform: none;
+  box-shadow: none;
+}
+
+.track-card.is-no-track::before {
+  opacity: 0.5;
 }
 
 .track-card-meta {
