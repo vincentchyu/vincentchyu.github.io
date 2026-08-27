@@ -307,14 +307,12 @@
 
   async function loadProvinceBoundaries() {
     try {
-      const res = await fetch("data/provinces.geojson");
-      if (res.ok) {
-        provincesGeoJSON = await res.json();
+        const data = await fetchJsonSafe(getDataUrl("data/provinces.geojson"), "data/provinces.geojson");
+        provincesGeoJSON = data;
         if (map && map.getSource("china-provinces")) {
-          map.getSource("china-provinces").setData(provincesGeoJSON);
+            map.getSource("china-provinces").setData(provincesGeoJSON);
         }
         updateHighlightedProvinces();
-      }
     } catch (err) {
       console.warn("Failed to load china provinces geojson:", err);
     }
@@ -583,11 +581,51 @@
 
   function getDataUrl(relativePath) {
     const clean = relativePath.replace(/^\/+/, "");
-    // 如果当前处于 /web/tracks/ 路由下，使用 /web/tracks/ 前缀防止 404
-    if (window.location.pathname.includes("/web/tracks")) {
+      const pathname = window.location.pathname || "";
+      // 若当前路径已包含 /web/tracks，基于当前路径精准推导前缀
+      if (pathname.includes("/web/tracks")) {
+          const idx = pathname.indexOf("/web/tracks");
+          const prefix = pathname.substring(0, idx + "/web/tracks".length);
+          return `${prefix}/${clean}`;
+      }
+      // 默认补齐全站 canonical 目录树前缀
       return `/web/tracks/${clean}`;
-    }
-    return clean;
+  }
+
+    async function fetchJsonSafe(url, fallbackRelativePath) {
+        let res = null;
+        let primaryUrl = url;
+        try {
+            res = await fetch(primaryUrl);
+        } catch (_) {
+            res = null;
+        }
+
+        // 若主路径请求失败或返回非 200，尝试纯相对路径作为备选降级
+        if ((!res || !res.ok) && fallbackRelativePath) {
+            const fallbackUrl = fallbackRelativePath.replace(/^\/+/, "");
+            if (fallbackUrl !== primaryUrl) {
+                try {
+                    const fallbackRes = await fetch(fallbackUrl);
+                    if (fallbackRes && fallbackRes.ok) {
+                        res = fallbackRes;
+                    }
+                } catch (_) {
+                }
+            }
+        }
+
+        if (!res || !res.ok) {
+            throw new Error(`HTTP ${res ? res.status : "network_error"} loading ${url}`);
+        }
+
+        const text = await res.text();
+        // 防御非 JSON 响应（如 404 HTML 或 SPA 回落页面）
+        if (text.trim().startsWith("<")) {
+            throw new Error(`Invalid JSON response (received HTML document) from ${url}`);
+        }
+
+        return JSON.parse(text);
   }
 
   async function loadManifest() {
@@ -598,9 +636,7 @@
     }
 
     try {
-      const res = await fetch(getDataUrl("data/manifest.json"));
-      if (!res.ok) throw new Error(`HTTP ${res.status} loading manifest`);
-      const data = await res.json();
+        const data = await fetchJsonSafe(getDataUrl("data/manifest.json"), "data/manifest.json");
       manifestData = data;
       updateHUDStats(currentFilterType);
       updateFilterCounts(data.stats);
@@ -614,9 +650,7 @@
 
   async function loadOverviewTracks() {
     try {
-      const res = await fetch(getDataUrl("data/overview.geojson"));
-      if (!res.ok) throw new Error(`HTTP ${res.status} loading overview geojson`);
-      const data = await res.json();
+        const data = await fetchJsonSafe(getDataUrl("data/overview.geojson"), "data/overview.geojson");
       overviewGeoJSON = data;
       // 始终触发渲染：消费可能在加载期间排队的待渲染标记
       renderMapTracks();
@@ -1066,9 +1100,7 @@
     }
 
     try {
-      const res = await fetch(getDataUrl(`data/tracks/${id}.json`));
-      if (!res.ok) throw new Error(`HTTP ${res.status} loading track ${id}`);
-      const detail = await res.json();
+        const detail = await fetchJsonSafe(getDataUrl(`data/tracks/${id}.json`), `data/tracks/${id}.json`);
       // 防止在 fetch 期间用户已切换到其他轨迹或取消选择
       if (activeTrackId !== id) return;
       activeTrackDetail = detail;
