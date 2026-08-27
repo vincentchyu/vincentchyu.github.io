@@ -316,41 +316,6 @@ body.footprint-page {
   font-weight: 700;
 }
 
-.summary-btn {
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  padding: 2px 6px;
-  cursor: pointer;
-  color: inherit;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.summary-btn:hover {
-  background: var(--hud-card-hover);
-  border-color: var(--hud-card-border);
-}
-
-.summary-btn.is-active {
-  background: rgba(37, 99, 235, 0.08);
-  border-color: rgba(37, 99, 235, 0.25);
-  color: var(--accent);
-}
-
-@media (prefers-color-scheme: dark) {
-  .summary-btn.is-active {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.35);
-    color: #60a5fa;
-  }
-}
-
 .summary-divider {
   opacity: 0.35;
 }
@@ -445,8 +410,53 @@ body.footprint-page {
   margin-left: 2px;
   transition: transform 0.2s;
 }
-  margin-left: 2px;
-  transition: transform 0.2s;
+
+/* MapLibre 原生 NavigationControl 与 ScaleControl 控件适配，避开右上角工具栏 */
+.footprint-workspace .maplibregl-ctrl-top-right {
+  top: 56px;
+  right: 14px;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.footprint-workspace .maplibregl-ctrl-top-right .maplibregl-ctrl {
+  margin: 0 0 8px 0;
+  box-shadow: var(--hud-shadow);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--hud-btn-border);
+  background: var(--hud-btn-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.footprint-workspace .maplibregl-ctrl-group button {
+  width: 32px;
+  height: 32px;
+  background-color: transparent;
+  border: none;
+  border-bottom: 1px solid var(--hud-divider);
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.footprint-workspace .maplibregl-ctrl-group button:last-child {
+  border-bottom: none;
+}
+
+.footprint-workspace .maplibregl-ctrl-group button:hover {
+  background-color: var(--hud-btn-hover);
+}
+
+@media (prefers-color-scheme: dark) {
+  .footprint-workspace .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+    filter: invert(1) brightness(1.2);
+  }
 }
 
 /* 下拉菜单容器与底图/图层控制 */
@@ -717,6 +727,15 @@ body.footprint-page {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
+  gap: 8px;
+}
+
+.sidebar-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .sidebar-title {
@@ -724,6 +743,25 @@ body.footprint-page {
   font-weight: 700;
   color: var(--hud-card-title);
   letter-spacing: 0.5px;
+}
+
+.sidebar-provinces-badge {
+  font-size: 11px;
+  color: var(--hud-subtext);
+  background: var(--hud-badge-bg);
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--hud-card-border);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-feature-settings: "tnum";
+  user-select: none;
+}
+
+.sidebar-provinces-badge b {
+  color: var(--hud-card-title);
+  font-weight: 700;
 }
 
 .sidebar-close-btn {
@@ -734,6 +772,7 @@ body.footprint-page {
   cursor: pointer;
   padding: 2px 6px;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 
 .sidebar-close-btn:hover {
@@ -742,7 +781,10 @@ body.footprint-page {
 }
 
 .search-box {
+  position: relative;
   width: 100%;
+  display: flex;
+  align-items: center;
 }
 
 .search-input {
@@ -751,7 +793,7 @@ body.footprint-page {
   background: var(--hud-input-bg);
   border: 1px solid var(--hud-input-border);
   border-radius: 8px;
-  padding: 7px 10px;
+  padding: 7px 28px 7px 10px;
   color: var(--hud-input-text);
   font-size: 12px;
   outline: none;
@@ -764,6 +806,83 @@ body.footprint-page {
 
 .search-input:focus {
   border-color: var(--accent);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: var(--hud-subtext);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 50%;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.search-clear-btn:hover {
+  color: var(--hud-text);
+  background: var(--hud-menu-item-hover);
+}
+
+/* 城市/省份快捷过滤胶囊栏 (Quick Filter Chips) */
+.quick-filter-chips {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding-top: 8px;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.quick-filter-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  background: var(--hud-card-bg);
+  border: 1px solid var(--hud-card-border);
+  color: var(--hud-subtext);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.15s ease;
+  user-select: none;
+  font-family: inherit;
+  line-height: 1.2;
+}
+
+.filter-chip:hover {
+  color: var(--hud-text);
+  background: var(--hud-card-hover);
+  border-color: var(--hud-btn-border);
+}
+
+.filter-chip.is-active {
+  background: var(--hud-menu-item-active);
+  color: var(--hud-menu-item-active-text);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.filter-chip sub {
+  font-size: 9px;
+  opacity: 0.75;
+  vertical-align: baseline;
+  position: relative;
+  top: -1px;
+  font-feature-settings: "tnum";
 }
 
 /* 轨迹列表 */
@@ -1436,6 +1555,30 @@ body.footprint-page {
     left: 14px;
     right: 14px;
     bottom: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .map-toolbar {
+    top: 10px;
+    right: 10px;
+    gap: 4px;
+  }
+
+  .toolbar-actions {
+    gap: 4px;
+  }
+
+  .toolbar-btn,
+  .fullscreen-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .footprint-workspace .maplibregl-ctrl-top-right {
+    top: 48px;
+    right: 10px;
   }
 }
 

@@ -99,11 +99,6 @@
         <span class="summary-item">▲ 累计爬升 <b id="stat_total_ele">0</b> m</span>
         <span class="summary-divider">·</span>
         <span class="summary-item">🏃 <b id="stat_total_count">0</b> 条记录</span>
-        <span class="summary-divider">·</span>
-        <button id="btn_toggle_provinces_hud" class="summary-item summary-btn is-active" type="button" title="点击切换省份点亮" aria-pressed="true">
-          <span>🗺️</span>
-          <span>点亮 <b id="stat_total_provinces">0</b> 个省份</span>
-        </button>
       </div>
     </div>
 
@@ -223,6 +218,12 @@
             <span id="fullscreen_icon">⛶</span>
             <span>全屏</span>
           </button>
+
+          <!-- Highlight Provinces Trigger -->
+          <button id="btn_toggle_provinces" class="toolbar-btn active" type="button" title="点击切换点亮省份" aria-pressed="true">
+            <span>🗺️</span>
+            <span>点亮省份</span>
+          </button>
         </div>
       </div>
 
@@ -230,12 +231,21 @@
       <aside id="sidebar" class="footprint-sidebar">
         <div class="sidebar-header">
           <div class="sidebar-title-row">
-            <span class="sidebar-title">轨迹列表</span>
+            <div class="sidebar-title-group">
+              <span class="sidebar-title">轨迹列表</span>
+              <span class="sidebar-provinces-badge" title="当前分类已点亮省份数">
+                <span>🗺️</span>
+                <span>点亮 <b id="stat_total_provinces">0</b> 个省份</span>
+              </span>
+            </div>
             <button id="sidebar_close_btn" class="sidebar-close-btn" type="button" aria-label="收起列表">✕</button>
           </div>
           <div class="search-box">
-            <input id="search_input" class="search-input" type="text" placeholder="搜索线路、地点或省份..." />
+            <input id="search_input" class="search-input" type="text" placeholder="搜索线路、城市或省份..." autocomplete="off" />
+            <button id="search_clear_btn" class="search-clear-btn" type="button" title="清空搜索" style="display: none;">✕</button>
           </div>
+          <!-- 城市/省份快捷过滤标签栏 -->
+          <div id="quick_filter_chips" class="quick-filter-chips" role="group" aria-label="城市与省份快捷筛选"></div>
         </div>
 
         <div id="track_list" class="track-list">

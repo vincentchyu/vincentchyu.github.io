@@ -566,12 +566,12 @@
     if (chkPhotos) chkPhotos.checked = overlayConfig.photos;
     if (chkWaypoints) chkWaypoints.checked = overlayConfig.waypoints;
 
-    // 同步顶部 HUD 点亮省份胶囊按钮状态
-    const btnHudProvinces = document.getElementById("btn_toggle_provinces_hud");
-    if (btnHudProvinces) {
-      btnHudProvinces.classList.toggle("is-active", !!overlayConfig.provinces);
-      btnHudProvinces.setAttribute("aria-pressed", overlayConfig.provinces ? "true" : "false");
-      btnHudProvinces.title = overlayConfig.provinces ? "点击隐藏省份点亮" : "点击开启省份点亮";
+    // 同步工具栏点亮省份按钮状态
+    const btnToolbarProvinces = document.getElementById("btn_toggle_provinces");
+    if (btnToolbarProvinces) {
+      btnToolbarProvinces.classList.toggle("active", !!overlayConfig.provinces);
+      btnToolbarProvinces.setAttribute("aria-pressed", overlayConfig.provinces ? "true" : "false");
+      btnToolbarProvinces.title = overlayConfig.provinces ? "点击隐藏省份点亮" : "点击开启省份点亮";
     }
 
     if (window.CredentialStore) {
@@ -640,6 +640,7 @@
       manifestData = data;
       updateHUDStats(currentFilterType);
       updateFilterCounts(data.stats);
+      renderQuickFilterChips();
       renderTrackList();
       // 异步非阻塞加载全景骨架底网
       loadOverviewTracks();
@@ -919,6 +920,104 @@
     }
 
     return card;
+  }
+
+  // 渲染城市/省份快捷过滤胶囊标签 (Quick Filter Chips)
+  function renderQuickFilterChips() {
+    const chipsContainer = document.getElementById("quick_filter_chips");
+    if (!chipsContainer || !manifestData || !Array.isArray(manifestData.tracks)) return;
+
+    // 统计当前分类轨迹下的城市和省份频次
+    const currentTracks = currentFilterType === "all"
+      ? manifestData.tracks
+      : manifestData.tracks.filter((t) => t.type === currentFilterType);
+
+    const locationMap = new Map();
+    currentTracks.forEach((t) => {
+      if (t.city && typeof t.city === "string") {
+        const city = t.city.trim();
+        if (city && city !== "0" && city !== "未知" && city !== "中国") {
+          locationMap.set(city, (locationMap.get(city) || 0) + 1);
+        }
+      } else if (t.province && typeof t.province === "string") {
+        const prov = normalizeProvince(t.province) || t.province.trim();
+        if (prov && prov !== "0" && prov !== "未知") {
+          locationMap.set(prov, (locationMap.get(prov) || 0) + 1);
+        }
+      }
+    });
+
+    const sortedLocations = Array.from(locationMap.entries())
+      .sort((a, b) => b[1] - a[1]);
+
+    chipsContainer.innerHTML = "";
+
+    // 1. 全部 Chip
+    const allChip = document.createElement("button");
+    allChip.className = "filter-chip" + (!searchQuery ? " is-active" : "");
+    allChip.type = "button";
+    allChip.dataset.query = "";
+    allChip.innerHTML = `<span>全部</span><sub>${currentTracks.length}</sub>`;
+    allChip.addEventListener("click", () => {
+      const searchInput = document.getElementById("search_input");
+      const clearBtn = document.getElementById("search_clear_btn");
+      if (searchInput) searchInput.value = "";
+      if (clearBtn) clearBtn.style.display = "none";
+      searchQuery = "";
+      updateQuickFilterChipsActiveState();
+      renderTrackList();
+      renderMapTracks();
+    });
+    chipsContainer.appendChild(allChip);
+
+    // 2. 各城市/省份 Chips
+    sortedLocations.forEach(([name, count]) => {
+      const chip = document.createElement("button");
+      const isActive = searchQuery && searchQuery.toLowerCase() === name.toLowerCase();
+      chip.className = "filter-chip" + (isActive ? " is-active" : "");
+      chip.type = "button";
+      chip.dataset.query = name;
+      chip.innerHTML = `<span>${escapeHtml(name)}</span><sub>${count}</sub>`;
+      chip.addEventListener("click", () => {
+        const searchInput = document.getElementById("search_input");
+        const clearBtn = document.getElementById("search_clear_btn");
+        if (searchQuery && searchQuery.toLowerCase() === name.toLowerCase()) {
+          searchQuery = "";
+          if (searchInput) searchInput.value = "";
+          if (clearBtn) clearBtn.style.display = "none";
+        } else {
+          searchQuery = name;
+          if (searchInput) searchInput.value = name;
+          if (clearBtn) clearBtn.style.display = "flex";
+        }
+        updateQuickFilterChipsActiveState();
+        renderTrackList();
+        renderMapTracks();
+      });
+      chipsContainer.appendChild(chip);
+    });
+  }
+
+  function updateQuickFilterChipsActiveState() {
+    const chipsContainer = document.getElementById("quick_filter_chips");
+    if (!chipsContainer) return;
+    const chips = chipsContainer.querySelectorAll(".filter-chip");
+    chips.forEach((chip) => {
+      const q = chip.dataset.query;
+      if (!searchQuery) {
+        if (q === "") {
+          chip.classList.add("is-active");
+        } else {
+          chip.classList.remove("is-active");
+        }
+      } else {
+        if (q && q.toLowerCase() === searchQuery.toLowerCase()) {
+          chip.classList.add("is-active");
+        } else {
+          chip.classList.remove("is-active");
+        }
+      }
+    });
   }
 
   function renderTrackList() {
@@ -1579,10 +1678,10 @@
       });
     }
 
-    // 顶部 HUD 点亮省份徽章快捷一键切换
-    const btnHudProvinces = document.getElementById("btn_toggle_provinces_hud");
-    if (btnHudProvinces) {
-      btnHudProvinces.addEventListener("click", () => {
+    // 工具栏点亮省份快捷切换
+    const btnToolbarProvinces = document.getElementById("btn_toggle_provinces");
+    if (btnToolbarProvinces) {
+      btnToolbarProvinces.addEventListener("click", () => {
         overlayConfig.provinces = !overlayConfig.provinces;
         applyOverlayVisibility();
       });
@@ -1673,6 +1772,7 @@
         }
 
         updateHUDStats(currentFilterType);
+        renderQuickFilterChips();
         renderTrackList();
         renderMapTracks();
       });
@@ -1696,11 +1796,30 @@
       });
     }
 
-    // 7. 搜索框
+    // 7. 搜索框与快捷过滤联动
     const searchInput = document.getElementById("search_input");
+    const searchClearBtn = document.getElementById("search_clear_btn");
     if (searchInput) {
       searchInput.addEventListener("input", (e) => {
         searchQuery = e.target.value.trim();
+        if (searchClearBtn) {
+          searchClearBtn.style.display = searchQuery ? "flex" : "none";
+        }
+        updateQuickFilterChipsActiveState();
+        renderTrackList();
+        renderMapTracks();
+      });
+    }
+
+    if (searchClearBtn) {
+      searchClearBtn.addEventListener("click", () => {
+        if (searchInput) {
+          searchInput.value = "";
+          searchInput.focus();
+        }
+        searchClearBtn.style.display = "none";
+        searchQuery = "";
+        updateQuickFilterChipsActiveState();
         renderTrackList();
         renderMapTracks();
       });
