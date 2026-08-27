@@ -964,6 +964,7 @@
       if (searchInput) searchInput.value = "";
       if (clearBtn) clearBtn.style.display = "none";
       searchQuery = "";
+      resetTrackSelection();
       updateQuickFilterChipsActiveState();
       renderTrackList();
       renderMapTracks();
@@ -990,6 +991,7 @@
           if (searchInput) searchInput.value = name;
           if (clearBtn) clearBtn.style.display = "flex";
         }
+        resetTrackSelection();
         updateQuickFilterChipsActiveState();
         renderTrackList();
         renderMapTracks();
@@ -1762,6 +1764,16 @@
         btn.classList.add("is-active");
         currentFilterType = btn.dataset.type;
 
+        // 切换分类时清空搜索条件，确保新分类从全景开始
+        searchQuery = "";
+        const searchInput = document.getElementById("search_input");
+        const searchClearBtn = document.getElementById("search_clear_btn");
+        if (searchInput) searchInput.value = "";
+        if (searchClearBtn) searchClearBtn.style.display = "none";
+
+        // 取消当前选中的轨迹详情，恢复全景底网
+        resetTrackSelection();
+
         // 根据运动场景智能建议底图（仅当推荐底图具备有效凭据时智能联动）
         const suggestedTheme = activitySuggestedTheme[currentFilterType];
         if (suggestedTheme && suggestedTheme !== currentTheme) {
@@ -1805,6 +1817,7 @@
         if (searchClearBtn) {
           searchClearBtn.style.display = searchQuery ? "flex" : "none";
         }
+        resetTrackSelection();
         updateQuickFilterChipsActiveState();
         renderTrackList();
         renderMapTracks();
@@ -1819,6 +1832,7 @@
         }
         searchClearBtn.style.display = "none";
         searchQuery = "";
+        resetTrackSelection();
         updateQuickFilterChipsActiveState();
         renderTrackList();
         renderMapTracks();
