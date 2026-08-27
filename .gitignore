@@ -26,3 +26,5 @@ internal/imaging/img.webp
 !internal/storage/object_store_test.go
 !web/photography/data/gallery-source.json
 /.ollamassist/
+!web/tracks/data/**/*.json
+!web/tracks/data/**/*.geojson
