@@ -72,9 +72,15 @@
     getOverlayConfig() {
       try {
         const raw = localStorage.getItem(this.KEYS.OVERLAYS_CONFIG);
-        return raw ? JSON.parse(raw) : { tracks: true, photos: true, waypoints: true };
+        const parsed = raw ? JSON.parse(raw) : null;
+        return {
+          tracks: parsed && typeof parsed.tracks === "boolean" ? parsed.tracks : true,
+          photos: parsed && typeof parsed.photos === "boolean" ? parsed.photos : true,
+          waypoints: parsed && typeof parsed.waypoints === "boolean" ? parsed.waypoints : true,
+          provinces: parsed && typeof parsed.provinces === "boolean" ? parsed.provinces : true,
+        };
       } catch (_) {
-        return { tracks: true, photos: true, waypoints: true };
+        return { tracks: true, photos: true, waypoints: true, provinces: true };
       }
     },
 

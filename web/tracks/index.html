@@ -66,20 +66,25 @@
         <span>骑行</span>
         <span class="tab-count" id="count_cycling">0</span>
       </button>
-      <button class="footprint-tab" data-type="driving" type="button">
-        <span class="tab-dot" style="background: var(--color-driving)"></span>
-        <span>自驾</span>
-        <span class="tab-count" id="count_driving">0</span>
-      </button>
       <button class="footprint-tab" data-type="walking" type="button">
         <span class="tab-dot" style="background: var(--color-walking)"></span>
         <span>行走</span>
         <span class="tab-count" id="count_walking">0</span>
       </button>
-      <button class="footprint-tab" data-type="transit" type="button">
-        <span class="tab-dot" style="background: var(--color-transit)"></span>
-        <span>旅行</span>
-        <span class="tab-count" id="count_transit">0</span>
+      <button class="footprint-tab" data-type="driving" type="button">
+        <span class="tab-dot" style="background: var(--color-driving)"></span>
+        <span>驾车</span>
+        <span class="tab-count" id="count_driving">0</span>
+      </button>
+      <button class="footprint-tab" data-type="train" type="button">
+        <span class="tab-dot" style="background: var(--color-train)"></span>
+        <span>火车</span>
+        <span class="tab-count" id="count_train">0</span>
+      </button>
+      <button class="footprint-tab" data-type="flight" type="button">
+        <span class="tab-dot" style="background: var(--color-flight)"></span>
+        <span>飞机</span>
+        <span class="tab-count" id="count_flight">0</span>
       </button>
     </nav>
 
@@ -95,7 +100,10 @@
         <span class="summary-divider">·</span>
         <span class="summary-item">🏃 <b id="stat_total_count">0</b> 条记录</span>
         <span class="summary-divider">·</span>
-        <span class="summary-item">🗺️ 点亮 <b id="stat_total_provinces">0</b> 个省份</span>
+        <button id="btn_toggle_provinces_hud" class="summary-item summary-btn is-active" type="button" title="点击切换省份点亮" aria-pressed="true">
+          <span>🗺️</span>
+          <span>点亮 <b id="stat_total_provinces">0</b> 个省份</span>
+        </button>
       </div>
     </div>
 
@@ -185,6 +193,10 @@
             </button>
             <div id="overlays_dropdown" class="dropdown-menu overlays-menu" style="display: none;">
               <div class="dropdown-header">图层叠加控制</div>
+              <label class="overlay-option">
+                <input type="checkbox" id="chk_overlay_provinces" checked />
+                <span>🗺️ 点亮探索省份</span>
+              </label>
               <label class="overlay-option">
                 <input type="checkbox" id="chk_overlay_tracks" checked />
                 <span>📍 全量轨迹底网</span>
@@ -313,8 +325,16 @@
       </div>
 
       <div class="map-settings-body">
-        <div class="settings-intro">
-          在 GitHub Pages 静态部署模式下，API Token 仅保存在当前浏览器的 <code>localStorage</code> 中，不会上传至任何后端或代码仓库，保证凭据私密安全。
+        <div class="settings-security-tip">
+          <div class="security-tip-header">
+            <span class="security-tip-icon">🔒</span>
+            <span class="security-tip-title">安全提示</span>
+          </div>
+          <ul class="security-tip-list">
+            <li>您的 API Token 仅保存在<strong>当前浏览器本地</strong>（<code>localStorage</code>），<strong>不会上传至任何服务器</strong>或代码仓库。</li>
+            <li>Token 仅在浏览器端用于拼接地图瓦片请求 URL，直接发送至对应的第三方图源服务商。</li>
+            <li>清除浏览器数据或更换浏览器后需重新输入。</li>
+          </ul>
         </div>
 
         <!-- Thunderforest Token Section -->

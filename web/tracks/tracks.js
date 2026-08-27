@@ -23,7 +23,11 @@
     tracks: true,
     photos: true,
     waypoints: true,
+    provinces: true,
   };
+
+  // 省级行政边界数据
+  let provincesGeoJSON = null;
 
   // 标点与交互光标
   let hoverMarker = null;
@@ -31,28 +35,32 @@
   let endMarker = null;
   let photoMarkers = [];
 
-  // 高饱和度、高对比度的户外荧光色系
+  // 高饱和度、高对比度的户外荧光色系 (符合全球户外运动标准最佳实践)
   const activityColors = {
-    trail_running: "#ff5500", // 燃橙
-    hiking: "#10b981",        // 翡翠绿
-    running: "#00d2ff",       // 电光蓝
-    cycling: "#c084fc",       // 极光紫
-    driving: "#fbbf24",       // 琥珀金
-    walking: "#38bdf8",       // 浅海蓝
-    transit: "#94a3b8",       // 银灰
+    hiking: "#ff7a00",        // 徒步：探险暖橙 (核心主角)
+    trail_running: "#ef4444", // 越野跑：熔岩烈红
+    running: "#00d2ff",       // 路跑：电光青蓝
+    cycling: "#10b981",       // 骑行：穿梭翠绿
+    walking: "#14b8a6",       // 行走：薄荷浅青
+    driving: "#ec4899",       // 驾车：公路洋红 (与徒步暖橙高对比拉开)
+    train: "#a855f7",         // 火车：极光星轨紫
+    flight: "#38bdf8",        // 飞机：苍穹冰蓝
+    transit: "#a855f7",       // 兼容历史旅行
   };
 
   const activityLabels = {
-    trail_running: "越野跑",
     hiking: "徒步",
+    trail_running: "越野跑",
     running: "路跑",
     cycling: "骑行",
-    driving: "自驾",
     walking: "行走",
+    driving: "驾车",
+    train: "火车",
+    flight: "飞机",
     transit: "旅行",
   };
 
-  // 运动场景与推荐底图映射 (全部采用免 Token 的免费开放图源: OpenTopoMap / OpenFreeMap / Esri Satellite)
+  // 运动与交通场景推荐底图映射
   const activitySuggestedTheme = {
     all: "opentopomap",           // 全部：开放等高线地形
     hiking: "opentopomap",        // 徒步：OpenTopoMap 开放等高线地形
@@ -60,9 +68,24 @@
     running: "openfreemap",       // 路跑：OpenFreeMap 开源街区路网
     cycling: "openfreemap",       // 骑行：OpenFreeMap 开源公路路网
     walking: "openfreemap",       // 行走：OpenFreeMap 开源街区
-    driving: "satellite",         // 自驾：Esri 高清卫星影像
-    transit: "satellite",         // 旅行：Esri 高清卫星影像
+    driving: "satellite",         // 驾车：Esri 高清卫星影像
+    train: "satellite",           // 火车：Esri 高清卫星影像
+    flight: "satellite",          // 飞机：Esri 高清卫星影像
+    transit: "satellite",         // 兼容旅行：Esri 高清卫星影像
   };
+
+  function normalizeProvince(p) {
+    if (!p || typeof p !== "string") return "";
+    return p.replace(/(省|市|特别行政区|回族自治区|维吾尔自治区|壮族自治区|自治区)$/, "").trim();
+  }
+
+  function getActiveProvinceColor(type = currentFilterType) {
+    const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (type && activityColors[type]) {
+      return activityColors[type];
+    }
+    return isDark ? "#00d2ff" : "#2563eb";
+  }
 
   function init() {
     // 读取持久化的图层显隐配置
@@ -76,6 +99,7 @@
     bindUIEvents();
     bindSettingsEvents();
     loadManifest();
+    loadProvinceBoundaries();
     adjustWorkspaceHeight();
   }
 
@@ -239,10 +263,16 @@
       attribution: style.attribution,
     });
 
-    // 插入到 GeoJSON 轨迹图层之下，确保底图在最底层
-    const firstTrackLayer = map.getLayer("all-tracks-glow") 
-      ? "all-tracks-glow" 
-      : (map.getLayer("selected-track-casing") ? "selected-track-casing" : undefined);
+    // 插入到省份图层与 GeoJSON 轨迹图层之下，确保底图在最底层
+    const firstTrackLayer = map.getLayer("province-base-line")
+      ? "province-base-line"
+      : (map.getLayer("province-dim-fill")
+        ? "province-dim-fill"
+        : (map.getLayer("province-highlight-fill")
+          ? "province-highlight-fill"
+          : (map.getLayer("all-tracks-glow") 
+            ? "all-tracks-glow" 
+            : (map.getLayer("selected-track-casing") ? "selected-track-casing" : undefined))));
     map.addLayer(
       {
         id: "base-raster-layer",
@@ -256,8 +286,112 @@
     );
   }
 
+  async function loadProvinceBoundaries() {
+    try {
+      const res = await fetch("data/provinces.geojson");
+      if (res.ok) {
+        provincesGeoJSON = await res.json();
+        if (map && map.getSource("china-provinces")) {
+          map.getSource("china-provinces").setData(provincesGeoJSON);
+        }
+        updateHighlightedProvinces();
+      }
+    } catch (err) {
+      console.warn("Failed to load china provinces geojson:", err);
+    }
+  }
+
   function initMapLayers() {
     if (!map) return;
+
+    // 0. 省级行政区划与点亮高亮图层组 (位于底图之上，轨迹线之下)
+    if (!map.getSource("china-provinces")) {
+      map.addSource("china-provinces", {
+        type: "geojson",
+        data: provincesGeoJSON || { type: "FeatureCollection", features: [] },
+      });
+    }
+
+    const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const provinceVis = overlayConfig.provinces ? "visible" : "none";
+
+    // 0.1 全国省份基底细轮廓线
+    if (!map.getLayer("province-base-line")) {
+      map.addLayer({
+        id: "province-base-line",
+        type: "line",
+        source: "china-provinces",
+        layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
+        paint: {
+          "line-color": isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.15)",
+          "line-width": 1,
+        },
+      });
+    }
+
+    // 0.2 未点亮省份暗色压暗遮罩层 (Fog of War: 压暗弱化未点亮区域过于鲜艳的等高线底图，凸显点亮省份)
+    if (!map.getLayer("province-dim-fill")) {
+      map.addLayer({
+        id: "province-dim-fill",
+        type: "fill",
+        source: "china-provinces",
+        filter: ["==", ["get", "short_name"], "__none__"],
+        layout: { "visibility": provinceVis },
+        paint: {
+          "fill-color": "#090d16",
+          "fill-opacity": isDark ? 0.38 : 0.42,
+        },
+      });
+    }
+
+    // 0.3 点亮省份高光光晕面填充
+    if (!map.getLayer("province-highlight-fill")) {
+      map.addLayer({
+        id: "province-highlight-fill",
+        type: "fill",
+        source: "china-provinces",
+        filter: ["==", ["get", "short_name"], "__none__"],
+        layout: { "visibility": provinceVis },
+        paint: {
+          "fill-color": getActiveProvinceColor(currentFilterType),
+          "fill-opacity": isDark ? 0.26 : 0.22,
+        },
+      });
+    }
+
+    // 0.4 点亮省份深色外轮廓描边 (Casing 保护边: 彻底隔绝底部杂乱等高线，防止撞色隐形)
+    if (!map.getLayer("province-highlight-casing")) {
+      map.addLayer({
+        id: "province-highlight-casing",
+        type: "line",
+        source: "china-provinces",
+        filter: ["==", ["get", "short_name"], "__none__"],
+        layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
+        paint: {
+          "line-color": "#000000",
+          "line-width": 4,
+          "line-opacity": 0.65,
+          "line-blur": 1.5,
+        },
+      });
+    }
+
+    // 0.5 点亮省份鲜艳发光轮廓线 (Core Line)
+    if (!map.getLayer("province-highlight-line")) {
+      map.addLayer({
+        id: "province-highlight-line",
+        type: "line",
+        source: "china-provinces",
+        filter: ["==", ["get", "short_name"], "__none__"],
+        layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
+        paint: {
+          "line-color": getActiveProvinceColor(currentFilterType),
+          "line-width": 2.2,
+          "line-opacity": 0.95,
+          "line-blur": 0.5,
+        },
+      });
+    }
 
     // 1. 全局轨迹底图 Source
     if (!map.getSource("all-tracks")) {
@@ -396,14 +530,32 @@
       }
     }
 
+    // 4. 省份点亮与遮罩显隐
+    const provinceVis = overlayConfig.provinces ? "visible" : "none";
+    ["province-base-line", "province-dim-fill", "province-highlight-fill", "province-highlight-casing", "province-highlight-line"].forEach((layerId) => {
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, "visibility", provinceVis);
+      }
+    });
+
     // 同步 Checkbox 状态
+    const chkProvinces = document.getElementById("chk_overlay_provinces");
     const chkTracks = document.getElementById("chk_overlay_tracks");
     const chkPhotos = document.getElementById("chk_overlay_photos");
     const chkWaypoints = document.getElementById("chk_overlay_waypoints");
 
+    if (chkProvinces) chkProvinces.checked = !!overlayConfig.provinces;
     if (chkTracks) chkTracks.checked = overlayConfig.tracks;
     if (chkPhotos) chkPhotos.checked = overlayConfig.photos;
     if (chkWaypoints) chkWaypoints.checked = overlayConfig.waypoints;
+
+    // 同步顶部 HUD 点亮省份胶囊按钮状态
+    const btnHudProvinces = document.getElementById("btn_toggle_provinces_hud");
+    if (btnHudProvinces) {
+      btnHudProvinces.classList.toggle("is-active", !!overlayConfig.provinces);
+      btnHudProvinces.setAttribute("aria-pressed", overlayConfig.provinces ? "true" : "false");
+      btnHudProvinces.title = overlayConfig.provinces ? "点击隐藏省份点亮" : "点击开启省份点亮";
+    }
 
     if (window.CredentialStore) {
       window.CredentialStore.saveOverlayConfig(overlayConfig);
@@ -456,6 +608,68 @@
     }
   }
 
+  function updateHighlightedProvinces(targetTracks) {
+    if (!map || !mapLayersReady || !map.getSource("china-provinces")) return;
+
+    const tracks = targetTracks || getFilteredTracks();
+    const provinceSet = new Set();
+    tracks.forEach((t) => {
+      if (t.province && t.province.trim()) {
+        const norm = normalizeProvince(t.province);
+        if (norm) {
+          provinceSet.add(norm);
+        }
+      }
+    });
+
+    const activeList = Array.from(provinceSet);
+    const color = getActiveProvinceColor(currentFilterType);
+    const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    // 1. 点亮省份匹配表达式 (同时支持 short_name 和 name)
+    const highlightFilter = activeList.length > 0
+      ? [
+          "any",
+          ["in", ["get", "short_name"], ["literal", activeList]],
+          ["in", ["get", "name"], ["literal", activeList]],
+        ]
+      : ["==", ["get", "short_name"], "__none__"];
+
+    // 2. 未点亮省份匹配表达式 (用于压暗未探索区域，防止鲜艳等高线喧宾夺主)
+    const dimFilter = activeList.length > 0
+      ? [
+          "all",
+          ["!", ["in", ["get", "short_name"], ["literal", activeList]]],
+          ["!", ["in", ["get", "name"], ["literal", activeList]]],
+        ]
+      : ["!=", ["get", "short_name"], "__none__"];
+
+    // 更新未点亮省份暗色遮罩
+    if (map.getLayer("province-dim-fill")) {
+      map.setFilter("province-dim-fill", dimFilter);
+      map.setPaintProperty("province-dim-fill", "fill-opacity", isDark ? 0.38 : 0.42);
+    }
+
+    // 更新点亮省份高光面
+    if (map.getLayer("province-highlight-fill")) {
+      map.setFilter("province-highlight-fill", highlightFilter);
+      map.setPaintProperty("province-highlight-fill", "fill-color", color);
+      map.setPaintProperty("province-highlight-fill", "fill-opacity", isDark ? 0.26 : 0.22);
+    }
+
+    // 更新点亮省份深色外轮廓描边
+    if (map.getLayer("province-highlight-casing")) {
+      map.setFilter("province-highlight-casing", highlightFilter);
+    }
+
+    // 更新点亮省份鲜艳发光轮廓线
+    if (map.getLayer("province-highlight-line")) {
+      map.setFilter("province-highlight-line", highlightFilter);
+      map.setPaintProperty("province-highlight-line", "line-color", color);
+      map.setPaintProperty("province-highlight-line", "line-opacity", 0.95);
+    }
+  }
+
   function updateHUDStats(filterType = currentFilterType) {
     if (!manifestData || !Array.isArray(manifestData.tracks)) return;
 
@@ -471,7 +685,10 @@
     const provinceSet = new Set();
     targetTracks.forEach((t) => {
       if (t.province && t.province.trim()) {
-        provinceSet.add(t.province.trim());
+        const norm = normalizeProvince(t.province);
+        if (norm) {
+          provinceSet.add(norm);
+        }
       }
     });
     const provincesCount = provinceSet.size;
@@ -485,6 +702,8 @@
     if (elEle) elEle.textContent = Math.round(totalEle).toLocaleString();
     if (elCount) elCount.textContent = totalCount;
     if (elProvinces) elProvinces.textContent = provincesCount;
+
+    updateHighlightedProvinces(targetTracks);
   }
 
   function updateFilterCounts(stats) {
@@ -504,7 +723,7 @@
     const countAllEl = document.getElementById("count_all");
     if (countAllEl) countAllEl.textContent = total || 0;
 
-    ["hiking", "trail_running", "running", "cycling", "driving", "walking", "transit"].forEach((t) => {
+    ["hiking", "trail_running", "running", "cycling", "walking", "driving", "train", "flight", "transit"].forEach((t) => {
       const el = document.getElementById("count_" + t);
       if (el) el.textContent = counts[t] || 0;
     });
@@ -517,10 +736,136 @@
       const matchQuery =
         !searchQuery ||
         t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.city && t.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (t.province && t.province.includes(searchQuery)) ||
         (t.country && t.country.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchType && matchQuery;
     });
+  }
+
+  // 运动类型强度梯度配置 (公里数与心率)
+  // 跑步：公里数（10KM \ 20KM \ 30KM \ 40KM \ 50KM \ 60KM）f: 10 * (n + 1), 平均心率（120 \ 140 \ 170 \ 180）
+  // 徒步：公里数（10KM \ 30KM \ 60KM \ 100KM \ 150KM \ 210KM）f: 5 * (a + 2) * (a + 1), 平均心率（120 \ 140 \ 170 \ 180）
+  // 越野跑：公里数（20KM \ 60KM \ 120KM \ 200KM \ 300KM \ 420KM）f: 10 * (a + 2) * (a + 1), 平均心率（120 \ 140 \ 170 \ 180）
+  const metricThresholdConfig = {
+    running: {
+      distance: [10, 20, 30, 40, 50, 60],
+      hr: [120, 140, 170, 180],
+    },
+    hiking: {
+      distance: [10, 30, 60, 100, 150, 210],
+      hr: [120, 140, 170, 180],
+    },
+    trail_running: {
+      distance: [20, 60, 120, 200, 300, 420],
+      hr: [120, 140, 170, 180],
+    },
+    cycling: {
+      distance: [30, 60, 100, 150, 200, 300],
+      hr: [120, 140, 170, 180],
+    },
+    walking: {
+      distance: [5, 10, 15, 20, 30, 40],
+      hr: [90, 110, 130, 150],
+    },
+    driving: {
+      distance: [100, 300, 600, 1000, 1500, 2500],
+      hr: [80, 100, 120, 140],
+    },
+    train: {
+      distance: [100, 300, 600, 1200, 2000, 3000],
+      hr: [80, 100, 120, 140],
+    },
+    flight: {
+      distance: [500, 1000, 2000, 5000, 8000, 12000],
+      hr: [80, 100, 120, 140],
+    },
+    default: {
+      distance: [10, 30, 60, 100, 150, 210],
+      hr: [120, 140, 170, 180],
+    },
+  };
+
+  function getMetricTier(value, thresholds) {
+    if (value === undefined || value === null || isNaN(value) || value <= 0) return 0;
+    if (!thresholds || !thresholds.length) return 0;
+    for (let i = thresholds.length - 1; i >= 0; i--) {
+      if (value >= thresholds[i]) {
+        return i + 1;
+      }
+    }
+    return 0;
+  }
+
+  function getDistanceTier(distanceKm, activityType) {
+    const cfg = metricThresholdConfig[activityType] || metricThresholdConfig.default;
+    return getMetricTier(Number(distanceKm), cfg.distance);
+  }
+
+  function getHrTier(avgHr, activityType) {
+    const cfg = metricThresholdConfig[activityType] || metricThresholdConfig.default;
+    return getMetricTier(Number(avgHr), cfg.hr);
+  }
+
+  let isStatOnlyExpanded = false;
+
+  function createTrackCard(t) {
+    const card = document.createElement("div");
+    const hasTrack = t.has_track !== false;
+    const isCardActive = hasTrack && t.id === activeTrackId;
+    card.className = "track-card" + (isCardActive ? " active" : "") + (!hasTrack ? " is-no-track" : "");
+    card.dataset.id = t.id;
+    const color = activityColors[t.type] || "#94a3b8";
+    card.style.setProperty("--card-color", color);
+
+    const typeLabel = activityLabels[t.type] || t.type;
+    const dateStr = t.start_time ? t.start_time.substring(0, 10) : "";
+
+    // 城市/地区信息（优先展示城市，如阿坝州、广州、拉萨等；无城市时降级展示省份）
+    const cityOrRegion = t.city || t.province || "";
+    const cityTooltip = t.province && t.city && t.province !== t.city
+      ? `${t.province} · ${t.city}`
+      : (cityOrRegion || "中国");
+
+    // 计算公里数与心率的梯度等级
+    const distTier = getDistanceTier(t.distance_km, t.type);
+    const distStr = `<span class="track-metric metric-dist tier-${distTier}" title="${typeLabel}里程阶梯 Tier ${distTier}">${t.distance_km} km</span>`;
+
+    let hrStr = "";
+    if (t.avg_hr > 0) {
+      const hrTier = getHrTier(t.avg_hr, t.type);
+      hrStr = `<span class="track-metric metric-hr tier-${hrTier}" title="${typeLabel}心率阶梯 Tier ${hrTier}">${t.avg_hr} bpm</span>`;
+    }
+
+    const gainStr = t.elevation_gain_m > 0 ? `<span class="track-meta-item">+${Math.round(t.elevation_gain_m)} m</span>` : "";
+    const photoStr = t.photo_count > 0 ? `<span class="track-meta-item">${t.photo_count} 张照片</span>` : "";
+    const privacyBadge = !hasTrack ? `<span class="track-card-badge is-muted" title="短途隐私保护，仅展示统计数据">仅统计</span>` : "";
+    const cityBadge = cityOrRegion ? `<span class="track-card-badge" title="${escapeHtml(cityTooltip)}">${escapeHtml(cityOrRegion)}</span>` : "";
+
+    card.innerHTML = `
+      <div class="track-card-header">
+        <span class="track-card-title" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
+        <div class="track-card-badges">
+          ${privacyBadge}
+          ${cityBadge}
+        </div>
+      </div>
+      <div class="track-card-meta">
+        ${distStr}
+        ${hrStr}
+        <span class="track-meta-item">${dateStr}</span>
+        ${gainStr}
+        ${photoStr}
+      </div>
+    `;
+
+    if (hasTrack) {
+      card.addEventListener("click", () => {
+        selectTrack(t.id);
+      });
+    }
+
+    return card;
   }
 
   function renderTrackList() {
@@ -533,46 +878,55 @@
       return;
     }
 
-    tracks.forEach((t) => {
-      const card = document.createElement("div");
-      const hasTrack = t.has_track !== false;
-      const isCardActive = hasTrack && t.id === activeTrackId;
-      card.className = "track-card" + (isCardActive ? " active" : "") + (!hasTrack ? " is-no-track" : "");
-      card.dataset.id = t.id;
-      const color = activityColors[t.type] || "#94a3b8";
-      card.style.setProperty("--card-color", color);
+    const activeTracks = tracks.filter((t) => t.has_track !== false);
+    const statOnlyTracks = tracks.filter((t) => t.has_track === false);
 
-      const typeLabel = activityLabels[t.type] || t.type;
-      const dateStr = t.start_time ? t.start_time.substring(0, 10) : "";
-      const hrStr = t.avg_hr > 0 ? `<span>❤️ ${t.avg_hr} bpm</span>` : "";
-      const photoStr = t.photo_count > 0 ? `<span>📷 ${t.photo_count}张照片</span>` : "";
-      const privacyBadge = !hasTrack ? `<span class="track-card-badge is-muted" title="短途隐私保护，仅展示统计数据">仅统计</span>` : "";
+    // 1. 优先在最顶部渲染仅统计轨迹折叠分组（默认收起，可展开）
+    if (statOnlyTracks.length > 0) {
+      const groupEl = document.createElement("div");
+      groupEl.className = "stat-group-container" + (isStatOnlyExpanded ? " is-expanded" : "");
 
-      card.innerHTML = `
-        <div class="track-card-header">
-          <span class="track-card-title" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
-          <div class="track-card-badges">
-            ${privacyBadge}
-            <span class="track-card-badge" style="color:${color}">${typeLabel}</span>
-          </div>
+      const headerEl = document.createElement("div");
+      headerEl.className = "stat-group-header";
+      headerEl.setAttribute("role", "button");
+      headerEl.setAttribute("aria-expanded", isStatOnlyExpanded ? "true" : "false");
+      headerEl.innerHTML = `
+        <div class="stat-group-title-wrap">
+          <span class="stat-group-title">仅统计记录</span>
+          <span class="stat-group-count">${statOnlyTracks.length}</span>
         </div>
-        <div class="track-card-meta">
-          <span>📅 ${dateStr}</span>
-          <span>📍 ${t.distance_km} km</span>
-          <span>▲ ${Math.round(t.elevation_gain_m || 0)} m</span>
-          ${hrStr}
-          ${photoStr}
-        </div>
+        <span class="stat-group-chevron">▾</span>
       `;
 
-      if (hasTrack) {
-        card.addEventListener("click", () => {
-          selectTrack(t.id);
-        });
-      }
+      const bodyEl = document.createElement("div");
+      bodyEl.className = "stat-group-body";
 
-      listEl.appendChild(card);
-    });
+      statOnlyTracks.forEach((t) => {
+        bodyEl.appendChild(createTrackCard(t));
+      });
+
+      headerEl.addEventListener("click", () => {
+        isStatOnlyExpanded = !isStatOnlyExpanded;
+        groupEl.classList.toggle("is-expanded", isStatOnlyExpanded);
+        headerEl.setAttribute("aria-expanded", isStatOnlyExpanded ? "true" : "false");
+      });
+
+      groupEl.appendChild(headerEl);
+      groupEl.appendChild(bodyEl);
+      listEl.appendChild(groupEl);
+    }
+
+    // 2. 渲染非仅统计轨迹（有详细路线）
+    if (activeTracks.length > 0) {
+      activeTracks.forEach((t) => {
+        listEl.appendChild(createTrackCard(t));
+      });
+    } else if (statOnlyTracks.length > 0) {
+      const emptyTip = document.createElement("div");
+      emptyTip.className = "track-list-empty-tip";
+      emptyTip.textContent = "当前分类下暂无完整轨迹";
+      listEl.appendChild(emptyTip);
+    }
   }
 
   // 标记是否有待执行的地图渲染（在 overviewGeoJSON 尚未加载完成时排队）
@@ -611,6 +965,8 @@
       type: "FeatureCollection",
       features: filteredFeatures,
     });
+
+    updateHighlightedProvinces();
 
     if (!activeTrackId && filteredTracks.length > 0) {
       fitAllTracks(filteredTracks);
@@ -1125,9 +1481,26 @@
     });
 
     // 3. 图层选项开关事件
+    const chkProvinces = document.getElementById("chk_overlay_provinces");
     const chkTracks = document.getElementById("chk_overlay_tracks");
     const chkPhotos = document.getElementById("chk_overlay_photos");
     const chkWaypoints = document.getElementById("chk_overlay_waypoints");
+
+    if (chkProvinces) {
+      chkProvinces.addEventListener("change", () => {
+        overlayConfig.provinces = chkProvinces.checked;
+        applyOverlayVisibility();
+      });
+    }
+
+    // 顶部 HUD 点亮省份徽章快捷一键切换
+    const btnHudProvinces = document.getElementById("btn_toggle_provinces_hud");
+    if (btnHudProvinces) {
+      btnHudProvinces.addEventListener("click", () => {
+        overlayConfig.provinces = !overlayConfig.provinces;
+        applyOverlayVisibility();
+      });
+    }
 
     if (chkTracks) {
       chkTracks.addEventListener("change", () => {

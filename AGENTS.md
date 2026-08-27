@@ -42,6 +42,9 @@
 - `go run cmd/admin/main.go`：启动照片管理后台，`http://localhost:3002`。
 - `go run cmd/update-photos/main.go`：手动执行照片更新流程。
 - `go run cmd/update-tracks/main.go`：手动执行轨迹与摄影时空关联更新流程。
+- `go run cmd/scan-tracks/main.go`：扫描正式包与预备包 GPX 冲突，生成时空重叠清单与 Markdown 报告（支持 `--hiking`、`--running`、`-type <type>` 过滤）。
+- `go run cmd/merge-tracks/main.go`：根据清单执行双向点位融合弥补与心率时空插值合并（支持 `--hiking`、`--running`、`-id <id>`、`-name <keyword>`、`-all`）。
+- `go run cmd/concat-tracks/main.go`：将多日/多段分段轨迹按天数时序首尾顺次相连拼接为完整大环线（支持 `-pattern`、`-title`、`-out`）。
 - `./run.sh init`：生成并安装 macOS LaunchAgent。
 - `./run.sh start`：同时启动后台服务和本地博客预览。
 - `./run.sh stop`：同时停止后台服务和本地博客预览。

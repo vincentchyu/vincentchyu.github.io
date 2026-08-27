@@ -1,12 +1,14 @@
 /* Footprint Page Styles - Canonical Site Shell Integration */
 :root {
-  --color-trail: #ea580c;
-  --color-hiking: #059669;
-  --color-running: #0284c7;
-  --color-cycling: #9333ea;
-  --color-driving: #d97706;
-  --color-walking: #0284c7;
-  --color-transit: #64748b;
+  --color-hiking: #ff7a00;
+  --color-trail: #ef4444;
+  --color-running: #00d2ff;
+  --color-cycling: #10b981;
+  --color-walking: #14b8a6;
+  --color-driving: #ec4899;
+  --color-train: #a855f7;
+  --color-flight: #38bdf8;
+  --color-transit: #a855f7;
   
   --accent: #2563eb;
   --radius: 12px;
@@ -52,17 +54,48 @@
   /* 工作区外框 */
   --workspace-bg: #f1f5f9;
   --workspace-border: rgba(0, 0, 0, 0.1);
+
+  /* 指标强度阶梯颜色 (Light Mode 日间) */
+  --tier-0-color: #64748b;
+  --tier-0-bg: rgba(100, 116, 139, 0.08);
+  --tier-0-border: rgba(100, 116, 139, 0.18);
+
+  --tier-1-color: #059669;
+  --tier-1-bg: rgba(5, 150, 105, 0.08);
+  --tier-1-border: rgba(5, 150, 105, 0.22);
+
+  --tier-2-color: #0284c7;
+  --tier-2-bg: rgba(2, 132, 199, 0.08);
+  --tier-2-border: rgba(2, 132, 199, 0.22);
+
+  --tier-3-color: #d97706;
+  --tier-3-bg: rgba(217, 119, 6, 0.08);
+  --tier-3-border: rgba(217, 119, 6, 0.22);
+
+  --tier-4-color: #e11d48;
+  --tier-4-bg: rgba(225, 29, 72, 0.08);
+  --tier-4-border: rgba(225, 29, 72, 0.22);
+
+  --tier-5-color: #c026d3;
+  --tier-5-bg: rgba(192, 38, 211, 0.08);
+  --tier-5-border: rgba(192, 38, 211, 0.22);
+
+  --tier-6-color: #7c3aed;
+  --tier-6-bg: rgba(124, 58, 237, 0.08);
+  --tier-6-border: rgba(124, 58, 237, 0.22);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-trail: #ff5500;
-    --color-hiking: #10b981;
+    --color-hiking: #ff7a00;
+    --color-trail: #ef4444;
     --color-running: #00d2ff;
-    --color-cycling: #c084fc;
-    --color-driving: #fbbf24;
-    --color-walking: #38bdf8;
-    --color-transit: #94a3b8;
+    --color-cycling: #10b981;
+    --color-walking: #14b8a6;
+    --color-driving: #ec4899;
+    --color-train: #a855f7;
+    --color-flight: #38bdf8;
+    --color-transit: #a855f7;
     
     --accent: #3b82f6;
 
@@ -107,6 +140,35 @@
     /* 工作区外框 */
     --workspace-bg: #0d1117;
     --workspace-border: rgba(255, 255, 255, 0.15);
+
+    /* 指标强度阶梯颜色 (Dark Mode 夜间) */
+    --tier-0-color: #94a3b8;
+    --tier-0-bg: rgba(148, 163, 184, 0.12);
+    --tier-0-border: rgba(148, 163, 184, 0.22);
+
+    --tier-1-color: #34d399;
+    --tier-1-bg: rgba(52, 211, 153, 0.12);
+    --tier-1-border: rgba(52, 211, 153, 0.25);
+
+    --tier-2-color: #38bdf8;
+    --tier-2-bg: rgba(56, 189, 248, 0.12);
+    --tier-2-border: rgba(56, 189, 248, 0.25);
+
+    --tier-3-color: #fbbf24;
+    --tier-3-bg: rgba(251, 191, 36, 0.12);
+    --tier-3-border: rgba(251, 191, 36, 0.25);
+
+    --tier-4-color: #fb7185;
+    --tier-4-bg: rgba(251, 113, 133, 0.12);
+    --tier-4-border: rgba(251, 113, 133, 0.25);
+
+    --tier-5-color: #e879f9;
+    --tier-5-bg: rgba(232, 121, 249, 0.12);
+    --tier-5-border: rgba(232, 121, 249, 0.25);
+
+    --tier-6-color: #a78bfa;
+    --tier-6-bg: rgba(167, 139, 250, 0.12);
+    --tier-6-border: rgba(167, 139, 250, 0.25);
   }
 }
 
@@ -191,11 +253,23 @@ body.footprint-page {
   transition: opacity 0.2s, border-color 0.2s;
 }
 
-.footprint-tab:hover,
+.footprint-tab:hover {
+  opacity: 0.9;
+}
+
 .footprint-tab.is-active {
   opacity: 1;
-  border-bottom-color: currentColor;
+  border-bottom-color: var(--accent);
 }
+
+.footprint-tab[data-type="hiking"].is-active { border-bottom-color: var(--color-hiking); color: var(--color-hiking); }
+.footprint-tab[data-type="trail_running"].is-active { border-bottom-color: var(--color-trail); color: var(--color-trail); }
+.footprint-tab[data-type="running"].is-active { border-bottom-color: var(--color-running); color: var(--color-running); }
+.footprint-tab[data-type="cycling"].is-active { border-bottom-color: var(--color-cycling); color: var(--color-cycling); }
+.footprint-tab[data-type="walking"].is-active { border-bottom-color: var(--color-walking); color: var(--color-walking); }
+.footprint-tab[data-type="driving"].is-active { border-bottom-color: var(--color-driving); color: var(--color-driving); }
+.footprint-tab[data-type="train"].is-active { border-bottom-color: var(--color-train); color: var(--color-train); }
+.footprint-tab[data-type="flight"].is-active { border-bottom-color: var(--color-flight); color: var(--color-flight); }
 
 .tab-dot {
   width: 8px;
@@ -240,6 +314,41 @@ body.footprint-page {
 
 .footprint-summary-strip b {
   font-weight: 700;
+}
+
+.summary-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 2px 6px;
+  cursor: pointer;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.summary-btn:hover {
+  background: var(--hud-card-hover);
+  border-color: var(--hud-card-border);
+}
+
+.summary-btn.is-active {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: var(--accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .summary-btn.is-active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.35);
+    color: #60a5fa;
+  }
 }
 
 .summary-divider {
@@ -733,12 +842,12 @@ body.footprint-page {
 }
 
 .track-card-badge {
-  font-size: 9px;
-  padding: 2px 6px;
-  border-radius: 8px;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
   background: var(--hud-badge-bg);
-  font-weight: 600;
-  text-transform: uppercase;
+  color: var(--hud-subtext);
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -746,7 +855,7 @@ body.footprint-page {
   color: var(--hud-subtext);
   background: var(--hud-badge-bg);
   opacity: 0.85;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .track-card.is-no-track {
@@ -769,18 +878,155 @@ body.footprint-page {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: 5px 8px;
   font-size: 11px;
   color: var(--hud-subtext);
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .track-card-meta span {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
   white-space: nowrap;
   font-feature-settings: "tnum";
+}
+
+.track-meta-item {
+  color: var(--hud-subtext);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* 核心指标微胶囊高亮 (公里数 & 心率) */
+.track-metric {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  transition: all 0.2s ease;
+}
+
+.track-metric.tier-0 {
+  color: var(--tier-0-color);
+  background: var(--tier-0-bg);
+  border: 1px solid var(--tier-0-border);
+}
+
+.track-metric.tier-1 {
+  color: var(--tier-1-color);
+  background: var(--tier-1-bg);
+  border: 1px solid var(--tier-1-border);
+}
+
+.track-metric.tier-2 {
+  color: var(--tier-2-color);
+  background: var(--tier-2-bg);
+  border: 1px solid var(--tier-2-border);
+}
+
+.track-metric.tier-3 {
+  color: var(--tier-3-color);
+  background: var(--tier-3-bg);
+  border: 1px solid var(--tier-3-border);
+}
+
+.track-metric.tier-4 {
+  color: var(--tier-4-color);
+  background: var(--tier-4-bg);
+  border: 1px solid var(--tier-4-border);
+}
+
+.track-metric.tier-5 {
+  color: var(--tier-5-color);
+  background: var(--tier-5-bg);
+  border: 1px solid var(--tier-5-border);
+}
+
+.track-metric.tier-6 {
+  color: var(--tier-6-color);
+  background: var(--tier-6-bg);
+  border: 1px solid var(--tier-6-border);
+}
+
+/* 仅统计折叠分组（置顶显示） */
+.stat-group-container {
+  margin-bottom: 12px;
+  border-bottom: 1px dashed var(--hud-divider);
+  padding-bottom: 10px;
+}
+
+.stat-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--hud-card-bg);
+  border: 1px solid var(--hud-card-border);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--hud-card-title);
+}
+
+.stat-group-header:hover {
+  background: var(--hud-card-hover);
+  border-color: var(--hud-input-border);
+}
+
+.stat-group-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-group-icon {
+  font-size: 13px;
+}
+
+.stat-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--hud-card-title);
+}
+
+.stat-group-count {
+  font-size: 11px;
+  color: var(--hud-subtext);
+  background: var(--hud-badge-bg);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+  font-feature-settings: "tnum";
+}
+
+.stat-group-chevron {
+  font-size: 10px;
+  color: var(--hud-subtext);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stat-group-container.is-expanded .stat-group-chevron {
+  transform: rotate(180deg);
+}
+
+.stat-group-body {
+  display: none;
+  margin-top: 8px;
+}
+
+.stat-group-container.is-expanded .stat-group-body {
+  display: block;
+}
+
+.track-list-empty-tip {
+  text-align: center;
+  padding: 16px 10px;
+  color: var(--hud-subtext);
+  font-size: 12px;
 }
 
 /* 底部高程剖面 HUD */
@@ -1282,19 +1528,55 @@ body.footprint-page {
   gap: 16px;
 }
 
-.settings-intro {
+/* 安全提示条 */
+.settings-security-tip {
   font-size: 12px;
   color: var(--hud-subtext);
   line-height: 1.6;
-  background: var(--hud-card-bg);
-  padding: 10px 14px;
+  background: rgba(34, 197, 94, 0.06);
+  padding: 12px 14px;
   border-radius: 8px;
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid rgba(34, 197, 94, 0.6);
 }
 
-.settings-intro code {
+.security-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.security-tip-icon {
+  font-size: 14px;
+}
+
+.security-tip-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(34, 197, 94, 0.9);
+}
+
+.security-tip-list {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.security-tip-list li {
+  margin-bottom: 2px;
+}
+
+.security-tip-list li:last-child {
+  margin-bottom: 0;
+}
+
+.security-tip-list code {
   color: var(--accent);
   font-family: ui-monospace, monospace;
+}
+
+.security-tip-list strong {
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .settings-card {
