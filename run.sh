@@ -40,6 +40,7 @@ case "$1" in
     ;;
   restart)
     go run ./cmd/build-photography-assets
+    go run cmd/update-tracks/main.go
     # go run ./cmd/update-neodb/main.go
     sh "$SCRIPT_DIR/stop_photograph-management.sh"
     sh "$SCRIPT_DIR/build_photograph-management_launchctl.sh"

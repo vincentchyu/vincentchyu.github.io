@@ -9,6 +9,7 @@
   let overviewGeoJSON = null;
   let activeTrackId = null;
   let activeTrackDetail = null;
+    let pendingSelectedTrackDetail = null;
   let currentFilterType = "all";
   let searchQuery = "";
   let is3D = false;
@@ -173,8 +174,9 @@
       mapLayersReady = true;
       renderMapTracks();
       applyOverlayVisibility();
-      if (activeTrackDetail) {
-        renderSelectedTrackOnMap(activeTrackDetail);
+        if (activeTrackDetail || pendingSelectedTrackDetail) {
+            const detailToRender = activeTrackDetail || pendingSelectedTrackDetail;
+            renderSelectedTrackOnMap(detailToRender);
         applyFocusDimming(true);
       }
     });
@@ -263,16 +265,27 @@
       attribution: style.attribution,
     });
 
-    // 插入到省份图层与 GeoJSON 轨迹图层之下，确保底图在最底层
-    const firstTrackLayer = map.getLayer("province-base-line")
-      ? "province-base-line"
-      : (map.getLayer("province-dim-fill")
-        ? "province-dim-fill"
-        : (map.getLayer("province-highlight-fill")
-          ? "province-highlight-fill"
-          : (map.getLayer("all-tracks-glow") 
-            ? "all-tracks-glow" 
-            : (map.getLayer("selected-track-casing") ? "selected-track-casing" : undefined))));
+      // 找到当前地图中第一个存在的矢量业务图层作为 beforeId，保证 base-raster-layer 永远在最底层
+      const businessLayers = [
+          "province-base-line",
+          "province-dim-fill",
+          "province-highlight-fill",
+          "province-highlight-casing",
+          "province-highlight-line",
+          "all-tracks-glow",
+          "all-tracks-core",
+          "selected-track-casing",
+          "selected-track-glow",
+          "selected-track-core"
+      ];
+      let firstTrackLayer = undefined;
+      for (let i = 0; i < businessLayers.length; i++) {
+          if (map.getLayer(businessLayers[i])) {
+              firstTrackLayer = businessLayers[i];
+              break;
+          }
+      }
+
     map.addLayer(
       {
         id: "base-raster-layer",
@@ -284,6 +297,12 @@
       },
       firstTrackLayer
     );
+
+      // 切换主题后，若当前有选中的轨迹，确保重新渲染高亮与压暗状态
+      if (activeTrackDetail) {
+          renderSelectedTrackOnMap(activeTrackDetail);
+          applyFocusDimming(true);
+      }
   }
 
   async function loadProvinceBoundaries() {
@@ -359,7 +378,7 @@
       });
     }
 
-    // 0.4 点亮省份深色外轮廓描边 (Casing 保护边: 彻底隔绝底部杂乱等高线，防止撞色隐形)
+      // 0.4 点亮省份深色外轮廓描边 (Casing 保护边: 隔绝杂乱底图，防止撞色隐形)
     if (!map.getLayer("province-highlight-casing")) {
       map.addLayer({
         id: "province-highlight-casing",
@@ -369,14 +388,14 @@
         layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
         paint: {
           "line-color": "#000000",
-          "line-width": 4,
-          "line-opacity": 0.65,
-          "line-blur": 1.5,
+            "line-width": 3,
+            "line-opacity": 0.4,
+            "line-blur": 1,
         },
       });
     }
 
-    // 0.5 点亮省份鲜艳发光轮廓线 (Core Line)
+      // 0.5 点亮省份鲜艳发光轮廓线 (Core Line: 采用行政边界虚线，清晰与实线运动轨迹区分，防止误认)
     if (!map.getLayer("province-highlight-line")) {
       map.addLayer({
         id: "province-highlight-line",
@@ -386,9 +405,9 @@
         layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
         paint: {
           "line-color": getActiveProvinceColor(currentFilterType),
-          "line-width": 2.2,
-          "line-opacity": 0.95,
-          "line-blur": 0.5,
+            "line-width": 1.8,
+            "line-opacity": 0.8,
+            "line-dasharray": [3, 2],
         },
       });
     }
@@ -431,9 +450,9 @@
           "visibility": overlayConfig.tracks ? "visible" : "none",
         },
         paint: {
-          "line-color": activeTrackId ? "#334155" : ["get", "color"],
+            "line-color": activeTrackId ? "#475569" : ["get", "color"],
           "line-width": activeTrackId ? 1.5 : 2.5,
-          "line-opacity": activeTrackId ? 0.15 : 0.85,
+            "line-opacity": activeTrackId ? 0.2 : 0.85,
         },
       });
     }
@@ -456,7 +475,7 @@
         paint: {
           "line-color": "#090d16",
           "line-width": 9,
-          "line-opacity": 0.65,
+            "line-opacity": 0.8,
           "line-blur": 2,
         },
       });
@@ -470,9 +489,9 @@
         source: "selected-track",
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
-          "line-color": ["coalesce", ["get", "color"], "#10b981"],
+            "line-color": ["coalesce", ["get", "color"], "#ff7a00"],
           "line-width": 6,
-          "line-opacity": 0.95,
+            "line-opacity": 1.0,
         },
       });
     }
@@ -486,8 +505,8 @@
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
           "line-color": "#ffffff",
-          "line-width": 2.5,
-          "line-opacity": 0.9,
+            "line-width": 2.8,
+            "line-opacity": 0.95,
         },
       });
     }
@@ -1062,6 +1081,7 @@
       if (activeTrackId === id) {
         activeTrackId = null;
         activeTrackDetail = null;
+          pendingSelectedTrackDetail = null;
         document.querySelectorAll(".track-card").forEach((c) => c.classList.remove("active"));
         applyFocusDimming(false);
         if (map && map.getSource("selected-track")) {
@@ -1075,6 +1095,7 @@
     if (!activeTrackId) return;
     activeTrackId = null;
     activeTrackDetail = null;
+      pendingSelectedTrackDetail = null;
 
     hideProfileHUD(false);
     document.querySelectorAll(".track-card").forEach((c) => c.classList.remove("active"));
@@ -1082,9 +1103,18 @@
     if (map && map.getSource("selected-track")) {
       map.getSource("selected-track").setData({ type: "FeatureCollection", features: [] });
     }
-    if (startMarker) startMarker.remove();
-    if (endMarker) endMarker.remove();
-    if (hoverMarker) hoverMarker.remove();
+      if (startMarker) {
+          startMarker.remove();
+          startMarker = null;
+      }
+      if (endMarker) {
+          endMarker.remove();
+          endMarker = null;
+      }
+      if (hoverMarker) {
+          hoverMarker.remove();
+          hoverMarker = null;
+      }
     clearPhotoMarkers();
 
     const photoStrip = document.getElementById("photo_strip");
@@ -1238,7 +1268,21 @@
   }
 
   function renderSelectedTrackOnMap(detail) {
-    if (!map || !detail || !mapLayersReady) return;
+      if (!map || !detail) return;
+
+      // 自愈检查：若图层尚未创建，尝试立即初始化图层
+      if (!map.getSource("selected-track") || !map.getLayer("selected-track-core")) {
+          if (typeof map.isStyleLoaded === "function" && map.isStyleLoaded()) {
+              initMapLayers();
+              mapLayersReady = true;
+          } else {
+              // 样式仍在加载中，排队等待 style.load 触发时自动渲染
+              pendingSelectedTrackDetail = detail;
+              return;
+          }
+      }
+      pendingSelectedTrackDetail = null;
+
     const source = map.getSource("selected-track");
     if (!source) return;
 
@@ -1256,18 +1300,28 @@
       ],
     });
 
-    if (startMarker) startMarker.remove();
-    if (endMarker) endMarker.remove();
+      if (startMarker) {
+          startMarker.remove();
+          startMarker = null;
+      }
+      if (endMarker) {
+          endMarker.remove();
+          endMarker = null;
+      }
 
     if (coords.length > 1) {
       const startEl = document.createElement("div");
-      startEl.innerHTML = `<div style="width:16px;height:16px;background:#10b981;border:2px solid #fff;border-radius:50%;box-shadow:0 0 10px #10b981;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;color:#fff;">S</div>`;
+        startEl.className = "track-waypoint-marker start";
+        startEl.style.cssText = "width:18px;height:18px;background:#10b981;border:2px solid #ffffff;border-radius:50%;box-shadow:0 0 10px rgba(16,185,129,0.8);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#ffffff;cursor:default;user-select:none;";
+        startEl.textContent = "S";
       startEl.addEventListener("click", (e) => e.stopPropagation());
       startMarker = new maplibregl.Marker({ element: startEl })
         .setLngLat(coords[0]);
 
       const endEl = document.createElement("div");
-      endEl.innerHTML = `<div style="width:16px;height:16px;background:#ef4444;border:2px solid #fff;border-radius:50%;box-shadow:0 0 10px #ef4444;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:bold;color:#fff;">F</div>`;
+        endEl.className = "track-waypoint-marker end";
+        endEl.style.cssText = "width:18px;height:18px;background:#ef4444;border:2px solid #ffffff;border-radius:50%;box-shadow:0 0 10px rgba(239,68,68,0.8);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;color:#ffffff;cursor:default;user-select:none;";
+        endEl.textContent = "F";
       endEl.addEventListener("click", (e) => e.stopPropagation());
       endMarker = new maplibregl.Marker({ element: endEl })
         .setLngLat(coords[coords.length - 1]);
