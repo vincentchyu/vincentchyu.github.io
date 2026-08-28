@@ -1618,9 +1618,28 @@
     ctx.clearRect(0, 0, w, h);
 
     const profile = detail.profile;
-    const maxEle = Math.max(...profile.map((p) => p.e), 100);
-    const minEle = Math.min(...profile.map((p) => p.e), 0);
-    const eleRange = Math.max(maxEle - minEle, 50);
+    const rawElevations = profile.map((p) => p.e);
+    const rawMax = Math.max(...rawElevations);
+    const rawMin = Math.min(...rawElevations);
+    const rawSpan = rawMax - rawMin;
+
+    // 动态自适应高程缩放：上下保留缓冲留白，同时设置最小视觉跨度避免平路/操场微小 GPS 抖动被过度放大
+    const minVisualSpan = 30;
+    const padding = Math.max(rawSpan * 0.12, 10);
+    let minEle = Math.floor(rawMin - padding);
+    let maxEle = Math.ceil(rawMax + padding);
+
+    if (rawMin >= 0 && minEle < 0) {
+      minEle = 0; // 非负海拔地区底部不低于海平面 0m
+    }
+
+    if (maxEle - minEle < minVisualSpan) {
+      const mid = (rawMax + rawMin) / 2;
+      minEle = rawMin >= 0 ? Math.max(0, Math.floor(mid - minVisualSpan / 2)) : Math.floor(mid - minVisualSpan / 2);
+      maxEle = Math.ceil(minEle + minVisualSpan);
+    }
+
+    const eleRange = Math.max(maxEle - minEle, 1);
     const totalDist = detail.distance_km || 1;
 
     const color = activityColors[detail.type] || "#00d2ff";
