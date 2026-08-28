@@ -1549,7 +1549,20 @@
     document.getElementById("profile_stat_gain").textContent = Math.round(detail.elevation_gain_m);
     document.getElementById("profile_stat_max_ele").textContent = Math.round(detail.max_elevation_m);
     document.getElementById("profile_stat_duration").textContent = formatDuration(detail.duration_s);
-    document.getElementById("profile_stat_speed").textContent = detail.avg_speed_kmh;
+    
+    const speedLabel = document.getElementById("profile_speed_label");
+    const speedStat = document.getElementById("profile_stat_speed");
+    const speedUnit = document.getElementById("profile_speed_unit");
+    
+    if (detail.type === "running" || detail.type === "trail_running") {
+      speedLabel.textContent = "配速";
+      speedStat.textContent = formatPace(detail.avg_speed_kmh);
+      speedUnit.textContent = "/KM";
+    } else {
+      speedLabel.textContent = "均速";
+      speedStat.textContent = detail.avg_speed_kmh;
+      speedUnit.textContent = "km/h";
+    }
 
     const hrWrapper = document.getElementById("profile_hr_wrapper");
     const hrStat = document.getElementById("profile_stat_hr");
@@ -2234,6 +2247,18 @@
     const m = Math.floor((s % 3600) / 60);
     if (h > 0) return `${h}小时 ${m}分`;
     return `${m}分钟`;
+  }
+
+  function formatPace(speedKmh) {
+    if (!speedKmh || speedKmh <= 0) return "0'00''";
+    const paceMinDec = 60 / speedKmh;
+    let mins = Math.floor(paceMinDec);
+    let secs = Math.round((paceMinDec - mins) * 60);
+    if (secs === 60) {
+      mins += 1;
+      secs = 0;
+    }
+    return `${mins}'${secs.toString().padStart(2, '0')}''`;
   }
 
   function escapeHtml(str) {
