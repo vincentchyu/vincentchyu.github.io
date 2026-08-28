@@ -5,6 +5,7 @@
   --color-running: #00d2ff;
   --color-cycling: #10b981;
   --color-walking: #14b8a6;
+  --color-skateboarding: #eab308;
   --color-driving: #ec4899;
   --color-train: #a855f7;
   --color-flight: #38bdf8;
@@ -92,6 +93,7 @@
     --color-running: #00d2ff;
     --color-cycling: #10b981;
     --color-walking: #14b8a6;
+    --color-skateboarding: #eab308;
     --color-driving: #ec4899;
     --color-train: #a855f7;
     --color-flight: #38bdf8;
@@ -175,16 +177,16 @@
 html,
 body.footprint-page {
   min-height: 100vh;
-  overflow-y: auto; /* 允许正常上下滚动，随时查看顶栏菜单 */
+  overflow-y: auto; /* 允许正常上下滚动，随时查看顶栏菜单与置顶内容 */
   overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 .footprint-page {
   background: var(--site-shell-bg, #fff);
   color: var(--site-shell-text, #000);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
 }
@@ -202,7 +204,7 @@ body.footprint-page {
   display: flex;
   flex-direction: column;
   padding-top: 0;
-  padding-bottom: 1.25rem;
+  padding-bottom: 1rem;
   box-sizing: border-box;
 }
 
@@ -211,8 +213,8 @@ body.footprint-page {
   flex-shrink: 0;
   display: block;
   border-bottom: 0;
-  padding-top: 1rem;
-  padding-bottom: 0.6rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.4rem;
 }
 
 .footprint-title {
@@ -232,7 +234,7 @@ body.footprint-page {
   gap: 1.15rem;
   flex-wrap: wrap;
   align-items: center;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.4rem;
 }
 
 .footprint-tab {
@@ -267,6 +269,7 @@ body.footprint-page {
 .footprint-tab[data-type="running"].is-active { border-bottom-color: var(--color-running); color: var(--color-running); }
 .footprint-tab[data-type="cycling"].is-active { border-bottom-color: var(--color-cycling); color: var(--color-cycling); }
 .footprint-tab[data-type="walking"].is-active { border-bottom-color: var(--color-walking); color: var(--color-walking); }
+.footprint-tab[data-type="skateboarding"].is-active { border-bottom-color: var(--color-skateboarding); color: var(--color-skateboarding); }
 .footprint-tab[data-type="driving"].is-active { border-bottom-color: var(--color-driving); color: var(--color-driving); }
 .footprint-tab[data-type="train"].is-active { border-bottom-color: var(--color-train); color: var(--color-train); }
 .footprint-tab[data-type="flight"].is-active { border-bottom-color: var(--color-flight); color: var(--color-flight); }
@@ -291,7 +294,7 @@ body.footprint-page {
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .footprint-intro {
@@ -322,8 +325,8 @@ body.footprint-page {
 
 /* 主展示工作区 (自适应填满屏幕剩余高度) */
 .footprint-workspace {
-  flex: 1;
-  min-height: 320px;
+  height: calc(100vh - 160px);
+  min-height: 360px;
   position: relative;
   width: 100%;
   border-radius: var(--radius);

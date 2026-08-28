@@ -43,6 +43,7 @@
     running: "#00d2ff",       // 路跑：电光青蓝
     cycling: "#10b981",       // 骑行：穿梭翠绿
     walking: "#14b8a6",       // 行走：薄荷浅青
+    skateboarding: "#eab308", // 滑板：陆冲暖黄
     driving: "#ec4899",       // 驾车：公路洋红 (与徒步暖橙高对比拉开)
     train: "#a855f7",         // 火车：极光星轨紫
     flight: "#38bdf8",        // 飞机：苍穹冰蓝
@@ -55,6 +56,7 @@
     running: "路跑",
     cycling: "骑行",
     walking: "行走",
+    skateboarding: "滑板",
     driving: "驾车",
     train: "火车",
     flight: "飞机",
@@ -69,6 +71,7 @@
     running: "openfreemap",       // 路跑：OpenFreeMap 开源街区路网
     cycling: "openfreemap",       // 骑行：OpenFreeMap 开源公路路网
     walking: "openfreemap",       // 行走：OpenFreeMap 开源街区
+    skateboarding: "openfreemap", // 滑板：OpenFreeMap 开源街区
     driving: "satellite",         // 驾车：Esri 高清卫星影像
     train: "satellite",           // 火车：Esri 高清卫星影像
     flight: "satellite",          // 飞机：Esri 高清卫星影像
@@ -99,9 +102,26 @@
     updateActiveBasemapUI(currentTheme);
     bindUIEvents();
     bindSettingsEvents();
+    initLayoutObserver();
     loadManifest();
     loadProvinceBoundaries();
     adjustWorkspaceHeight();
+  }
+
+  function initLayoutObserver() {
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      adjustWorkspaceHeight();
+    });
+    const mainEl = document.querySelector(".footprint-main");
+    if (mainEl) {
+      const hero = mainEl.querySelector(".footprint-hero");
+      const tabs = mainEl.querySelector(".footprint-tabs");
+      const intro = mainEl.querySelector(".footprint-intro-row");
+      if (hero) observer.observe(hero);
+      if (tabs) observer.observe(tabs);
+      if (intro) observer.observe(intro);
+    }
   }
 
   function adjustWorkspaceHeight() {
@@ -114,10 +134,37 @@
       return;
     }
 
-    const rect = workspace.getBoundingClientRect();
-    const bottomPadding = 20; // 底部安全留白
-    const calculatedHeight = Math.max(300, window.innerHeight - rect.top - bottomPadding);
-    workspace.style.height = `${calculatedHeight}px`;
+    // 主动清除外部残留的 body.style.minHeight 垫高，防止任何累计黑边
+    if (document.body && document.body.style.minHeight) {
+      document.body.style.minHeight = "";
+    }
+
+    // 锚点元素 (页面置顶时的视口顶端参考基准)
+    const anchor = document.getElementById("site-page-anchor") || document.querySelector(".footprint-title");
+    let headerOffset = 130; // 默认合理间距兜底
+
+    if (anchor) {
+      const anchorRect = anchor.getBoundingClientRect();
+      const workspaceRect = workspace.getBoundingClientRect();
+      // 使用文档绝对坐标差值，与当前页面滚动位置完全解耦
+      const anchorTopInDoc = anchorRect.top + window.scrollY;
+      const workspaceTopInDoc = workspaceRect.top + window.scrollY;
+      headerOffset = Math.max(0, workspaceTopInDoc - anchorTopInDoc);
+    }
+
+    // 获取 footprint-main 的底部 padding (通常为 1rem 即 16px)
+    const mainEl = document.querySelector(".footprint-main");
+    let bottomGap = 16;
+    if (mainEl) {
+      const computedPadding = parseFloat(window.getComputedStyle(mainEl).paddingBottom);
+      if (!Number.isNaN(computedPadding) && computedPadding > 0) {
+        bottomGap = computedPadding;
+      }
+    }
+
+    // 置顶状态下，视口内剩余给地图工作区的完美高度 (向上取整确保高度充足，绝不触发 missingScroll 垫高产生黑边)
+    const targetHeight = Math.max(360, Math.ceil(window.innerHeight - headerOffset - bottomGap));
+    workspace.style.height = `${targetHeight}px`;
 
     if (map) {
       map.resize();
@@ -472,14 +519,14 @@
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
           "line-color": "#090d16",
-          "line-width": 9,
-            "line-opacity": 0.8,
-          "line-blur": 2,
+          "line-width": 8.5,
+          "line-opacity": 0.95,
+          "line-blur": 0.5,
         },
       });
     }
 
-    // 2.2 中层运动类型鲜艳主题色光晕
+    // 2.2 中层运动类型鲜艳主题色光晕 (微光过渡)
     if (!map.getLayer("selected-track-glow")) {
       map.addLayer({
         id: "selected-track-glow",
@@ -487,14 +534,15 @@
         source: "selected-track",
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
-            "line-color": ["coalesce", ["get", "color"], "#ff7a00"],
-          "line-width": 6,
-            "line-opacity": 1.0,
+          "line-color": ["coalesce", ["get", "color"], "#ff7a00"],
+          "line-width": 6.5,
+          "line-opacity": 0.8,
+          "line-blur": 1.5,
         },
       });
     }
 
-    // 2.3 顶层纯白立体发光芯线
+    // 2.3 顶层高饱和实体主题色核心主线 (方案一：实心主色彻底解决浅色底图发虚)
     if (!map.getLayer("selected-track-core")) {
       map.addLayer({
         id: "selected-track-core",
@@ -502,9 +550,9 @@
         source: "selected-track",
         layout: { "line-join": "round", "line-cap": "round" },
         paint: {
-          "line-color": "#ffffff",
-            "line-width": 2.8,
-            "line-opacity": 0.95,
+          "line-color": ["coalesce", ["get", "color"], "#ff7a00"],
+          "line-width": 4.5,
+          "line-opacity": 1.0,
         },
       });
     }
@@ -642,6 +690,7 @@
       updateFilterCounts(data.stats);
       renderQuickFilterChips();
       renderTrackList();
+      adjustWorkspaceHeight();
       // 异步非阻塞加载全景骨架底网
       loadOverviewTracks();
     } catch (err) {
@@ -777,7 +826,7 @@
     const countAllEl = document.getElementById("count_all");
     if (countAllEl) countAllEl.textContent = total || 0;
 
-    ["hiking", "trail_running", "running", "cycling", "walking", "driving", "train", "flight", "transit"].forEach((t) => {
+    ["hiking", "trail_running", "running", "cycling", "walking", "skateboarding", "driving", "train", "flight", "transit"].forEach((t) => {
       const el = document.getElementById("count_" + t);
       if (el) el.textContent = counts[t] || 0;
     });
@@ -819,6 +868,10 @@
       hr: [120, 140, 170, 180],
     },
     walking: {
+      distance: [5, 10, 15, 20, 30, 40],
+      hr: [90, 110, 130, 150],
+    },
+    skateboarding: {
       distance: [5, 10, 15, 20, 30, 40],
       hr: [90, 110, 130, 150],
     },
@@ -1564,14 +1617,17 @@
 
     // 高程填充区域
     ctx.beginPath();
+    let lastX = w - padX;
     profile.forEach((p, idx) => {
-      const x = padX + (p.d / totalDist) * (w - padX * 2);
+      const ratio = Math.min(Math.max(p.d / totalDist, 0), 1);
+      const x = padX + ratio * (w - padX * 2);
       const y = h - padY - ((p.e - minEle) / eleRange) * (h - padY * 2);
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
+      lastX = x;
     });
 
-    ctx.lineTo(w - padX, h - padY);
+    ctx.lineTo(lastX, h - padY);
     ctx.lineTo(padX, h - padY);
     ctx.closePath();
     ctx.fillStyle = gradient;
@@ -1580,7 +1636,8 @@
     // 折线顶边
     ctx.beginPath();
     profile.forEach((p, idx) => {
-      const x = padX + (p.d / totalDist) * (w - padX * 2);
+      const ratio = Math.min(Math.max(p.d / totalDist, 0), 1);
+      const x = padX + ratio * (w - padX * 2);
       const y = h - padY - ((p.e - minEle) / eleRange) * (h - padY * 2);
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
@@ -1593,7 +1650,8 @@
     if (highlightIdx >= 0 && highlightIdx < profile.length) {
       const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
       const hp = profile[highlightIdx];
-      const hx = padX + (hp.d / totalDist) * (w - padX * 2);
+      const hRatio = Math.min(Math.max(hp.d / totalDist, 0), 1);
+      const hx = padX + hRatio * (w - padX * 2);
       const hy = h - padY - ((hp.e - minEle) / eleRange) * (h - padY * 2);
 
       ctx.beginPath();
