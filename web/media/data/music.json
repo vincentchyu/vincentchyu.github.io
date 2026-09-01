@@ -8,7 +8,9 @@
       "url": "/album/2QjOh2DOknYsVn6NHVs0AW",
       "release_date": "1973-03-01"
     },
-    "created_time": "2026-08-30T04:24:39.321Z"
+    "created_time": "2026-08-30T04:24:39.321Z",
+    "comment_text": "pf中喜欢最一般的专辑，但还是神作",
+    "rating_grade": 9
   },
   {
     "item": {
@@ -17,7 +19,7 @@
       "cover_image_url": "https://neodb.social/m/album/2021/12/047a86515b-4a6a-489b-9b97-f824f5a2f3bb.jpg",
       "category": "music",
       "url": "/album/1yiEf12xwcj0jPbqotzzUI",
-      "rating": 9.3,
+      "rating": 9.4,
       "release_date": "1985-11-02"
     },
     "created_time": "2026-08-30T02:56:44.546Z"
@@ -808,6 +810,17 @@
   },
   {
     "item": {
+      "uuid": "4mOdqqLQk2uP9TJfULwXgv",
+      "title": "Tell Them, I'm Here - EP",
+      "cover_image_url": "https://neodb.social/m/item/musicbrainz_releasegroup/2026/08/07/bb5e756b-ae31-4452-9ab1-ca50685ab8ee.jpg",
+      "category": "music",
+      "url": "/album/4mOdqqLQk2uP9TJfULwXgv",
+      "release_date": "2025-11-14"
+    },
+    "created_time": "2025-08-07T13:54:00Z"
+  },
+  {
+    "item": {
       "uuid": "2ICAZT4ZmNW2vyjqt5jCKw",
       "title": "十万个为什么",
       "cover_image_url": "https://neodb.social/m/album/2021/09/15e2e5b405-f5c9-42fd-ac98-072b10c70c60.jpg",
@@ -815,17 +828,6 @@
       "url": "/album/2ICAZT4ZmNW2vyjqt5jCKw",
       "rating": 7.5,
       "release_date": "2020-09-24"
-    },
-    "created_time": "2025-08-07T13:54:00Z"
-  },
-  {
-    "item": {
-      "uuid": "4mOdqqLQk2uP9TJfULwXgv",
-      "title": "Tell Them, I'm Here - EP",
-      "cover_image_url": "https://neodb.social/m/item/musicbrainz_releasegroup/2026/08/07/bb5e756b-ae31-4452-9ab1-ca50685ab8ee.jpg",
-      "category": "music",
-      "url": "/album/4mOdqqLQk2uP9TJfULwXgv",
-      "release_date": "2025-11-14"
     },
     "created_time": "2025-08-07T13:54:00Z"
   },
@@ -845,6 +847,20 @@
   },
   {
     "item": {
+      "uuid": "0Sa1TZeTpWcNZvM8lT6ikt",
+      "title": "不正常飞船",
+      "cover_image_url": "https://neodb.social/m/album/2022/09/269ee61d95-8afd-4367-9f2c-6800f7ed40bb.jpg",
+      "category": "music",
+      "url": "/album/0Sa1TZeTpWcNZvM8lT6ikt",
+      "rating": 7.8,
+      "release_date": "2022-09-23"
+    },
+    "created_time": "2025-07-17T13:54:00Z",
+    "comment_text": "爵士入门",
+    "rating_grade": 7
+  },
+  {
+    "item": {
       "uuid": "568rH4yOPt64wqhbZ3GF6m",
       "title": "他们说忘了摇滚有问题",
       "cover_image_url": "https://neodb.social/m/album/2021/09/159912b1c2-524b-4494-be90-a57cce9ee11c.jpg",
@@ -855,19 +871,6 @@
     },
     "created_time": "2025-07-17T13:54:00Z",
     "rating_grade": 7
-  },
-  {
-    "item": {
-      "uuid": "2JijjtZBJhIH8uahKKKQtz",
-      "title": "OK Computer",
-      "cover_image_url": "https://neodb.social/m/album/2021/09/15b7c2da05-75f9-4d79-a1af-ec3025467aec.jpg",
-      "category": "music",
-      "url": "/album/2JijjtZBJhIH8uahKKKQtz",
-      "rating": 9.3,
-      "release_date": "1997-05-21"
-    },
-    "created_time": "2025-07-17T13:54:00Z",
-    "rating_grade": 9
   },
   {
     "item": {
@@ -884,17 +887,16 @@
   },
   {
     "item": {
-      "uuid": "0Sa1TZeTpWcNZvM8lT6ikt",
-      "title": "不正常飞船",
-      "cover_image_url": "https://neodb.social/m/album/2022/09/269ee61d95-8afd-4367-9f2c-6800f7ed40bb.jpg",
+      "uuid": "2JijjtZBJhIH8uahKKKQtz",
+      "title": "OK Computer",
+      "cover_image_url": "https://neodb.social/m/album/2021/09/15b7c2da05-75f9-4d79-a1af-ec3025467aec.jpg",
       "category": "music",
-      "url": "/album/0Sa1TZeTpWcNZvM8lT6ikt",
-      "rating": 7.8,
-      "release_date": "2022-09-23"
+      "url": "/album/2JijjtZBJhIH8uahKKKQtz",
+      "rating": 9.3,
+      "release_date": "1997-05-21"
     },
     "created_time": "2025-07-17T13:54:00Z",
-    "comment_text": "爵士入门",
-    "rating_grade": 7
+    "rating_grade": 9
   },
   {
     "item": {
@@ -911,18 +913,6 @@
   },
   {
     "item": {
-      "uuid": "5kiMIUtswJDgz4JQWFPZwB",
-      "title": "リージー  Best Selection Songs 2004-2018”",
-      "cover_image_url": "https://neodb.social/m/album/2022/01/07db96bbb9-3f12-4ab9-9353-a5dcbe3662be.jpg",
-      "category": "music",
-      "url": "/album/5kiMIUtswJDgz4JQWFPZwB",
-      "rating": 10,
-      "release_date": "2019-04-01"
-    },
-    "created_time": "2024-12-17T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "1CxvpzAfxR3MtyW9IB7egE",
       "title": "”Best Selection Songs 2004-2018” Volume.2 -Ballads(叙事歌)-",
       "cover_image_url": "https://neodb.social/m/album/2022/05/318cf7a1c5-9999-4985-9053-6c6159bbf7a2.jpg",
@@ -930,6 +920,18 @@
       "url": "/album/1CxvpzAfxR3MtyW9IB7egE",
       "rating": 10,
       "release_date": "2020-05-27"
+    },
+    "created_time": "2024-12-17T13:54:00Z"
+  },
+  {
+    "item": {
+      "uuid": "5kiMIUtswJDgz4JQWFPZwB",
+      "title": "リージー  Best Selection Songs 2004-2018”",
+      "cover_image_url": "https://neodb.social/m/album/2022/01/07db96bbb9-3f12-4ab9-9353-a5dcbe3662be.jpg",
+      "category": "music",
+      "url": "/album/5kiMIUtswJDgz4JQWFPZwB",
+      "rating": 10,
+      "release_date": "2019-04-01"
     },
     "created_time": "2024-12-17T13:54:00Z"
   },
