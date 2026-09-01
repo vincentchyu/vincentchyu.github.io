@@ -1345,16 +1345,23 @@
 
     const urls = getPhotoUrls(photo);
     const imgEl = document.getElementById("lightbox_img");
-    imgEl.src = urls.full;
-    imgEl.onerror = function () {
-      if (this.src !== urls.fallbackFull) {
-        this.src = urls.fallbackFull;
-      }
-    };
+    if (imgEl) {
+      imgEl.src = urls.full;
+      imgEl.onerror = function () {
+        if (this.src !== urls.fallbackFull) {
+          this.src = urls.fallbackFull;
+        }
+      };
+    }
 
-    document.getElementById("lightbox_title").textContent = photo.filename;
-    document.getElementById("lightbox_exif").textContent = [photo.camera, photo.lens, photo.params].filter(Boolean).join(" · ");
-    document.getElementById("lightbox_time").textContent = `📅 拍摄时间: ${photo.time}`;
+    const titleEl = document.getElementById("lightbox_title");
+    if (titleEl) titleEl.textContent = photo.filename || "";
+
+    const exifEl = document.getElementById("lightbox_exif");
+    if (exifEl) exifEl.textContent = [photo.camera, photo.lens, photo.params].filter(Boolean).join(" · ");
+
+    const timeEl = document.getElementById("lightbox_time");
+    if (timeEl) timeEl.textContent = photo.time ? `📅 拍摄时间: ${photo.time}` : "";
 
     modal.style.display = "flex";
   }
@@ -1529,6 +1536,7 @@
   }
 
   function showProfileHUD(detail) {
+    if (!detail) return;
     const hud = document.getElementById("profile_hud");
     const toggleBtn = document.getElementById("profile_toggle_btn");
     if (hud) hud.classList.add("visible");
@@ -1541,46 +1549,63 @@
     const color = activityColors[detail.type] || "#00d2ff";
 
     const badge = document.getElementById("profile_track_type_badge");
-    badge.textContent = typeLabel;
-    badge.style.color = color;
+    if (badge) {
+      badge.textContent = typeLabel;
+      badge.style.color = color;
+    }
 
-    document.getElementById("profile_track_title").textContent = detail.title;
-    document.getElementById("profile_stat_dist").textContent = detail.distance_km;
-    document.getElementById("profile_stat_gain").textContent = Math.round(detail.elevation_gain_m);
-    document.getElementById("profile_stat_max_ele").textContent = Math.round(detail.max_elevation_m);
-    document.getElementById("profile_stat_duration").textContent = formatDuration(detail.duration_s);
+    const titleEl = document.getElementById("profile_track_title");
+    if (titleEl) titleEl.textContent = detail.title || "--";
+
+    const distEl = document.getElementById("profile_stat_dist");
+    if (distEl) distEl.textContent = detail.distance_km != null ? detail.distance_km : "--";
+
+    const gainEl = document.getElementById("profile_stat_gain");
+    if (gainEl) gainEl.textContent = detail.elevation_gain_m != null ? Math.round(detail.elevation_gain_m) : "--";
+
+    const maxEleEl = document.getElementById("profile_stat_max_ele");
+    if (maxEleEl) maxEleEl.textContent = detail.max_elevation_m != null ? Math.round(detail.max_elevation_m) : "--";
+
+    const durationEl = document.getElementById("profile_stat_duration");
+    if (durationEl) durationEl.textContent = formatDuration(detail.duration_s);
     
     const speedLabel = document.getElementById("profile_speed_label");
     const speedStat = document.getElementById("profile_stat_speed");
     const speedUnit = document.getElementById("profile_speed_unit");
     
-    if (detail.type === "running" || detail.type === "trail_running") {
-      speedLabel.textContent = "配速";
-      speedStat.textContent = formatPace(detail.avg_speed_kmh);
-      speedUnit.textContent = "/KM";
-    } else {
-      speedLabel.textContent = "均速";
-      speedStat.textContent = detail.avg_speed_kmh;
-      speedUnit.textContent = "km/h";
+    if (speedLabel && speedStat && speedUnit) {
+      if (detail.type === "running" || detail.type === "trail_running") {
+        speedLabel.textContent = "配速";
+        speedStat.textContent = formatPace(detail.avg_speed_kmh);
+        speedUnit.textContent = "/KM";
+      } else {
+        speedLabel.textContent = "均速";
+        speedStat.textContent = detail.avg_speed_kmh != null ? detail.avg_speed_kmh : "--";
+        speedUnit.textContent = "km/h";
+      }
     }
 
     const hrWrapper = document.getElementById("profile_hr_wrapper");
     const hrStat = document.getElementById("profile_stat_hr");
-    if (detail.avg_hr > 0) {
-      hrWrapper.style.display = "block";
-      hrStat.textContent = detail.max_hr > detail.avg_hr ? `${detail.avg_hr} (最高 ${detail.max_hr})` : `${detail.avg_hr}`;
-    } else {
-      hrWrapper.style.display = "none";
+    if (hrWrapper && hrStat) {
+      if (detail.avg_hr > 0) {
+        hrWrapper.style.display = "block";
+        hrStat.textContent = detail.max_hr > detail.avg_hr ? `${detail.avg_hr} (最高 ${detail.max_hr})` : `${detail.avg_hr}`;
+      } else {
+        hrWrapper.style.display = "none";
+      }
     }
 
     // 照片按钮控制
     const btnPhotos = document.getElementById("btn_toggle_photos");
     const photoCountText = document.getElementById("photo_count_btn_text");
-    if (detail.photos && detail.photos.length > 0) {
-      btnPhotos.style.display = "inline-flex";
-      photoCountText.textContent = `沿途作品 (${detail.photos.length})`;
-    } else {
-      btnPhotos.style.display = "none";
+    if (btnPhotos) {
+      if (detail.photos && detail.photos.length > 0) {
+        btnPhotos.style.display = "inline-flex";
+        if (photoCountText) photoCountText.textContent = `沿途作品 (${detail.photos.length})`;
+      } else {
+        btnPhotos.style.display = "none";
+      }
     }
 
     drawElevationProfile(detail);
