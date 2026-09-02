@@ -1,10 +1,11 @@
 package photo
 
 import (
+	"cmp"
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -383,8 +384,8 @@ func upsertManifestYear(manifest GalleryManifest, album YearAlbum) GalleryManife
 		manifest.Years = append(manifest.Years, buildYearSummary(album))
 	}
 
-	sort.Slice(manifest.Years, func(i, j int) bool {
-		return manifest.Years[i].Year > manifest.Years[j].Year
+	slices.SortFunc(manifest.Years, func(a, b GalleryYearSummary) int {
+		return cmp.Compare(b.Year, a.Year)
 	})
 	return manifest
 }
@@ -412,10 +413,7 @@ func buildMonthSummaries(photos []Photo) []GalleryMonthSummary {
 	buckets := make(map[string]*monthBucket)
 	order := make([]string, 0)
 	for _, photo := range photos {
-		month := photo.Month
-		if month == "" {
-			month = "01"
-		}
+		month := cmp.Or(photo.Month, "01")
 		bucket, ok := buckets[month]
 		if !ok {
 			bucket = &monthBucket{}
@@ -428,8 +426,8 @@ func buildMonthSummaries(photos []Photo) []GalleryMonthSummary {
 		}
 	}
 
-	sort.Slice(order, func(i, j int) bool {
-		return order[i] > order[j]
+	slices.SortFunc(order, func(a, b string) int {
+		return cmp.Compare(b, a)
 	})
 
 	summaries := make([]GalleryMonthSummary, 0, len(order))
@@ -445,10 +443,7 @@ func buildMonthSummaries(photos []Photo) []GalleryMonthSummary {
 }
 
 func firstPhotoThumbnail(photo Photo) string {
-	if photo.Thumbnail != "" {
-		return photo.Thumbnail
-	}
-	return photo.Path
+	return cmp.Or(photo.Thumbnail, photo.Path)
 }
 
 func firstNonEmptyThumbnail(photos []Photo) string {
@@ -514,20 +509,20 @@ func normalizeYearAlbum(album *YearAlbum) {
 }
 
 func sortAlbums(albums []YearAlbum) {
-	sort.Slice(albums, func(i, j int) bool {
-		return albums[i].Year > albums[j].Year
+	slices.SortFunc(albums, func(a, b YearAlbum) int {
+		return cmp.Compare(b.Year, a.Year)
 	})
 }
 
 func sortPhotos(photos []Photo) {
-	sort.Slice(photos, func(i, j int) bool {
-		if photos[i].Date != photos[j].Date {
-			return photos[i].Date > photos[j].Date
+	slices.SortFunc(photos, func(a, b Photo) int {
+		if a.Date != b.Date {
+			return cmp.Compare(b.Date, a.Date)
 		}
-		if photos[i].Timestamp != photos[j].Timestamp {
-			return photos[i].Timestamp > photos[j].Timestamp
+		if a.Timestamp != b.Timestamp {
+			return cmp.Compare(b.Timestamp, a.Timestamp)
 		}
-		return photos[i].Filename > photos[j].Filename
+		return cmp.Compare(b.Filename, a.Filename)
 	})
 }
 

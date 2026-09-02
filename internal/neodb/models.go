@@ -64,14 +64,14 @@ type T struct {
 			Rating             float64     `json:"rating"`
 			RatingCount        int         `json:"rating_count"`
 			RatingDistribution []int       `json:"rating_distribution"`
-			Tags               interface{} `json:"tags"`
+			Tags               any         `json:"tags"`
 			Brief              string      `json:"brief"`
 			Id                 string      `json:"id"`
 			Uuid               string      `json:"uuid"`
 			Url                string      `json:"url"`
 			ApiUrl             string      `json:"api_url"`
 			Category           string      `json:"category"`
-			ParentUuid         interface{} `json:"parent_uuid"`
+			ParentUuid         any         `json:"parent_uuid"`
 			DisplayTitle       string      `json:"display_title"`
 			ExternalResources  []struct {
 				Url string `json:"url"`

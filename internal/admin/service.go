@@ -87,26 +87,16 @@ func (s *PhotoAdminService) ListPhotosPage(req ListPhotosPageRequest) (PhotoList
 	limit := req.Limit
 	if limit <= 0 {
 		limit = 120
-	}
-	if limit > 300 {
-		limit = 300
+	} else {
+		limit = min(limit, 300)
 	}
 
 	offset, err := decodeCursor(req.Cursor)
 	if err != nil {
 		return PhotoListPage{}, fmt.Errorf("invalid cursor: %w", err)
 	}
-	if offset < 0 {
-		offset = 0
-	}
-	if offset > len(filtered) {
-		offset = len(filtered)
-	}
-
-	end := offset + limit
-	if end > len(filtered) {
-		end = len(filtered)
-	}
+	offset = min(max(offset, 0), len(filtered))
+	end := min(offset+limit, len(filtered))
 
 	items := make([]PhotoListItem, 0, end-offset)
 	for _, item := range filtered[offset:end] {

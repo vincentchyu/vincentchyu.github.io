@@ -86,7 +86,7 @@ func CfKvSetValue(keyName, value string, expirationTtl float64) error {
 			AccountID:     cloudflare.F(config.AccountId),
 			Value:         cloudflare.F(value),
 			ExpirationTTL: cloudflare.F(expirationTtl),
-			Metadata:      cloudflare.F[any](map[string]interface{}{}),
+			Metadata:      cloudflare.F[any](map[string]any{}),
 		},
 	)
 	if err != nil {

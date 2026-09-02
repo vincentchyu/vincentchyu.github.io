@@ -99,7 +99,7 @@ func getEnvWithDefault(defaultValue string, names ...string) string {
 func NewR2Client(config *R2Config) (*R2Client, error) {
 	// Create custom endpoint resolver
 	customResolver := aws.EndpointResolverWithOptionsFunc(
-		func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		func(service, region string, options ...any) (aws.Endpoint, error) {
 			return aws.Endpoint{
 				URL:               config.Endpoint,
 				SigningRegion:     config.Region,
@@ -279,10 +279,7 @@ func (r *R2Client) DeleteObjects(keys []string) error {
 	// S3 batch delete limit is 1000
 	batchSize := 1000
 	for i := 0; i < len(objects); i += batchSize {
-		end := i + batchSize
-		if end > len(objects) {
-			end = len(objects)
-		}
+		end := min(i+batchSize, len(objects))
 
 		batch := objects[i:end]
 		_, err := r.client.DeleteObjects(

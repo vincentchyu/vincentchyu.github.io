@@ -1,6 +1,6 @@
 module github.com/vincentchyu/vincentchyu.github.io
 
-go 1.26.2
+go 1.27.1
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.40.0
@@ -12,6 +12,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.11.1
 	github.com/tdewolff/minify/v2 v2.24.12
+	github.com/vincentchyu/photools v0.0.0
 	github.com/volcengine/ve-tos-golang-sdk/v2 v2.9.2
 	golang.org/x/image v0.33.0
 )
@@ -38,7 +39,6 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	github.com/vincentchyu/photools v0.0.0
 	golang.org/x/net v0.0.0-20221002022538-bcab6841153b // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

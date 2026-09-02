@@ -17,7 +17,7 @@ import (
 type ExifExtractor interface {
 	// Extract 从图片文件中提取 EXIF 数据
 	// 返回: EXIF 数据映射, 宽度, 高度, 拍摄时间, 错误
-	Extract(filePath string) (map[string]interface{}, int, int, time.Time, error)
+	Extract(filePath string) (map[string]any, int, int, time.Time, error)
 }
 
 // ExifExtractorType 定义提取器类型
@@ -37,7 +37,7 @@ var (
 type GoExifExtractor struct{}
 
 // Extract 实现 ExifExtractor 接口
-func (e *GoExifExtractor) Extract(filePath string) (map[string]interface{}, int, int, time.Time, error) {
+func (e *GoExifExtractor) Extract(filePath string) (map[string]any, int, int, time.Time, error) {
 	return extractExifNative(filePath)
 }
 
@@ -45,7 +45,7 @@ func (e *GoExifExtractor) Extract(filePath string) (map[string]interface{}, int,
 type ExifToolExtractor struct{}
 
 // Extract 实现 ExifExtractor 接口
-func (e *ExifToolExtractor) Extract(filePath string) (map[string]interface{}, int, int, time.Time, error) {
+func (e *ExifToolExtractor) Extract(filePath string) (map[string]any, int, int, time.Time, error) {
 	return extractExifWithTool(filePath)
 }
 
@@ -60,7 +60,7 @@ func GetExifExtractor() ExifExtractor {
 }
 
 // extractExifNative uses go-exif to extract EXIF data
-func extractExifNative(filePath string) (map[string]interface{}, int, int, time.Time, error) {
+func extractExifNative(filePath string) (map[string]any, int, int, time.Time, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, 0, 0, time.Time{}, err
@@ -84,7 +84,7 @@ func extractExifNative(filePath string) (map[string]interface{}, int, int, time.
 		return nil, 0, 0, time.Time{}, err
 	}
 
-	exifData := make(map[string]interface{})
+	exifData := make(map[string]any)
 	var width, height int
 	var dateTaken time.Time
 
@@ -154,7 +154,7 @@ func extractExifNative(filePath string) (map[string]interface{}, int, int, time.
 }
 
 // extractExifWithTool uses exiftool command to extract EXIF data
-func extractExifWithTool(filePath string) (map[string]interface{}, int, int, time.Time, error) {
+func extractExifWithTool(filePath string) (map[string]any, int, int, time.Time, error) {
 	// 执行 exiftool -json 命令
 	cmd := exec.Command("exiftool", "-json", "-charset", "utf8", filePath)
 	output, err := cmd.Output()
@@ -163,7 +163,7 @@ func extractExifWithTool(filePath string) (map[string]interface{}, int, int, tim
 	}
 
 	// 解析 JSON 输出
-	var results []map[string]interface{}
+	var results []map[string]any
 	if err := json.Unmarshal(output, &results); err != nil {
 		return nil, 0, 0, time.Time{}, fmt.Errorf("failed to parse exiftool output: %w", err)
 	}
@@ -226,7 +226,7 @@ func extractExifWithTool(filePath string) (map[string]interface{}, int, int, tim
 	}
 
 	// 过滤字段,只保留白名单中的字段
-	filteredExifData := make(map[string]interface{})
+	filteredExifData := make(map[string]any)
 	for key, value := range rawExifData {
 		if allowedFields[key] {
 			filteredExifData[key] = value
@@ -257,8 +257,8 @@ func decodeUCS2(b []byte) string {
 }
 
 // normalizeExif transforms raw go-exif data to legacy format
-func normalizeExif(raw map[string]interface{}) map[string]interface{} {
-	normalized := make(map[string]interface{})
+func normalizeExif(raw map[string]any) map[string]any {
+	normalized := make(map[string]any)
 
 	// Helper to get string value
 	getString := func(key string) string {

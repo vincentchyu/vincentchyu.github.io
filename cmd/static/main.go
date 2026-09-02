@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
 	"io"
 	"log"
@@ -22,10 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	token := os.Getenv("THUNDERFOREST_API_TOKEN")
-	if token == "" {
-		token = os.Getenv("THUNDERFORESR_API_TOKEN")
-	}
+	token := cmp.Or(os.Getenv("THUNDERFOREST_API_TOKEN"), os.Getenv("THUNDERFORESR_API_TOKEN"))
 	if token != "" {
 		log.Println("✓ Thunderforest tile proxy enabled")
 	} else {
@@ -42,10 +40,7 @@ func main() {
 		},
 	)
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
-	}
+	port := cmp.Or(os.Getenv("PORT"), "3000")
 	log.Printf("Starting local server at http://localhost:%s\n", port)
 	log.Printf("Serving files from: %s\n", rootDir)
 	log.Println("Press Ctrl+C to stop")
@@ -59,19 +54,13 @@ func main() {
 var tileClient = createTileClient()
 
 func createTileClient() *http.Client {
-	proxyURLStr := os.Getenv("https_proxy")
-	if proxyURLStr == "" {
-		proxyURLStr = os.Getenv("HTTPS_PROXY")
-	}
-	if proxyURLStr == "" {
-		proxyURLStr = os.Getenv("http_proxy")
-	}
-	if proxyURLStr == "" {
-		proxyURLStr = os.Getenv("HTTP_PROXY")
-	}
-	if proxyURLStr == "" {
-		proxyURLStr = os.Getenv("all_proxy")
-	}
+	proxyURLStr := cmp.Or(
+		os.Getenv("https_proxy"),
+		os.Getenv("HTTPS_PROXY"),
+		os.Getenv("http_proxy"),
+		os.Getenv("HTTP_PROXY"),
+		os.Getenv("all_proxy"),
+	)
 
 	transport := &http.Transport{
 		Proxy: http.ProxyFromEnvironment,

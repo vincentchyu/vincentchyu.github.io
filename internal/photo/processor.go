@@ -2,6 +2,7 @@ package photo
 
 import (
 	"bytes"
+	"cmp"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 
@@ -47,20 +48,20 @@ const (
 
 // Photo represents a single photo entry
 type Photo struct {
-	Filename  string                 `json:"filename"`
-	Path      string                 `json:"path"`
-	Thumbnail string                 `json:"thumbnail"`
-	Alt       string                 `json:"alt"`
-	Year      string                 `json:"year"`
-	Month     string                 `json:"month"`
-	Date      string                 `json:"date"` // YYYY-MM-DD for sorting
-	Width     int                    `json:"width,omitempty"`
-	Height    int                    `json:"height,omitempty"`
-	Exif      map[string]interface{} `json:"exif,omitempty"`    // Complete EXIF data
-	Hash      string                 `json:"hash,omitempty"`    // File hash for caching
-	Timestamp int64                  `json:"-"`                 // Timestamp for sorting
-	IsHidden  bool                   `json:"is_hidden"`         // is_hidden
-	Subject   []string               `json:"Subject,omitempty"` // Custom tags
+	Filename  string         `json:"filename"`
+	Path      string         `json:"path"`
+	Thumbnail string         `json:"thumbnail"`
+	Alt       string         `json:"alt"`
+	Year      string         `json:"year"`
+	Month     string         `json:"month"`
+	Date      string         `json:"date"` // YYYY-MM-DD for sorting
+	Width     int            `json:"width,omitempty"`
+	Height    int            `json:"height,omitempty"`
+	Exif      map[string]any `json:"exif,omitempty"`    // Complete EXIF data
+	Hash      string         `json:"hash,omitempty"`    // File hash for caching
+	Timestamp int64          `json:"-"`                 // Timestamp for sorting
+	IsHidden  bool           `json:"is_hidden"`         // is_hidden
+	Subject   []string       `json:"Subject,omitempty"` // Custom tags
 }
 
 // YearAlbum represents a collection of photos for a specific year
@@ -255,7 +256,7 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string, force boo
 	}
 
 	// Extract tags from EXIF Subject if available
-	if subj, ok := exifData["Subject"].([]interface{}); ok {
+	if subj, ok := exifData["Subject"].([]any); ok {
 		for _, s := range subj {
 			if str, ok := s.(string); ok {
 				photo.Subject = append(photo.Subject, str)
@@ -264,7 +265,7 @@ func (p *PhotoProcessor) processPhoto(path string, yearDirName string, force boo
 	} else if subj, ok := exifData["Subject"].(string); ok {
 		// Sometimes it's a single string
 		photo.Subject = []string{subj}
-	} else if kw, ok := exifData["Keywords"].([]interface{}); ok {
+	} else if kw, ok := exifData["Keywords"].([]any); ok {
 		for _, k := range kw {
 			if str, ok := k.(string); ok {
 				photo.Subject = append(photo.Subject, str)
@@ -295,7 +296,7 @@ func (p *PhotoProcessor) ProcessPhoto(path string, yearDirName string) (Photo, e
 // RunUpdatePhotosWithRoot processes all photos and returns an error to the caller.
 func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string, force bool) error {
 	// Helper for logging
-	logMsg := func(format string, v ...interface{}) {
+	logMsg := func(format string, v ...any) {
 		msg := fmt.Sprintf(format, v...)
 		log.Println(msg) // Keep stdout logging
 		if logChan != nil {
@@ -356,14 +357,11 @@ func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string, force bool) 
 	var wg sync.WaitGroup
 
 	// Start workers
-	numWorkers := MaxConcurrency
-	if len(jobs) < numWorkers {
-		numWorkers = len(jobs)
-	}
+	numWorkers := min(MaxConcurrency, len(jobs))
 
 	logMsg("🟢 Starting %d workers for %d photos...", numWorkers, len(jobs))
 
-	for i := 0; i < numWorkers; i++ {
+	for range numWorkers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -374,11 +372,7 @@ func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string, force bool) 
 					continue
 				}
 
-				// 全部清空
-				if false {
-				} else {
-					resultsChan <- photo
-				}
+				resultsChan <- photo
 			}
 		}()
 	}
@@ -410,24 +404,24 @@ func RunUpdatePhotosWithRoot(rootDir string, logChan chan<- string, force bool) 
 	var newAlbums []YearAlbum
 	for year, photos := range albumsMap {
 		// Sort photos by date desc, then timestamp desc, then filename desc
-		sort.Slice(
-			photos, func(i, j int) bool {
-				if photos[i].Date != photos[j].Date {
-					return photos[i].Date > photos[j].Date
+		slices.SortFunc(
+			photos, func(a, b Photo) int {
+				if a.Date != b.Date {
+					return cmp.Compare(b.Date, a.Date)
 				}
-				if photos[i].Timestamp != photos[j].Timestamp {
-					return photos[i].Timestamp > photos[j].Timestamp
+				if a.Timestamp != b.Timestamp {
+					return cmp.Compare(b.Timestamp, a.Timestamp)
 				}
-				return photos[i].Filename > photos[j].Filename
+				return cmp.Compare(b.Filename, a.Filename)
 			},
 		)
 		newAlbums = append(newAlbums, YearAlbum{Year: year, Photos: photos})
 	}
 
 	// Sort albums by year desc
-	sort.Slice(
-		newAlbums, func(i, j int) bool {
-			return newAlbums[i].Year > newAlbums[j].Year
+	slices.SortFunc(
+		newAlbums, func(a, b YearAlbum) int {
+			return cmp.Compare(b.Year, a.Year)
 		},
 	)
 
@@ -456,7 +450,7 @@ func UpdatePhotosHandler(logChan chan<- string) {
 
 // JSONEqual compares two JSON byte slices for equality, ignoring whitespace and key order
 func JSONEqual(a, b []byte) bool {
-	var j1, j2 interface{}
+	var j1, j2 any
 	if err := json.Unmarshal(a, &j1); err != nil {
 		return false
 	}
