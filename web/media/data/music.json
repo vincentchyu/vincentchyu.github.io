@@ -798,17 +798,6 @@
   },
   {
     "item": {
-      "uuid": "4mOdqqLQk2uP9TJfULwXgv",
-      "title": "Tell Them, I'm Here - EP",
-      "cover_image_url": "https://neodb.social/m/item/musicbrainz_releasegroup/2026/08/07/bb5e756b-ae31-4452-9ab1-ca50685ab8ee.jpg",
-      "category": "music",
-      "url": "/album/4mOdqqLQk2uP9TJfULwXgv",
-      "release_date": "2025-11-14"
-    },
-    "created_time": "2025-08-07T13:54:00Z"
-  },
-  {
-    "item": {
       "uuid": "1EcnL39rdo8xrMl0N9QhOK",
       "title": "What's Going On",
       "cover_image_url": "https://neodb.social/m/item/apple_music/2025/01/11/0468461c-95ac-4ded-8335-9bcf8610b857.jpg",
@@ -816,6 +805,17 @@
       "url": "/album/1EcnL39rdo8xrMl0N9QhOK",
       "rating": 9,
       "release_date": "1971-05-21"
+    },
+    "created_time": "2025-08-07T13:54:00Z"
+  },
+  {
+    "item": {
+      "uuid": "4mOdqqLQk2uP9TJfULwXgv",
+      "title": "Tell Them, I'm Here - EP",
+      "cover_image_url": "https://neodb.social/m/item/musicbrainz_releasegroup/2026/08/07/bb5e756b-ae31-4452-9ab1-ca50685ab8ee.jpg",
+      "category": "music",
+      "url": "/album/4mOdqqLQk2uP9TJfULwXgv",
+      "release_date": "2025-11-14"
     },
     "created_time": "2025-08-07T13:54:00Z"
   },
@@ -847,6 +847,20 @@
   },
   {
     "item": {
+      "uuid": "0Sa1TZeTpWcNZvM8lT6ikt",
+      "title": "不正常飞船",
+      "cover_image_url": "https://neodb.social/m/album/2022/09/269ee61d95-8afd-4367-9f2c-6800f7ed40bb.jpg",
+      "category": "music",
+      "url": "/album/0Sa1TZeTpWcNZvM8lT6ikt",
+      "rating": 7.8,
+      "release_date": "2022-09-23"
+    },
+    "created_time": "2025-07-17T13:54:00Z",
+    "comment_text": "爵士入门",
+    "rating_grade": 7
+  },
+  {
+    "item": {
       "uuid": "568rH4yOPt64wqhbZ3GF6m",
       "title": "他们说忘了摇滚有问题",
       "cover_image_url": "https://neodb.social/m/album/2021/09/159912b1c2-524b-4494-be90-a57cce9ee11c.jpg",
@@ -857,19 +871,6 @@
     },
     "created_time": "2025-07-17T13:54:00Z",
     "rating_grade": 7
-  },
-  {
-    "item": {
-      "uuid": "2JijjtZBJhIH8uahKKKQtz",
-      "title": "OK Computer",
-      "cover_image_url": "https://neodb.social/m/album/2021/09/15b7c2da05-75f9-4d79-a1af-ec3025467aec.jpg",
-      "category": "music",
-      "url": "/album/2JijjtZBJhIH8uahKKKQtz",
-      "rating": 9.3,
-      "release_date": "1997-05-21"
-    },
-    "created_time": "2025-07-17T13:54:00Z",
-    "rating_grade": 9
   },
   {
     "item": {
@@ -886,17 +887,16 @@
   },
   {
     "item": {
-      "uuid": "0Sa1TZeTpWcNZvM8lT6ikt",
-      "title": "不正常飞船",
-      "cover_image_url": "https://neodb.social/m/album/2022/09/269ee61d95-8afd-4367-9f2c-6800f7ed40bb.jpg",
+      "uuid": "2JijjtZBJhIH8uahKKKQtz",
+      "title": "OK Computer",
+      "cover_image_url": "https://neodb.social/m/album/2021/09/15b7c2da05-75f9-4d79-a1af-ec3025467aec.jpg",
       "category": "music",
-      "url": "/album/0Sa1TZeTpWcNZvM8lT6ikt",
-      "rating": 7.8,
-      "release_date": "2022-09-23"
+      "url": "/album/2JijjtZBJhIH8uahKKKQtz",
+      "rating": 9.3,
+      "release_date": "1997-05-21"
     },
     "created_time": "2025-07-17T13:54:00Z",
-    "comment_text": "爵士入门",
-    "rating_grade": 7
+    "rating_grade": 9
   },
   {
     "item": {
@@ -1460,7 +1460,7 @@
       "cover_image_url": "https://neodb.social/m/album/2022/09/13c0f90d26-c561-48be-b6f2-42e9b3368c0f.jpg",
       "category": "music",
       "url": "/album/4wFgrYAEtXpxdeF0jpOUwN",
-      "rating": 7.6,
+      "rating": 7.5,
       "release_date": "2022-08-29"
     },
     "created_time": "2022-08-30T13:54:00Z"
