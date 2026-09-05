@@ -46,9 +46,11 @@
 - `go run cmd/merge-tracks/main.go`：根据清单执行双向点位融合弥补与心率时空插值合并（支持 `--hiking`、`--running`、`-id <id>`、`-name <keyword>`、`-all`）。
 - `go run cmd/concat-tracks/main.go`：将多日/多段分段轨迹按天数时序首尾顺次相连拼接为完整大环线（支持 `-pattern`、`-title`、`-out`）。
 - `./run.sh init`：生成并安装 macOS LaunchAgent。
-- `./run.sh start`：同时启动后台服务和本地博客预览。
+- `./run.sh start`：同时启动照片管理后台(:3002)和本地博客预览(:3000)。
 - `./run.sh stop`：同时停止后台服务和本地博客预览。
-- `./run.sh update`：运行照片更新。
+- `./run.sh updatep`：运行照片更新。
+- `./run.sh updatet`：运行山河足迹轨迹更新与摄影时空对齐。
+- `./run.sh synct`：一键自动同步 iPhone 苹果健康增量数据到山河足迹（支持 `./run.sh synct [zip路径]`）。
 
 `run.sh` 会先检查 `exiftool`，缺失时尝试用 Homebrew 安装。
 
