@@ -118,7 +118,7 @@
         <div class="dropdown-wrapper">
           <button id="btn_toggle_basemap" class="toolbar-btn active-basemap-btn" type="button" title="切换底图">
             <span id="active_basemap_icon">🌙</span>
-            <span id="active_basemap_name">暗黑地形</span>
+            <span id="active_basemap_name" class="btn-text">暗黑地形</span>
             <span class="dropdown-arrow">▾</span>
           </button>
           <div id="basemap_dropdown" class="dropdown-menu basemap-menu" style="display: none;">
@@ -188,14 +188,14 @@
           <div class="dropdown-wrapper">
             <button id="btn_toggle_overlays" class="toolbar-btn" type="button" title="图层控制">
               <span>👁️</span>
-              <span>图层</span>
+              <span class="btn-text">图层</span>
               <span class="dropdown-arrow">▾</span>
             </button>
             <div id="overlays_dropdown" class="dropdown-menu overlays-menu" style="display: none;">
               <div class="dropdown-header">图层叠加控制</div>
               <label class="overlay-option">
                 <input type="checkbox" id="chk_overlay_provinces" checked />
-                <span>🗺️ 点亮探索省份</span>
+                <span>🗺️ 探索迷雾 (Fog of War)</span>
               </label>
               <label class="overlay-option">
                 <input type="checkbox" id="chk_overlay_tracks" checked />
@@ -209,28 +209,42 @@
                 <input type="checkbox" id="chk_overlay_waypoints" checked />
                 <span>🚩 起终点标记</span>
               </label>
+              <div class="dropdown-divider" style="margin: 6px 0; border-top: 1px solid var(--hud-divider);"></div>
+              <button class="menu-item" id="btn_open_map_settings_mobile" type="button" style="padding: 6px 8px;">
+                <span class="item-icon">⚙️</span>
+                <span class="item-name">图源与凭据配置</span>
+              </button>
             </div>
           </div>
 
           <!-- Map Settings Modal Trigger -->
           <button id="btn_open_map_settings" class="toolbar-btn" type="button" title="图源与 Token 配置">
             <span>⚙️</span>
-            <span>设置</span>
+            <span class="btn-text">设置</span>
           </button>
 
           <!-- Fullscreen Trigger -->
           <button id="btn_toggle_fullscreen" class="fullscreen-btn" type="button" title="全屏模式">
             <span id="fullscreen_icon">⛶</span>
-            <span>全屏</span>
+            <span class="btn-text">全屏</span>
           </button>
 
-          <!-- Highlight Provinces Trigger -->
-          <button id="btn_toggle_provinces" class="toolbar-btn active" type="button" title="点击切换点亮省份" aria-pressed="true">
+          <!-- Reset to World View Trigger -->
+          <button id="btn_reset_world_view" class="toolbar-btn" type="button" title="复位到全球宏观探索版图">
+            <span>🌍</span>
+            <span class="btn-text">世界全景</span>
+          </button>
+
+          <!-- Highlight Provinces / Fog of War Trigger -->
+          <button id="btn_toggle_provinces" class="toolbar-btn active" type="button" title="点击切换探索迷雾遮罩" aria-pressed="true">
             <span>🗺️</span>
-            <span>点亮省份</span>
+            <span class="btn-text">探索迷雾</span>
           </button>
         </div>
       </div>
+
+      <!-- Sidebar Backdrop for Mobile Bottom Sheet -->
+      <div id="sidebar_backdrop" class="sidebar-backdrop" style="display: none;"></div>
 
       <!-- Embedded Sidebar Drawer -->
       <aside id="sidebar" class="footprint-sidebar">
@@ -238,9 +252,9 @@
           <div class="sidebar-title-row">
             <div class="sidebar-title-group">
               <span class="sidebar-title">轨迹列表</span>
-              <span class="sidebar-provinces-badge" title="当前分类已点亮省份数">
+              <span class="sidebar-provinces-badge" title="当前分类已解锁探索省份数">
                 <span>🗺️</span>
-                <span>点亮 <b id="stat_total_provinces">0</b> 个省份</span>
+                <span>已解锁 <b id="stat_total_provinces">0</b> 个省份</span>
               </span>
             </div>
             <button id="sidebar_close_btn" class="sidebar-close-btn" type="button" aria-label="收起列表">✕</button>

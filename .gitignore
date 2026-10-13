@@ -28,3 +28,7 @@ internal/imaging/img.webp
 /.ollamassist/
 !web/tracks/data/**/*.json
 !web/tracks/data/**/*.geojson
+
+# Compiled dynamic libraries
+*.dylib
+/libphotools.dylib

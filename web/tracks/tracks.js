@@ -29,6 +29,11 @@
 
   // 省级行政边界数据
   let provincesGeoJSON = null;
+  // 世界陆地板块边界数据 (用于仅在未探索陆地覆盖战争迷雾，保留深邃大洋)
+  let worldLandGeoJSON = null;
+  // 世界地理大洲与主要国家注记数据与标记集 (宏观浮雕注记)
+  let worldLabelsGeoJSON = null;
+  let worldLabelMarkers = [];
 
   // 标点与交互光标
   let hoverMarker = null;
@@ -80,7 +85,9 @@
 
   function normalizeProvince(p) {
     if (!p || typeof p !== "string") return "";
-    return p.replace(/(省|市|特别行政区|回族自治区|维吾尔自治区|壮族自治区|自治区)$/, "").trim();
+    const clean = p.replace(/(省|市|特别行政区|回族自治区|维吾尔自治区|壮族自治区|自治区)$/, "").trim();
+    if (clean === "尖沙咀" || clean === "旺角" || clean === "中西区") return "香港";
+    return clean;
   }
 
   function getActiveProvinceColor(type = currentFilterType) {
@@ -89,6 +96,13 @@
       return activityColors[type];
     }
     return isDark ? "#00d2ff" : "#2563eb";
+  }
+
+  function buildLandFogGeoJSON() {
+    if (worldLandGeoJSON && Array.isArray(worldLandGeoJSON.features) && worldLandGeoJSON.features.length > 0) {
+      return worldLandGeoJSON;
+    }
+    return { type: "FeatureCollection", features: [] };
   }
 
   function init() {
@@ -105,6 +119,8 @@
     initLayoutObserver();
     loadManifest();
     loadProvinceBoundaries();
+    loadWorldLandBoundaries();
+    loadWorldLabels();
     adjustWorkspaceHeight();
   }
 
@@ -201,12 +217,29 @@
     };
   }
 
+  // 全球宏观世界版图视野边界 (展示各大洲与四大洋完整的魔兽战争迷雾总览)
+  const WORLD_VIEW_BOUNDS = [
+    [-170.0, -58.0],
+    [175.0, 72.0],
+  ];
+
+  function fitWorldView(animated = false) {
+    if (!map) return;
+    const isMobile = window.innerWidth <= 768;
+    const leftPad = isMobile ? 20 : 340;
+    map.fitBounds(WORLD_VIEW_BOUNDS, {
+      padding: { top: 40, bottom: 40, left: leftPad, right: 40 },
+      maxZoom: 2.2,
+      duration: animated ? 1200 : 0,
+    });
+  }
+
   function initMap() {
     map = new maplibregl.Map({
       container: "map",
       style: getMapStyleForTheme(currentTheme),
-      center: [105.0, 35.0],
-      zoom: 4,
+      center: [20.0, 15.0],
+      zoom: 1.5,
       pitch: 0,
       bearing: 0,
       attributionControl: false,
@@ -221,12 +254,18 @@
       mapLayersReady = true;
       renderMapTracks();
       applyOverlayVisibility();
+      renderWorldLabels();
         if (activeTrackDetail || pendingSelectedTrackDetail) {
             const detailToRender = activeTrackDetail || pendingSelectedTrackDetail;
             renderSelectedTrackOnMap(detailToRender);
         applyFocusDimming(true);
+      } else if (currentFilterType === "all" && !searchQuery) {
+        fitWorldView(false);
       }
     });
+
+    // 缩放级别变化时实时更新大洲与国家注记的层级显隐
+    map.on("zoom", updateWorldLabelsVisibility);
 
     // 点击事件代理
     map.on("click", (e) => {
@@ -314,16 +353,28 @@
 
       // 找到当前地图中第一个存在的矢量业务图层作为 beforeId，保证 base-raster-layer 永远在最底层
       const businessLayers = [
+          "world-land-fog",
+          "world-land-fog-cloud",
+          "world-land-fog-casing",
+          "world-fog-mask",
+          "province-unexplored-fill",
+          "province-unexplored-cloud",
           "province-base-line",
           "province-dim-fill",
           "province-highlight-fill",
+          "province-glow-outer",
+          "province-glow-middle",
+          "province-glow-core",
           "province-highlight-casing",
           "province-highlight-line",
           "all-tracks-glow",
           "all-tracks-core",
           "selected-track-casing",
           "selected-track-glow",
-          "selected-track-core"
+          "selected-track-core",
+          "selected-track-transfer-casing",
+          "selected-track-transfer-glow",
+          "selected-track-transfer-core"
       ];
       let firstTrackLayer = undefined;
       for (let i = 0; i < businessLayers.length; i++) {
@@ -365,10 +416,213 @@
     }
   }
 
+  async function loadWorldLandBoundaries() {
+    try {
+      const data = await fetchJsonSafe(getDataUrl("data/world-land.geojson"), "data/world-land.geojson");
+      worldLandGeoJSON = data;
+      if (map && map.getSource("world-land-fog")) {
+        map.getSource("world-land-fog").setData(worldLandGeoJSON);
+      }
+      updateHighlightedProvinces();
+    } catch (err) {
+      console.warn("Failed to load world land geojson:", err);
+    }
+  }
+
+  async function loadWorldLabels() {
+    try {
+      const data = await fetchJsonSafe(getDataUrl("data/world-labels.geojson"), "data/world-labels.geojson");
+      worldLabelsGeoJSON = data;
+      renderWorldLabels();
+    } catch (err) {
+      console.warn("Failed to load world labels geojson:", err);
+    }
+  }
+
+  function renderWorldLabels() {
+    if (!map || !worldLabelsGeoJSON || !worldLabelsGeoJSON.features) return;
+
+    // 清理旧有的 Marker 实例
+    worldLabelMarkers.forEach(({ marker }) => {
+      try {
+        marker.remove();
+      } catch (_) {}
+    });
+    worldLabelMarkers = [];
+
+    worldLabelsGeoJSON.features.forEach((feature) => {
+      const props = feature.properties || {};
+      const coords = feature.geometry && feature.geometry.coordinates;
+      if (!coords || coords.length < 2) return;
+
+      const el = document.createElement("div");
+      el.className = `world-geo-label ${props.type || "country"}`;
+      el.textContent = props.label || props.name || "";
+
+      const marker = new maplibregl.Marker({ element: el, anchor: "center" })
+        .setLngLat(coords)
+        .addTo(map);
+
+      worldLabelMarkers.push({
+        marker,
+        el,
+        props,
+      });
+    });
+
+    updateWorldLabelsVisibility();
+  }
+
+  function updateWorldLabelsVisibility() {
+    if (!map || worldLabelMarkers.length === 0) return;
+
+    const zoom = map.getZoom();
+    const isProvincesVisible = !!overlayConfig.provinces;
+    const isDetailFocused = !!activeTrackId;
+
+    worldLabelMarkers.forEach(({ el, props }) => {
+      // 1. 若探索迷雾图层关闭，或当前进入了单条轨迹聚焦详情模式，全部淡出隐藏
+      if (!isProvincesVisible || isDetailFocused) {
+        el.classList.add("dimmed");
+        return;
+      }
+
+      // 2. 深度放大至城市/街道尺度（zoom > 5.5）时自动隐藏宏观大洲与国家注记
+      if (zoom > 5.5) {
+        el.classList.add("dimmed");
+        return;
+      }
+
+      const minzoom = props.minzoom !== undefined ? props.minzoom : 0;
+      const maxzoom = props.maxzoom !== undefined ? props.maxzoom : 20;
+
+      if (zoom >= minzoom && zoom <= maxzoom) {
+        el.classList.remove("dimmed");
+      } else {
+        el.classList.add("dimmed");
+      }
+    });
+  }
+
+  // 预加载《文明VI》大地图风格的无缝深邃云雾迷雾贴图 (fog-cloud.png)
+  let cloudFogImageLoaded = false;
+  let cloudFogImg = null;
+
+  function initCloudFogLoader() {
+    if (cloudFogImg) return;
+    try {
+      cloudFogImg = new Image();
+      cloudFogImg.onload = () => {
+        cloudFogImageLoaded = true;
+        applyCloudFogPatternToMap();
+      };
+      cloudFogImg.onerror = (err) => {
+        console.warn("Failed to load fog-cloud.png:", err);
+      };
+      cloudFogImg.src = getDataUrl("images/fog-cloud.png?v=4");
+    } catch (_) {}
+  }
+
+  function applyCloudFogPatternToMap() {
+    if (!map || !cloudFogImageLoaded || !cloudFogImg) return;
+    try {
+      if (!map.hasImage("cloud-fog-pattern")) {
+        map.addImage("cloud-fog-pattern", cloudFogImg);
+      }
+      const vis = overlayConfig.provinces ? "visible" : "none";
+      if (map.getLayer("world-land-fog-cloud")) {
+        map.setPaintProperty("world-land-fog-cloud", "fill-pattern", "cloud-fog-pattern");
+        map.setLayoutProperty("world-land-fog-cloud", "visibility", vis);
+      }
+      if (map.getLayer("province-unexplored-cloud")) {
+        map.setPaintProperty("province-unexplored-cloud", "fill-pattern", "cloud-fog-pattern");
+        map.setLayoutProperty("province-unexplored-cloud", "visibility", vis);
+      }
+    } catch (e) {
+      console.warn("Failed to apply cloud fog pattern to map:", e);
+    }
+  }
+
   function initMapLayers() {
     if (!map) return;
 
-    // 0. 省级行政区划与点亮高亮图层组 (位于底图之上，轨迹线之下)
+    initCloudFogLoader();
+    applyCloudFogPatternToMap();
+
+    // 0.0 世界各大洲未探索陆地战争迷雾 Source (仅覆盖未涉足海外陆地，彻底解放深邃大洋)
+    if (!map.getSource("world-land-fog")) {
+      map.addSource("world-land-fog", {
+        type: "geojson",
+        data: worldLandGeoJSON || { type: "FeatureCollection", features: [] },
+      });
+    }
+
+    const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const provinceVis = overlayConfig.provinces ? "visible" : "none";
+
+    // 0.05 悬浮云层向大洋投下的自然深色柔和阴影 (消灭贴纸感)
+    if (!map.getLayer("world-land-fog-shadow")) {
+      map.addLayer({
+        id: "world-land-fog-shadow",
+        type: "line",
+        source: "world-land-fog",
+        layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
+        paint: {
+          "line-color": "#01040a",
+          "line-width": 14,
+          "line-blur": 8,
+          "line-opacity": activeTrackId ? 0 : 0.65,
+        },
+      });
+    }
+
+    // 0.1 未探索各大洲海岸线深暗保护描边
+    if (!map.getLayer("world-land-fog-casing")) {
+      map.addLayer({
+        id: "world-land-fog-casing",
+        type: "line",
+        source: "world-land-fog",
+        layout: { "visibility": provinceVis },
+        paint: {
+          "line-color": "#03060c",
+          "line-width": 1.2,
+          "line-opacity": isDark ? 0.75 : 0.65,
+        },
+      });
+    }
+
+    // 0.2 未探索陆地战争迷雾底色面 (实体深黑夜幕底色，覆盖海外未涉足国家板块，绝对零漏光)
+    if (!map.getLayer("world-land-fog")) {
+      map.addLayer({
+        id: "world-land-fog",
+        type: "fill",
+        source: "world-land-fog",
+        layout: { "visibility": provinceVis },
+        paint: {
+          "fill-color": "#040711",
+          "fill-opacity": activeTrackId ? 0 : 0.98,
+        },
+      });
+    }
+
+    // 0.21 未探索陆地卷云纹理层 (呈现深邃乌云密布翻滚烟云)
+    if (!map.getLayer("world-land-fog-cloud")) {
+      const cloudLayerDef = {
+        id: "world-land-fog-cloud",
+        type: "fill",
+        source: "world-land-fog",
+        layout: { "visibility": map.hasImage("cloud-fog-pattern") && overlayConfig.provinces ? "visible" : "none" },
+        paint: {
+          "fill-opacity": activeTrackId ? 0 : 0.95,
+        },
+      };
+      if (map.hasImage("cloud-fog-pattern")) {
+        cloudLayerDef.paint["fill-pattern"] = "cloud-fog-pattern";
+      }
+      map.addLayer(cloudLayerDef);
+    }
+
+    // 0.3 省级行政区划与点亮高亮图层组 (位于底图之上，轨迹线之下)
     if (!map.getSource("china-provinces")) {
       map.addSource("china-provinces", {
         type: "geojson",
@@ -376,10 +630,40 @@
       });
     }
 
-    const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const provinceVis = overlayConfig.provinces ? "visible" : "none";
+    // 0.4 全国省份未探索战争迷雾底色面 (实体深黑夜幕底色，绝对零漏光)
+    if (!map.getLayer("province-unexplored-fill")) {
+      map.addLayer({
+        id: "province-unexplored-fill",
+        type: "fill",
+        source: "china-provinces",
+        filter: ["!=", ["get", "short_name"], "__none__"],
+        layout: { "visibility": provinceVis },
+        paint: {
+          "fill-color": "#040711",
+          "fill-opacity": activeTrackId ? 0 : 0.98,
+        },
+      });
+    }
 
-    // 0.1 全国省份基底细轮廓线
+    // 0.41 全国省份未探索卷云纹理层 (浮于深黑底色之上)
+    if (!map.getLayer("province-unexplored-cloud")) {
+      const provCloudLayerDef = {
+        id: "province-unexplored-cloud",
+        type: "fill",
+        source: "china-provinces",
+        filter: ["!=", ["get", "short_name"], "__none__"],
+        layout: { "visibility": map.hasImage("cloud-fog-pattern") && overlayConfig.provinces ? "visible" : "none" },
+        paint: {
+          "fill-opacity": activeTrackId ? 0 : 0.95,
+        },
+      };
+      if (map.hasImage("cloud-fog-pattern")) {
+        provCloudLayerDef.paint["fill-pattern"] = "cloud-fog-pattern";
+      }
+      map.addLayer(provCloudLayerDef);
+    }
+
+    // 0.5 全国省份基底细轮廓线
     if (!map.getLayer("province-base-line")) {
       map.addLayer({
         id: "province-base-line",
@@ -393,22 +677,7 @@
       });
     }
 
-    // 0.2 未点亮省份暗色压暗遮罩层 (Fog of War: 压暗弱化未点亮区域过于鲜艳的等高线底图，凸显点亮省份)
-    if (!map.getLayer("province-dim-fill")) {
-      map.addLayer({
-        id: "province-dim-fill",
-        type: "fill",
-        source: "china-provinces",
-        filter: ["==", ["get", "short_name"], "__none__"],
-        layout: { "visibility": provinceVis },
-        paint: {
-          "fill-color": "#090d16",
-          "fill-opacity": isDark ? 0.38 : 0.42,
-        },
-      });
-    }
-
-    // 0.3 点亮省份高光光晕面填充
+    // 0.6 【方案 A：暗黑石板微光调 Dark Slate Noir】点亮省份遮罩面 (压暗白底刺眼街道，极致凸显细线轨迹)
     if (!map.getLayer("province-highlight-fill")) {
       map.addLayer({
         id: "province-highlight-fill",
@@ -417,42 +686,58 @@
         filter: ["==", ["get", "short_name"], "__none__"],
         layout: { "visibility": provinceVis },
         paint: {
-          "fill-color": getActiveProvinceColor(currentFilterType),
-          "fill-opacity": isDark ? 0.26 : 0.22,
+          "fill-color": "#0b1322",
+          "fill-opacity": activeTrackId ? 0 : 0.52,
         },
       });
     }
 
-      // 0.4 点亮省份深色外轮廓描边 (Casing 保护边: 隔绝杂乱底图，防止撞色隐形)
-    if (!map.getLayer("province-highlight-casing")) {
+    // 0.6 【魔兽极光结界 1 - 外层大漫射晕染】超宽幅漫射光晕
+    if (!map.getLayer("province-glow-outer")) {
       map.addLayer({
-        id: "province-highlight-casing",
-        type: "line",
-        source: "china-provinces",
-        filter: ["==", ["get", "short_name"], "__none__"],
-        layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
-        paint: {
-          "line-color": "#000000",
-            "line-width": 3,
-            "line-opacity": 0.4,
-            "line-blur": 1,
-        },
-      });
-    }
-
-      // 0.5 点亮省份鲜艳发光轮廓线 (Core Line: 采用行政边界虚线，清晰与实线运动轨迹区分，防止误认)
-    if (!map.getLayer("province-highlight-line")) {
-      map.addLayer({
-        id: "province-highlight-line",
+        id: "province-glow-outer",
         type: "line",
         source: "china-provinces",
         filter: ["==", ["get", "short_name"], "__none__"],
         layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
         paint: {
           "line-color": getActiveProvinceColor(currentFilterType),
-            "line-width": 1.8,
-            "line-opacity": 0.8,
-            "line-dasharray": [3, 2],
+          "line-width": 18,
+          "line-blur": 12,
+          "line-opacity": isDark ? 0.55 : 0.45,
+        },
+      });
+    }
+
+    // 0.7 【魔兽极光结界 2 - 中层高光辉光】高饱和度发光带
+    if (!map.getLayer("province-glow-middle")) {
+      map.addLayer({
+        id: "province-glow-middle",
+        type: "line",
+        source: "china-provinces",
+        filter: ["==", ["get", "short_name"], "__none__"],
+        layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
+        paint: {
+          "line-color": getActiveProvinceColor(currentFilterType),
+          "line-width": 7.5,
+          "line-blur": 3.0,
+          "line-opacity": isDark ? 0.85 : 0.75,
+        },
+      });
+    }
+
+    // 0.8 【魔兽极光结界 3 - 内层极细电光芯线】高亮白绿能量核心线
+    if (!map.getLayer("province-glow-core")) {
+      map.addLayer({
+        id: "province-glow-core",
+        type: "line",
+        source: "china-provinces",
+        filter: ["==", ["get", "short_name"], "__none__"],
+        layout: { "line-join": "round", "line-cap": "round", "visibility": provinceVis },
+        paint: {
+          "line-color": "#f0fdf4",
+          "line-width": 1.8,
+          "line-opacity": 0.95,
         },
       });
     }
@@ -556,6 +841,60 @@
         },
       });
     }
+
+    // 2.4 非徒步转场连接单独渲染为虚线，避免与真实采样轨迹混淆。
+    if (!map.getSource("selected-track-transfer")) {
+      map.addSource("selected-track-transfer", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+    }
+
+    if (!map.getLayer("selected-track-transfer-casing")) {
+      map.addLayer({
+        id: "selected-track-transfer-casing",
+        type: "line",
+        source: "selected-track-transfer",
+        layout: { "line-join": "round", "line-cap": "butt" },
+        paint: {
+          "line-color": "#090d16",
+          "line-width": 8.5,
+          "line-opacity": 0.9,
+          "line-dasharray": [2, 1.5],
+        },
+      });
+    }
+
+    if (!map.getLayer("selected-track-transfer-glow")) {
+      map.addLayer({
+        id: "selected-track-transfer-glow",
+        type: "line",
+        source: "selected-track-transfer",
+        layout: { "line-join": "round", "line-cap": "butt" },
+        paint: {
+          "line-color": ["coalesce", ["get", "color"], "#ff7a00"],
+          "line-width": 6.5,
+          "line-opacity": 0.65,
+          "line-blur": 1,
+          "line-dasharray": [2, 1.5],
+        },
+      });
+    }
+
+    if (!map.getLayer("selected-track-transfer-core")) {
+      map.addLayer({
+        id: "selected-track-transfer-core",
+        type: "line",
+        source: "selected-track-transfer",
+        layout: { "line-join": "round", "line-cap": "butt" },
+        paint: {
+          "line-color": ["coalesce", ["get", "color"], "#ff7a00"],
+          "line-width": 4.5,
+          "line-opacity": 0.95,
+          "line-dasharray": [2, 1.5],
+        },
+      });
+    }
   }
 
   function applyOverlayVisibility() {
@@ -595,13 +934,28 @@
       }
     }
 
-    // 4. 省份点亮与遮罩显隐
+    // 4. 世界陆地战争迷雾与极光结界显隐
     const provinceVis = overlayConfig.provinces ? "visible" : "none";
-    ["province-base-line", "province-dim-fill", "province-highlight-fill", "province-highlight-casing", "province-highlight-line"].forEach((layerId) => {
+    [
+      "world-land-fog-shadow",
+      "world-land-fog",
+      "world-land-fog-cloud",
+      "world-land-fog-casing",
+      "province-unexplored-fill",
+      "province-unexplored-cloud",
+      "province-base-line",
+      "province-highlight-fill",
+      "province-glow-outer",
+      "province-glow-middle",
+      "province-glow-core"
+    ].forEach((layerId) => {
       if (map.getLayer(layerId)) {
         map.setLayoutProperty(layerId, "visibility", provinceVis);
       }
     });
+
+    // 5. 同步世界宏观大洲与主要国家注记显隐
+    updateWorldLabelsVisibility();
 
     // 同步 Checkbox 状态
     const chkProvinces = document.getElementById("chk_overlay_provinces");
@@ -614,12 +968,12 @@
     if (chkPhotos) chkPhotos.checked = overlayConfig.photos;
     if (chkWaypoints) chkWaypoints.checked = overlayConfig.waypoints;
 
-    // 同步工具栏点亮省份按钮状态
+    // 同步工具栏点亮探索/迷雾按钮状态
     const btnToolbarProvinces = document.getElementById("btn_toggle_provinces");
     if (btnToolbarProvinces) {
       btnToolbarProvinces.classList.toggle("active", !!overlayConfig.provinces);
       btnToolbarProvinces.setAttribute("aria-pressed", overlayConfig.provinces ? "true" : "false");
-      btnToolbarProvinces.title = overlayConfig.provinces ? "点击隐藏省份点亮" : "点击开启省份点亮";
+      btnToolbarProvinces.title = overlayConfig.provinces ? "点击隐藏探索迷雾" : "点击开启探索迷雾";
     }
 
     if (window.CredentialStore) {
@@ -717,6 +1071,9 @@
     const tracks = targetTracks || getFilteredTracks();
     const provinceSet = new Set();
     tracks.forEach((t) => {
+      if (t.country === "香港") {
+        provinceSet.add("香港");
+      }
       if (t.province && t.province.trim()) {
         const norm = normalizeProvince(t.province);
         if (norm) {
@@ -729,6 +1086,16 @@
     const color = getActiveProvinceColor(currentFilterType);
     const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 
+    // 0. 刷新世界各大洲未探索陆地战争迷雾 (只覆盖海外未去过陆地，完全露出各大洋深蓝通透水体)
+    try {
+      if (map.getSource("world-land-fog")) {
+        const fogGeoJSON = buildLandFogGeoJSON();
+        map.getSource("world-land-fog").setData(fogGeoJSON);
+      }
+    } catch (e) {
+      console.warn("Failed to update world land fog:", e);
+    }
+
     // 1. 点亮省份匹配表达式 (同时支持 short_name 和 name)
     const highlightFilter = activeList.length > 0
       ? [
@@ -738,38 +1105,48 @@
         ]
       : ["==", ["get", "short_name"], "__none__"];
 
-    // 2. 未点亮省份匹配表达式 (用于压暗未探索区域，防止鲜艳等高线喧宾夺主)
-    const dimFilter = activeList.length > 0
-      ? [
-          "all",
-          ["!", ["in", ["get", "short_name"], ["literal", activeList]]],
-          ["!", ["in", ["get", "name"], ["literal", activeList]]],
-        ]
+    // 1.1 未探索省份匹配表达式 (非点亮省份)
+    const unexploredFilter = activeList.length > 0
+      ? ["!", highlightFilter]
       : ["!=", ["get", "short_name"], "__none__"];
 
-    // 更新未点亮省份暗色遮罩
-    if (map.getLayer("province-dim-fill")) {
-      map.setFilter("province-dim-fill", dimFilter);
-      map.setPaintProperty("province-dim-fill", "fill-opacity", isDark ? 0.38 : 0.42);
+    // 2. 更新全国未探索省份战争迷雾底色面 (实体深黑夜幕，绝对零漏光)
+    if (map.getLayer("province-unexplored-fill")) {
+      map.setFilter("province-unexplored-fill", unexploredFilter);
+      map.setPaintProperty("province-unexplored-fill", "fill-opacity", activeTrackId ? 0 : 0.98);
     }
 
-    // 更新点亮省份高光面
+    // 2.1 更新全国未探索省份卷云纹理层
+    if (map.getLayer("province-unexplored-cloud")) {
+      map.setFilter("province-unexplored-cloud", unexploredFilter);
+      map.setPaintProperty("province-unexplored-cloud", "fill-opacity", activeTrackId ? 0 : 0.70);
+    }
+
+    // 3. 更新方案 A：已解锁省份暗黑石板微光调 (Dark Slate Noir，#0b1322，0.52 压暗白底街道并凸显轨迹)
     if (map.getLayer("province-highlight-fill")) {
       map.setFilter("province-highlight-fill", highlightFilter);
-      map.setPaintProperty("province-highlight-fill", "fill-color", color);
-      map.setPaintProperty("province-highlight-fill", "fill-opacity", isDark ? 0.26 : 0.22);
+      map.setPaintProperty("province-highlight-fill", "fill-color", "#0b1322");
+      map.setPaintProperty("province-highlight-fill", "fill-opacity", activeTrackId ? 0 : 0.52);
     }
 
-    // 更新点亮省份深色外轮廓描边
-    if (map.getLayer("province-highlight-casing")) {
-      map.setFilter("province-highlight-casing", highlightFilter);
+    // 4. 【魔兽极光结界 1 - 外层大漫射晕染】更新光晕颜色
+    if (map.getLayer("province-glow-outer")) {
+      map.setFilter("province-glow-outer", highlightFilter);
+      map.setPaintProperty("province-glow-outer", "line-color", color);
+      map.setPaintProperty("province-glow-outer", "line-opacity", activeTrackId ? 0 : (isDark ? 0.55 : 0.45));
     }
 
-    // 更新点亮省份鲜艳发光轮廓线
-    if (map.getLayer("province-highlight-line")) {
-      map.setFilter("province-highlight-line", highlightFilter);
-      map.setPaintProperty("province-highlight-line", "line-color", color);
-      map.setPaintProperty("province-highlight-line", "line-opacity", 0.95);
+    // 5. 【魔兽极光结界 2 - 中层高光辉光】更新发光带
+    if (map.getLayer("province-glow-middle")) {
+      map.setFilter("province-glow-middle", highlightFilter);
+      map.setPaintProperty("province-glow-middle", "line-color", color);
+      map.setPaintProperty("province-glow-middle", "line-opacity", activeTrackId ? 0 : (isDark ? 0.85 : 0.75));
+    }
+
+    // 6. 【魔兽极光结界 3 - 内层极细电光芯线】更新核心线
+    if (map.getLayer("province-glow-core")) {
+      map.setFilter("province-glow-core", highlightFilter);
+      map.setPaintProperty("province-glow-core", "line-opacity", activeTrackId ? 0 : 0.95);
     }
   }
 
@@ -787,6 +1164,9 @@
 
     const provinceSet = new Set();
     targetTracks.forEach((t) => {
+      if (t.country === "香港") {
+        provinceSet.add("香港");
+      }
       if (t.province && t.province.trim()) {
         const norm = normalizeProvince(t.province);
         if (norm) {
@@ -1175,8 +1555,12 @@
 
     updateHighlightedProvinces();
 
-    if (!activeTrackId && filteredTracks.length > 0) {
-      fitAllTracks(filteredTracks);
+    if (!activeTrackId) {
+      if (currentFilterType === "all" && !searchQuery) {
+        fitWorldView(true);
+      } else if (filteredTracks.length > 0) {
+        fitAllTracks(filteredTracks);
+      }
     }
   }
 
@@ -1210,17 +1594,86 @@
     if (!map || !map.getStyle() || !map.getLayer("all-tracks-core") || !map.getLayer("all-tracks-glow")) return;
 
     try {
+      const isDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
       if (isFocused) {
         map.setPaintProperty("all-tracks-core", "line-opacity", 0.15);
         map.setPaintProperty("all-tracks-core", "line-width", 1.5);
         map.setPaintProperty("all-tracks-core", "line-color", "#475569");
         map.setPaintProperty("all-tracks-glow", "line-opacity", 0);
+
+        // 聚焦单轨详情：平滑淡化陆地战争迷雾与暗黑石板微光，完整呈现真实地形与等高线/街道/卫星影像原貌
+        if (map.getLayer("world-land-fog-shadow")) {
+          map.setPaintProperty("world-land-fog-shadow", "line-opacity", 0);
+        }
+        if (map.getLayer("world-land-fog")) {
+          map.setPaintProperty("world-land-fog", "fill-opacity", 0);
+        }
+        if (map.getLayer("world-land-fog-cloud")) {
+          map.setPaintProperty("world-land-fog-cloud", "fill-opacity", 0);
+        }
+        if (map.getLayer("world-land-fog-casing")) {
+          map.setPaintProperty("world-land-fog-casing", "line-opacity", 0);
+        }
+        if (map.getLayer("province-unexplored-fill")) {
+          map.setPaintProperty("province-unexplored-fill", "fill-opacity", 0);
+        }
+        if (map.getLayer("province-unexplored-cloud")) {
+          map.setPaintProperty("province-unexplored-cloud", "fill-opacity", 0);
+        }
+        if (map.getLayer("province-highlight-fill")) {
+          map.setPaintProperty("province-highlight-fill", "fill-opacity", 0);
+        }
+        if (map.getLayer("province-glow-outer")) {
+          map.setPaintProperty("province-glow-outer", "line-opacity", 0);
+        }
+        if (map.getLayer("province-glow-middle")) {
+          map.setPaintProperty("province-glow-middle", "line-opacity", 0);
+        }
+        if (map.getLayer("province-glow-core")) {
+          map.setPaintProperty("province-glow-core", "line-opacity", 0);
+        }
       } else {
         map.setPaintProperty("all-tracks-core", "line-opacity", 0.85);
         map.setPaintProperty("all-tracks-core", "line-width", 2.5);
         map.setPaintProperty("all-tracks-core", "line-color", ["get", "color"]);
         map.setPaintProperty("all-tracks-glow", "line-opacity", 0.4);
+
+        // 退出聚焦恢复全景：平滑恢复陆地卷云迷雾与暗黑石板微光遮罩，凸显全景轨迹线
+        const provVisible = overlayConfig.provinces;
+        if (map.getLayer("world-land-fog-shadow")) {
+          map.setPaintProperty("world-land-fog-shadow", "line-opacity", provVisible ? 0.65 : 0);
+        }
+        if (map.getLayer("world-land-fog")) {
+          map.setPaintProperty("world-land-fog", "fill-opacity", provVisible ? 0.98 : 0);
+        }
+        if (map.getLayer("world-land-fog-cloud")) {
+          map.setPaintProperty("world-land-fog-cloud", "fill-opacity", provVisible ? 0.95 : 0);
+        }
+        if (map.getLayer("world-land-fog-casing")) {
+          map.setPaintProperty("world-land-fog-casing", "line-opacity", provVisible ? (isDark ? 0.75 : 0.65) : 0);
+        }
+        if (map.getLayer("province-unexplored-fill")) {
+          map.setPaintProperty("province-unexplored-fill", "fill-opacity", provVisible ? 0.98 : 0);
+        }
+        if (map.getLayer("province-unexplored-cloud")) {
+          map.setPaintProperty("province-unexplored-cloud", "fill-opacity", provVisible ? 0.95 : 0);
+        }
+        if (map.getLayer("province-highlight-fill")) {
+          map.setPaintProperty("province-highlight-fill", "fill-opacity", provVisible ? 0.52 : 0);
+        }
+        if (map.getLayer("province-glow-outer")) {
+          map.setPaintProperty("province-glow-outer", "line-opacity", provVisible ? (isDark ? 0.55 : 0.45) : 0);
+        }
+        if (map.getLayer("province-glow-middle")) {
+          map.setPaintProperty("province-glow-middle", "line-opacity", provVisible ? (isDark ? 0.85 : 0.75) : 0);
+        }
+        if (map.getLayer("province-glow-core")) {
+          map.setPaintProperty("province-glow-core", "line-opacity", provVisible ? 0.95 : 0);
+        }
       }
+
+      // 同步大洲与国家宏观注记的显隐（单轨聚焦时平滑淡出，退出恢复）
+      updateWorldLabelsVisibility();
     } catch (_) {}
   }
 
@@ -1238,10 +1691,24 @@
     });
 
     if (item && item.bbox && map) {
+      const isMobile = window.innerWidth <= 768;
+      const fitPadding = isMobile
+        ? { top: 60, bottom: 170, left: 24, right: 24 }
+        : { top: 80, bottom: 200, left: 350, right: 80 };
       map.fitBounds(
         [[item.bbox[0], item.bbox[1]], [item.bbox[2], item.bbox[3]]],
-        { padding: { top: 80, bottom: 200, left: 350, right: 80 }, maxZoom: 15, duration: 1200 }
+        { padding: fitPadding, maxZoom: 15, duration: 1200 }
       );
+    }
+
+    // 移动端选中轨迹后，自动收起底部抽屉与遮罩，展示高亮路线与路线详情
+    if (window.innerWidth <= 768) {
+      const sidebar = document.getElementById("sidebar");
+      const toggleBtn = document.getElementById("sidebar_toggle_btn");
+      const sidebarBackdrop = document.getElementById("sidebar_backdrop");
+      if (sidebar) sidebar.classList.add("collapsed");
+      if (toggleBtn) toggleBtn.classList.add("visible");
+      if (sidebarBackdrop) sidebarBackdrop.style.display = "none";
     }
 
     // 注意：不在此处调用 applyFocusDimming(true)
@@ -1273,6 +1740,9 @@
         if (map && map.getSource("selected-track")) {
           map.getSource("selected-track").setData({ type: "FeatureCollection", features: [] });
         }
+        if (map && map.getSource("selected-track-transfer")) {
+          map.getSource("selected-track-transfer").setData({ type: "FeatureCollection", features: [] });
+        }
       }
     }
   }
@@ -1288,6 +1758,9 @@
 
     if (map && map.getSource("selected-track")) {
       map.getSource("selected-track").setData({ type: "FeatureCollection", features: [] });
+    }
+    if (map && map.getSource("selected-track-transfer")) {
+      map.getSource("selected-track-transfer").setData({ type: "FeatureCollection", features: [] });
     }
       if (startMarker) {
           startMarker.remove();
@@ -1310,6 +1783,9 @@
     }
 
     applyFocusDimming(false);
+    if (currentFilterType === "all" && !searchQuery) {
+      fitWorldView(true);
+    }
   }
 
   function clearPhotoMarkers() {
@@ -1460,11 +1936,69 @@
     });
   }
 
+  function transferSpeedLimitKmh(activityType) {
+    if (activityType === "hiking" || activityType === "walking") return 15;
+    if (activityType === "running" || activityType === "trail_running") return 25;
+    return Infinity;
+  }
+
+  function haversineDistanceKm(a, b) {
+    const earthRadiusKm = 6371;
+    const toRadians = (degrees) => (degrees * Math.PI) / 180;
+    const dLat = toRadians(b[1] - a[1]);
+    const dLon = toRadians(b[0] - a[0]);
+    const lat1 = toRadians(a[1]);
+    const lat2 = toRadians(b[1]);
+    const arc = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    return earthRadiusKm * 2 * Math.atan2(Math.sqrt(arc), Math.sqrt(1 - arc));
+  }
+
+  function isTransferConnection(previous, current, activityType) {
+    const previousTime = Number(previous[3]);
+    const currentTime = Number(current[3]);
+    if (!Number.isFinite(previousTime) || !Number.isFinite(currentTime) || currentTime <= previousTime) return false;
+
+    const distanceKm = haversineDistanceKm(previous, current);
+    const elapsedHours = (currentTime - previousTime) / 3600;
+    if (elapsedHours <= 0) return false;
+
+    const speedKmh = distanceKm / elapsedHours;
+    if (speedKmh > transferSpeedLimitKmh(activityType)) return true;
+
+    // 相隔至少 1.5 km、且中间断采样 10 分钟以上的直连没有真实路径可供呈现。
+    // 即使慢速乘车未越过运动速度阈值，也应明确标为转场虚线。
+    return distanceKm >= 1.5 && elapsedHours >= (10 / 60);
+  }
+
+  function splitRecordedAndTransferSegments(rawCoords, activityType) {
+    const recordedSegments = [];
+    const transferSegments = [];
+    if (!rawCoords.length) return { recordedSegments, transferSegments };
+
+    let recordedSegment = [[rawCoords[0][0], rawCoords[0][1]]];
+    for (let index = 1; index < rawCoords.length; index++) {
+      const previous = rawCoords[index - 1];
+      const current = rawCoords[index];
+      const currentCoord = [current[0], current[1]];
+
+      if (isTransferConnection(previous, current, activityType)) {
+        if (recordedSegment.length > 1) recordedSegments.push(recordedSegment);
+        transferSegments.push([[previous[0], previous[1]], currentCoord]);
+        recordedSegment = [currentCoord];
+      } else {
+        recordedSegment.push(currentCoord);
+      }
+    }
+    if (recordedSegment.length > 1) recordedSegments.push(recordedSegment);
+
+    return { recordedSegments, transferSegments };
+  }
+
   function renderSelectedTrackOnMap(detail) {
       if (!map || !detail) return;
 
       // 自愈检查：若图层尚未创建，尝试立即初始化图层
-      if (!map.getSource("selected-track") || !map.getLayer("selected-track-core")) {
+      if (!map.getSource("selected-track") || !map.getSource("selected-track-transfer") || !map.getLayer("selected-track-core")) {
           if (typeof map.isStyleLoaded === "function" && map.isStyleLoaded()) {
               initMapLayers();
               mapLayersReady = true;
@@ -1477,20 +2011,30 @@
       pendingSelectedTrackDetail = null;
 
     const source = map.getSource("selected-track");
-    if (!source) return;
+    const transferSource = map.getSource("selected-track-transfer");
+    if (!source || !transferSource) return;
 
-    const coords = (detail.coordinates || []).map((p) => [p[0], p[1]]);
+    const rawCoords = detail.coordinates || [];
+    const coords = rawCoords.map((p) => [p[0], p[1]]);
     const color = activityColors[detail.type] || "#00d2ff";
+    const { recordedSegments, transferSegments } = splitRecordedAndTransferSegments(rawCoords, detail.type);
 
     source.setData({
       type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: { id: detail.id, color: color },
-          geometry: { type: "LineString", coordinates: coords },
-        },
-      ],
+      features: recordedSegments.map((coordinates) => ({
+        type: "Feature",
+        properties: { id: detail.id, color: color },
+        geometry: { type: "LineString", coordinates },
+      })),
+    });
+
+    transferSource.setData({
+      type: "FeatureCollection",
+      features: transferSegments.map((coordinates) => ({
+        type: "Feature",
+        properties: { id: detail.id, color: color },
+        geometry: { type: "LineString", coordinates },
+      })),
     });
 
       if (startMarker) {
@@ -1541,6 +2085,12 @@
     const toggleBtn = document.getElementById("profile_toggle_btn");
     if (hud) hud.classList.add("visible");
     if (toggleBtn) toggleBtn.classList.remove("visible");
+
+    // 移动端：路线详情展开时隐藏列表唤起按钮，避免底部堆叠重叠
+    const sidebarToggleBtn = document.getElementById("sidebar_toggle_btn");
+    if (sidebarToggleBtn && window.innerWidth <= 768) {
+      sidebarToggleBtn.classList.remove("visible");
+    }
 
     const toggleTitle = document.getElementById("profile_toggle_title");
     if (toggleTitle) toggleTitle.textContent = detail.title || "路线详情";
@@ -1620,6 +2170,15 @@
       toggleBtn.classList.add("visible");
     } else if (toggleBtn) {
       toggleBtn.classList.remove("visible");
+    }
+
+    // 移动端：若彻底退出路线详情，且侧边栏处于收起态，恢复左下角列表唤起按钮
+    if (window.innerWidth <= 768 && (!retainSelection || !activeTrackDetail)) {
+      const sidebar = document.getElementById("sidebar");
+      const sidebarToggleBtn = document.getElementById("sidebar_toggle_btn");
+      if (sidebar && sidebar.classList.contains("collapsed") && sidebarToggleBtn) {
+        sidebarToggleBtn.classList.add("visible");
+      }
     }
   }
 
@@ -1795,7 +2354,18 @@
       });
     }
 
-    // 工具栏点亮省份快捷切换
+    // 工具栏世界全景复位按钮
+    const btnResetWorldView = document.getElementById("btn_reset_world_view");
+    if (btnResetWorldView) {
+      btnResetWorldView.addEventListener("click", () => {
+        if (activeTrackId) {
+          resetTrackSelection();
+        }
+        fitWorldView(true);
+      });
+    }
+
+    // 工具栏探索迷雾快捷切换
     const btnToolbarProvinces = document.getElementById("btn_toggle_provinces");
     if (btnToolbarProvinces) {
       btnToolbarProvinces.addEventListener("click", () => {
@@ -1877,6 +2447,9 @@
         if (!btn) return;
         filterTabs.querySelectorAll(".footprint-tab").forEach((t) => t.classList.remove("is-active"));
         btn.classList.add("is-active");
+        if (typeof btn.scrollIntoView === "function") {
+          btn.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        }
         currentFilterType = btn.dataset.type;
 
         // 切换分类时清空搜索条件，确保新分类从全景开始
@@ -1905,22 +2478,33 @@
       });
     }
 
-    // 6. 侧边栏折叠/展开
+    // 6. 侧边栏折叠/展开与移动端底部抽屉联动
     const sidebar = document.getElementById("sidebar");
     const closeBtn = document.getElementById("sidebar_close_btn");
     const toggleBtn = document.getElementById("sidebar_toggle_btn");
+    const sidebarBackdrop = document.getElementById("sidebar_backdrop");
 
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        sidebar.classList.add("collapsed");
-        toggleBtn.classList.add("visible");
-      });
+    function closeSidebar() {
+      if (sidebar) sidebar.classList.add("collapsed");
+      if (toggleBtn) toggleBtn.classList.add("visible");
+      if (sidebarBackdrop) sidebarBackdrop.style.display = "none";
     }
-    if (toggleBtn) {
-      toggleBtn.addEventListener("click", () => {
-        sidebar.classList.remove("collapsed");
-        toggleBtn.classList.remove("visible");
-      });
+
+    function openSidebar() {
+      if (sidebar) sidebar.classList.remove("collapsed");
+      if (toggleBtn) toggleBtn.classList.remove("visible");
+      if (sidebarBackdrop && window.innerWidth <= 768) {
+        sidebarBackdrop.style.display = "block";
+      }
+    }
+
+    if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+    if (toggleBtn) toggleBtn.addEventListener("click", openSidebar);
+    if (sidebarBackdrop) sidebarBackdrop.addEventListener("click", closeSidebar);
+
+    // 移动端初始加载：默认收起抽屉，展示开阔的全景地图
+    if (window.innerWidth <= 768) {
+      closeSidebar();
     }
 
     // 7. 搜索框与快捷过滤联动
@@ -2005,11 +2589,24 @@
       });
     }
 
-    // 12. 高程 Canvas Hover 联动
+    // 12. 高程 Canvas Hover 与移动端 Touch 联动
     const canvas = document.getElementById("elevation_canvas");
     if (canvas) {
       canvas.addEventListener("mousemove", onCanvasHover);
       canvas.addEventListener("mouseleave", () => {
+        if (activeTrackDetail) drawElevationProfile(activeTrackDetail, -1);
+        if (hoverMarker) hoverMarker.remove();
+      });
+
+      canvas.addEventListener("touchstart", (e) => {
+        onCanvasHover(e);
+      }, { passive: true });
+
+      canvas.addEventListener("touchmove", (e) => {
+        onCanvasHover(e);
+      }, { passive: true });
+
+      canvas.addEventListener("touchend", () => {
         if (activeTrackDetail) drawElevationProfile(activeTrackDetail, -1);
         if (hoverMarker) hoverMarker.remove();
       });
@@ -2057,8 +2654,16 @@
     const btnDone = document.getElementById("btn_done_settings");
     const backdrop = document.getElementById("map_settings_backdrop");
 
+    const btnOpenMobile = document.getElementById("btn_open_map_settings_mobile");
     if (btnOpen) {
       btnOpen.addEventListener("click", openMapSettingsModal);
+    }
+    if (btnOpenMobile) {
+      btnOpenMobile.addEventListener("click", () => {
+        const overlaysDropdown = document.getElementById("overlays_dropdown");
+        if (overlaysDropdown) overlaysDropdown.style.display = "none";
+        openMapSettingsModal();
+      });
     }
     if (btnClose) {
       btnClose.addEventListener("click", closeMapSettingsModal);
@@ -2215,7 +2820,10 @@
     if (!activeTrackDetail || !activeTrackDetail.profile) return;
     const canvas = document.getElementById("elevation_canvas");
     const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
+    const clientX = (e.touches && e.touches.length > 0)
+      ? e.touches[0].clientX
+      : (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0].clientX : e.clientX);
+    const mouseX = clientX - rect.left;
     const padX = 8;
     const w = rect.width;
 

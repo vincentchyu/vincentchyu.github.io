@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-10-12
+
+### 山河足迹世界版图与探索迷雾模式 (`web/tracks/`)
+
+- **魔兽争霸与文明风格“探索迷雾 (Fog of War)”双重质感重构升级**：
+  - **几何剖分架构重构与大三角斜线畸变根治**：将世界未探索陆地数据重构为境外国家独立板块（`data/world-land.geojson`，175 个国家独立 Feature），国内由 `data/provinces.geojson` 各省独立多边形分别负责未探索黑雾与已解锁区域。彻底废除了在欧亚大陆单多边形内塞入共边相邻省份内环（inner holes）引发的 WebGL Earcut 三角剖分退化大三角形阴影。
+  - **未解锁区域：无缝深邃卷云迷雾纹理（Cloud Texture Pattern）**：内置基于 4 阶分形布朗运动（fBm）的周期性无缝平铺噪波生成器，在 16ms 内纯内存动态合成高质量暗夜风暴卷云纹理（`cloud-fog-pattern`），未探索陆地覆盖生动翻滚的云海迷雾，复刻《文明VI》大地图与魔兽战雾质感。
+  - **已解锁区域：清朗暗黑石板微光调（Clear Night Slate Noir）**：已解锁省份完全驱散云雾，保留纯净平滑的暗黑石板微光调（`#0b1322`，0.52），不仅优雅压暗白底街区图刺眼杂色，而且确保在宏观世界尺度下哪怕只有单点或短线的小轨迹依然拥有极高的对比度与清晰度。
+  - **三层极光结界边界体系**：在外层 18px 广幅漫射光晕、中层 7.5px 主题高光发光带、内层 1.8px 亮白电光芯线的包裹下，生动呈现如同激光切开翻滚云海般的探索解锁结界感。
+  - **大洋深蓝通透与全球全景交互**：释放太平洋、大西洋、印度洋通透水体；全景与全部运动分类初次加载默认呈现宏观全球版图，工具栏新增一键“🌍 世界全景”复位按钮，严格遵守三路异步竞态反回归设计。
+
+## 2026-10-11
+
+### 核心算法与自动化流水线重构 (`cmd/concat-tracks`, `cmd/merge-tracks`, `internal/track`)
+
+- **多日分段时序串联与大环线拼接工具彻底重构 (`cmd/concat-tracks/`, `ConcatGPXTracks`)**：
+  - **段内独立滤波与里程统计（彻底根除跨日污染）**：重构了 `ConcatGPXTracks` 核心统计逻辑，改用各分段段内独立进行 `SanitizeAndSmoothElevations` 高程平滑与段内有效运动里程计算，再进行全局汇总求和。彻底杜绝夜间营地大间隔、跨日乘车转场或营地海拔跳跃被错误计入徒步运动里程与累计爬升的物理逻辑缺陷。
+  - **权威标准文件名优先提取大路线名（根治 Apple Watch Route 标题污染）**：大标题推导优先从标准文件名 `{type}-{country}-{province}-{route}-{date}` 提取核心路线地名并清洗分段标记，彻底阻断从 GPX 内部标签提取 Apple Watch 自动生成的临时名称（如 `Route 2026-09-10 6:00pm`）导致的标题失真。
+  - **多分段独立 `<trkseg>` 输出**：实现 `WriteMultiSegmentGPX`，每个分段在导出的 GPX 1.1 中保留独立的 `<trkseg>` 标签，彻底根治第三方地图和渲染引擎在 D1 终点和 D2 起点之间强行连线的“跨天飞线”问题。
+  - **基于时间戳的物理时序严格排序**：自动提取各分段内部的起始时间戳进行物理时序升序重排，彻底解决原基于文件名字典序导致的 `Day10` 排在 `Day2` 前面的逻辑错位。
+  - **多天大路线标题与日期区间智能推导**：引入正则清洗各种形式的分段标记（`D1`, `Day2`, `第3天`, `D01`），自动识别并避免“大环线大环线”重叠；输出文件名自动推导跨日时间区间（如 `20260608_0611`），杜绝与 D1 原文件命名冲突。
+  - **时空重叠检测与单元测试补齐**：自动检测相邻分段是否存在异常时间交叉重叠并输出告警；重写 `cmd/concat-tracks/main_test.go` 为端到端转场隔离与标题推导真实测试用例。
+
+- **修复规范化文件名中真实山野徒步被误降级为散步的 Bug (`internal/track/parser.go`)**：
+  - **限制过度冲突纠偏**：修正了 `parser.go` 中无视山野海拔落差与爬升，将人工确认的 `hiking` 强制覆写为 `walking` 的漏洞。收紧为仅在城市平缓漫步（爬升<50m 且落差<30m）时温和纠偏，确保喀纳斯 D5 等真实山区重装徒步（爬升 413m、海拔 1200m）100% 保持 `hiking` 运动分类。
+
+- **全格式严格符合 GPX 1.1 官方规范与 Garmin 扩展标准 (`WriteMultiSegmentGPX`, `WriteStandardGPX`)**：
+  - **严格遵守 Topografix GPX 1.1 XSD Schema 顺序**：`<metadata>` 子元素严格按 `name -> time -> bounds` 顺序组织；`<trk>` 子元素按 `name -> type -> trkseg` 顺序组织；`<trkpt>` 严格按 `ele -> time -> extensions` 顺序输出。
+  - **完整声明 SchemaLocation 与 Garmin TPX 命名空间**：补齐 `xsi:schemaLocation` 中缺失的 Garmin TrackPointExtension schema URL，包含 `xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1"`，杜绝第三方严格 XML 解析器（如 BaseCamp、QGIS、Strava）校验报错。
+  - **自动计算并输出 Header `<bounds>` 视口边界**：毫秒级生成四至经纬度边界框，供专业 GIS 软件与地图查看器免遍历快速缩放定位。
+  - **XML 1.0 规范非法控制字符深度过滤**：在 `escapeXML` 中剔除 ASCII 0x00~0x1F 非法控制字符，防止外部软件抛出致命 XML 格式解析异常。
+
 ## 2026-09-04
 
 ### 新功能 & 工程自动化

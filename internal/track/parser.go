@@ -436,6 +436,34 @@ func convertPoint(pt gpxPoint) RawPoint {
 	}
 }
 
+// isUnrecordedTransferSegment reports whether two recorded points are separated by a
+// non-human-powered transfer or an unrecorded long-distance gap. It intentionally
+// applies only to human-powered activities: driving, train, and flight tracks are
+// expected to contain long intervals between sparse samples.
+func isUnrecordedTransferSegment(prev, curr RawPoint, activityType ActivityType) bool {
+	if activityType != TypeWalking && activityType != TypeHiking && activityType != TypeRunning && activityType != TypeTrailRunning {
+		return false
+	}
+	if prev.Time.IsZero() || curr.Time.IsZero() || !curr.Time.After(prev.Time) {
+		return false
+	}
+
+	distanceM := HaversineDistance(prev.Lat, prev.Lon, curr.Lat, curr.Lon)
+	elapsed := curr.Time.Sub(prev.Time)
+	speedKmh := (distanceM / elapsed.Seconds()) * 3.6
+
+	if (activityType == TypeWalking || activityType == TypeHiking) && speedKmh > 15 {
+		return true
+	}
+	if (activityType == TypeRunning || activityType == TypeTrailRunning) && speedKmh > 25 {
+		return true
+	}
+
+	// A 1.5 km+ straight bridge after at least 10 minutes without samples does not
+	// represent an observed human-powered path, even if the average speed is low.
+	return distanceM >= 1500 && elapsed >= 10*time.Minute
+}
+
 // 智能判定运动类型（结合速度、地形爬升、海拔落差、坡度与逆地理空间属性）
 func resolveActivityType(fileName, gpxType string, avgSpeedKmh, elevationGainM, distanceKm, eleSpan, maxEle float64, loc *geocoding.LocationInfo) ActivityType {
 	lowerName := strings.ToLower(fileName)

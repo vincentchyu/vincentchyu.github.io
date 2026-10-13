@@ -1,0 +1,833 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "continent",
+        "name": "亚洲",
+        "name_en": "ASIA",
+        "label": "亚洲 · ASIA",
+        "minzoom": 0,
+        "maxzoom": 3
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          90,
+          46
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "continent",
+        "name": "欧洲",
+        "name_en": "EUROPE",
+        "label": "欧洲 · EUROPE",
+        "minzoom": 0,
+        "maxzoom": 3
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15,
+          54
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "continent",
+        "name": "非洲",
+        "name_en": "AFRICA",
+        "label": "非洲 · AFRICA",
+        "minzoom": 0,
+        "maxzoom": 3
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21,
+          6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "continent",
+        "name": "北美洲",
+        "name_en": "NORTH AMERICA",
+        "label": "北美洲 · NORTH AMERICA",
+        "minzoom": 0,
+        "maxzoom": 3
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -100,
+          48
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "continent",
+        "name": "南美洲",
+        "name_en": "SOUTH AMERICA",
+        "label": "南美洲 · SOUTH AMERICA",
+        "minzoom": 0,
+        "maxzoom": 3
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58,
+          -18
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "continent",
+        "name": "大洋洲",
+        "name_en": "OCEANIA",
+        "label": "大洋洲 · OCEANIA",
+        "minzoom": 0,
+        "maxzoom": 3
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          134,
+          -25
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "continent",
+        "name": "南极洲",
+        "name_en": "ANTARCTICA",
+        "label": "南极洲 · ANTARCTICA",
+        "minzoom": 0,
+        "maxzoom": 3
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0,
+          -82
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "中国",
+        "name_en": "China",
+        "label": "中国",
+        "rank": 1,
+        "minzoom": 1.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          104.0,
+          35.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "俄罗斯",
+        "name_en": "Russia",
+        "label": "俄罗斯",
+        "rank": 1,
+        "minzoom": 1.2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          96,
+          62
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "加拿大",
+        "name_en": "Canada",
+        "label": "加拿大",
+        "rank": 1,
+        "minzoom": 1.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -105,
+          58
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "美国",
+        "name_en": "United States",
+        "label": "美国",
+        "rank": 1,
+        "minzoom": 1.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -98,
+          39
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "巴西",
+        "name_en": "Brazil",
+        "label": "巴西",
+        "rank": 1,
+        "minzoom": 1.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -52,
+          -11
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "澳大利亚",
+        "name_en": "Australia",
+        "label": "澳大利亚",
+        "rank": 1,
+        "minzoom": 1.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          134,
+          -25
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "印度",
+        "name_en": "India",
+        "label": "印度",
+        "rank": 1,
+        "minzoom": 1.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          79,
+          22
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "哈萨克斯坦",
+        "name_en": "Kazakhstan",
+        "label": "哈萨克斯坦",
+        "rank": 1,
+        "minzoom": 2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          67,
+          48
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "蒙古",
+        "name_en": "Mongolia",
+        "label": "蒙古",
+        "rank": 1,
+        "minzoom": 2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          104,
+          47
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "阿根廷",
+        "name_en": "Argentina",
+        "label": "阿根廷",
+        "rank": 1,
+        "minzoom": 2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65,
+          -36
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "格陵兰",
+        "name_en": "Greenland",
+        "label": "格陵兰",
+        "rank": 1,
+        "minzoom": 2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -42,
+          75
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "沙特阿拉伯",
+        "name_en": "Saudi Arabia",
+        "label": "沙特阿拉伯",
+        "rank": 2,
+        "minzoom": 2.2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          45,
+          24
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "墨西哥",
+        "name_en": "Mexico",
+        "label": "墨西哥",
+        "rank": 2,
+        "minzoom": 2.2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -102,
+          24
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "阿尔及利亚",
+        "name_en": "Algeria",
+        "label": "阿尔及利亚",
+        "rank": 2,
+        "minzoom": 2.2
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          3,
+          28
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "刚果(金)",
+        "name_en": "DR Congo",
+        "label": "刚果(金)",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          24,
+          -2.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "南非",
+        "name_en": "South Africa",
+        "label": "南非",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25,
+          -29
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "埃及",
+        "name_en": "Egypt",
+        "label": "埃及",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          30,
+          26.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "印度尼西亚",
+        "name_en": "Indonesia",
+        "label": "印度尼西亚",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          118,
+          -2
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "日本",
+        "name_en": "Japan",
+        "label": "日本",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          138,
+          36.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "英国",
+        "name_en": "United Kingdom",
+        "label": "英国",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -2,
+          54
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "法国",
+        "name_en": "France",
+        "label": "法国",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.5,
+          47
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "德国",
+        "name_en": "Germany",
+        "label": "德国",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          10.5,
+          51.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "西班牙",
+        "name_en": "Spain",
+        "label": "西班牙",
+        "rank": 2,
+        "minzoom": 2.5
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -3.5,
+          40
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "意大利",
+        "name_en": "Italy",
+        "label": "意大利",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          12.5,
+          42.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "瑞典",
+        "name_en": "Sweden",
+        "label": "瑞典",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          16,
+          62
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "挪威",
+        "name_en": "Norway",
+        "label": "挪威",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          9,
+          61
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "土耳其",
+        "name_en": "Turkey",
+        "label": "土耳其",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          35,
+          39
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "伊朗",
+        "name_en": "Iran",
+        "label": "伊朗",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          54,
+          32.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "巴基斯坦",
+        "name_en": "Pakistan",
+        "label": "巴基斯坦",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          70,
+          30
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "泰国",
+        "name_en": "Thailand",
+        "label": "泰国",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          101,
+          15.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "缅甸",
+        "name_en": "Myanmar",
+        "label": "缅甸",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          96,
+          21
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "越南",
+        "name_en": "Vietnam",
+        "label": "越南",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          107,
+          16
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "马来西亚",
+        "name_en": "Malaysia",
+        "label": "马来西亚",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          102,
+          4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "菲律宾",
+        "name_en": "Philippines",
+        "label": "菲律宾",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          122,
+          13
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "新西兰",
+        "name_en": "New Zealand",
+        "label": "新西兰",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          172,
+          -42
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "秘鲁",
+        "name_en": "Peru",
+        "label": "秘鲁",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -75,
+          -9.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "智利",
+        "name_en": "Chile",
+        "label": "智利",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71,
+          -35
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "哥伦比亚",
+        "name_en": "Colombia",
+        "label": "哥伦比亚",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73,
+          4
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "type": "country",
+        "name": "尼日利亚",
+        "name_en": "Nigeria",
+        "label": "尼日利亚",
+        "rank": 2,
+        "minzoom": 2.8
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          8,
+          9.5
+        ]
+      }
+    }
+  ]
+}
