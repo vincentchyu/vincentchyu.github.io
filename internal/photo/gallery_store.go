@@ -169,6 +169,11 @@ func (s *GalleryStore) SaveFull(albums []YearAlbum) (GalleryManifest, error) {
 	return s.repository.SaveFull(albums)
 }
 
+// SaveYears writes the given year shards, refreshes their summaries in the manifest, and publishes only the updated shards.
+func (s *GalleryStore) SaveYears(albums []YearAlbum) (GalleryManifest, error) {
+	return s.repository.SaveYears(albums)
+}
+
 // UpsertPhoto updates or inserts one photo inside its year shard and refreshes the manifest.
 func (s *GalleryStore) UpsertPhoto(photo Photo) (GalleryManifest, error) {
 	return s.repository.UpsertPhoto(photo)

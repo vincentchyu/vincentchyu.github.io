@@ -9,7 +9,16 @@ function buildPhotoResourcePath(photoOrYear, filename) {
 
 async function parseJSON(response, fallbackMessage) {
   if (!response.ok) {
-    throw new Error(fallbackMessage);
+    let errorMessage = fallbackMessage;
+    try {
+      const data = await response.json();
+      if (data && data.error) {
+        errorMessage = `${fallbackMessage}: ${data.error}`;
+      }
+    } catch {
+      // ignore
+    }
+    throw new Error(errorMessage);
   }
   return response.json();
 }

@@ -263,19 +263,24 @@ async function batchUpdate(isHidden) {
   const otherBtnId = isHidden ? "batchShowBtn" : "batchHideBtn";
 
   setButtonLoading(btnId, true);
-  document.getElementById(otherBtnId).disabled = true;
+  const otherBtn = document.getElementById(otherBtnId);
+  if (otherBtn) {
+    otherBtn.disabled = true;
+  }
 
   try {
-    await batchUpdatePhotos(Array.from(state.selectedPhotos), {
+    const selectedFilenames = Array.from(state.selectedPhotos);
+    await batchUpdatePhotos(selectedFilenames, {
       is_hidden: isHidden,
     });
     clearPhotoPageCache();
 
-    const filenamesToSync = new Set();
+    const selectedSet = new Set(selectedFilenames);
+    const filenamesToSync = new Set(selectedFilenames);
     let hiddenDelta = 0;
 
     state.allPhotos.forEach((photo) => {
-      if (!state.selectedPhotos.has(photo.filename)) {
+      if (!selectedSet.has(photo.filename)) {
         return;
       }
 
@@ -284,7 +289,6 @@ async function batchUpdate(isHidden) {
       }
 
       photo.is_hidden = isHidden;
-      filenamesToSync.add(photo.filename);
     });
 
     state.selectedPhotos.clear();
@@ -292,7 +296,7 @@ async function batchUpdate(isHidden) {
     if (hasStatusFilter()) {
       await loadPhotos({ reset: true });
     } else {
-      state.hiddenPhotoCount += hiddenDelta;
+      state.hiddenPhotoCount = Math.max(0, state.hiddenPhotoCount + hiddenDelta);
       syncPhotoCards(Array.from(filenamesToSync));
       updateStats();
       updateBatchButtons();
@@ -301,7 +305,7 @@ async function batchUpdate(isHidden) {
     alert(isHidden ? "所需照片已隐藏" : "所需照片已显示");
   } catch (error) {
     console.error("Error batch updating:", error);
-    alert("批量操作失败，请重试");
+    alert(error?.message || "批量操作失败，请重试");
   } finally {
     setButtonLoading(btnId, false);
     updateBatchButtons();

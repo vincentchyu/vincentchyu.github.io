@@ -18,6 +18,7 @@ type galleryStore interface {
 	LoadAlbums() ([]photo.YearAlbum, *photo.GalleryManifest, error)
 	LoadYearAlbum(year string) (photo.YearAlbum, error)
 	SaveFull(albums []photo.YearAlbum) (photo.GalleryManifest, error)
+	SaveYears(albums []photo.YearAlbum) (photo.GalleryManifest, error)
 	UpsertPhoto(photo photo.Photo) (photo.GalleryManifest, error)
 	DeletePhoto(year, filename string) (photo.GalleryManifest, error)
 	LoadSourceConfig() (photo.GallerySourceConfig, error)
@@ -117,104 +118,90 @@ func (s *PhotoAdminService) ListPhotosPage(req ListPhotosPageRequest) (PhotoList
 }
 
 func (s *PhotoAdminService) UpdatePhoto(year, filename string, req PhotoUpdateRequest) error {
-	if year != "" {
-		album, err := s.store.LoadYearAlbum(year)
+	if year == "" {
+		foundYear, _, err := s.findPhotoLocation(filename)
 		if err != nil {
-			return fmt.Errorf("failed to load year shard: %w", err)
+			return err
 		}
-
-		found := false
-		var updated photo.Photo
-		for i := range album.Photos {
-			if album.Photos[i].Filename != filename {
-				continue
-			}
-			updated, _ = applyPhotoUpdate(&album.Photos[i], req)
-			found = true
-			break
-		}
-		if !found {
-			return fmt.Errorf("photo not found: %s", filename)
-		}
-
-		if _, err := s.store.UpsertPhoto(updated); err != nil {
-			return fmt.Errorf("failed to persist photo update: %w", err)
-		}
-		return nil
+		year = foundYear
 	}
 
-	albums, _, err := s.store.LoadAlbums()
+	album, err := s.store.LoadYearAlbum(year)
 	if err != nil {
-		return fmt.Errorf("failed to load gallery data: %w", err)
+		return fmt.Errorf("failed to load year shard: %w", err)
 	}
 
 	found := false
-	for i := range albums {
-		for j := range albums[i].Photos {
-			if albums[i].Photos[j].Filename != filename {
-				continue
-			}
-			if req.Alt != nil {
-				albums[i].Photos[j].Alt = *req.Alt
-			}
-			if req.IsHidden != nil {
-				albums[i].Photos[j].IsHidden = *req.IsHidden
-			}
-			if req.Subject != nil {
-				albums[i].Photos[j].Subject = req.Subject
-			}
-			found = true
-			break
+	var updated photo.Photo
+	for i := range album.Photos {
+		if album.Photos[i].Filename != filename {
+			continue
 		}
-		if found {
-			break
-		}
+		updated, _ = applyPhotoUpdate(&album.Photos[i], req)
+		found = true
+		break
 	}
-
 	if !found {
 		return fmt.Errorf("photo not found: %s", filename)
 	}
 
-	if _, err := s.store.SaveFull(albums); err != nil {
-		return fmt.Errorf("failed to persist gallery data: %w", err)
+	if _, err := s.store.UpsertPhoto(updated); err != nil {
+		return fmt.Errorf("failed to persist photo update: %w", err)
 	}
 	return nil
 }
 
 func (s *PhotoAdminService) UpdatePhotosBatch(req BatchUpdateRequest) error {
+	if len(req.Filenames) == 0 {
+		return fmt.Errorf("no filenames provided")
+	}
+
 	albums, _, err := s.store.LoadAlbums()
 	if err != nil {
 		return fmt.Errorf("failed to load gallery data: %w", err)
 	}
 
+	targetFiles := make(map[string]struct{}, len(req.Filenames))
+	for _, fn := range req.Filenames {
+		targetFiles[fn] = struct{}{}
+	}
+
 	updatedCount := 0
-	for _, filename := range req.Filenames {
-		for i := range albums {
-			for j := range albums[i].Photos {
-				if albums[i].Photos[j].Filename != filename {
-					continue
-				}
-				if req.Updates.Alt != nil {
-					albums[i].Photos[j].Alt = *req.Updates.Alt
-				}
-				if req.Updates.IsHidden != nil {
-					albums[i].Photos[j].IsHidden = *req.Updates.IsHidden
-				}
-				if req.Updates.Subject != nil {
-					albums[i].Photos[j].Subject = req.Updates.Subject
-				}
-				updatedCount++
-				goto nextFilename
+	modifiedYears := make(map[string]int)
+
+	for i := range albums {
+		yearModified := false
+		for j := range albums[i].Photos {
+			if _, match := targetFiles[albums[i].Photos[j].Filename]; !match {
+				continue
 			}
+
+			updated, changed := applyPhotoUpdate(&albums[i].Photos[j], req.Updates)
+			if changed {
+				albums[i].Photos[j] = updated
+				yearModified = true
+			}
+			updatedCount++
 		}
-	nextFilename:
+		if yearModified {
+			modifiedYears[albums[i].Year] = i
+		}
 	}
 
 	if updatedCount == 0 {
 		return fmt.Errorf("no matching photos found")
 	}
 
-	if _, err := s.store.SaveFull(albums); err != nil {
+	if len(modifiedYears) == 0 {
+		return nil
+	}
+
+	modifiedAlbums := make([]photo.YearAlbum, 0, len(modifiedYears))
+	for _, idx := range modifiedYears {
+		modifiedAlbums = append(modifiedAlbums, albums[idx])
+	}
+
+	if _, err := s.store.SaveYears(modifiedAlbums); err != nil {
 		return fmt.Errorf("failed to persist gallery data: %w", err)
 	}
 	return nil

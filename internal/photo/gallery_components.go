@@ -23,6 +23,7 @@ type GalleryRepository interface {
 	LoadAlbums() ([]YearAlbum, *GalleryManifest, error)
 	LoadYearAlbum(year string) (YearAlbum, error)
 	SaveFull(albums []YearAlbum) (GalleryManifest, error)
+	SaveYears(albums []YearAlbum) (GalleryManifest, error)
 	UpsertPhoto(photo Photo) (GalleryManifest, error)
 	DeletePhoto(year, filename string) (GalleryManifest, error)
 }
@@ -120,6 +121,53 @@ func (r *galleryRepository) SaveFull(albums []YearAlbum) (GalleryManifest, error
 	return manifest, nil
 }
 
+func (r *galleryRepository) SaveYears(albums []YearAlbum) (GalleryManifest, error) {
+	if len(albums) == 0 {
+		return r.store.loadManifestForMutation()
+	}
+
+	normalizeAlbums(albums)
+
+	if err := os.MkdirAll(filepath.Join(r.store.RootDir, GalleryYearsDir), 0o755); err != nil {
+		return GalleryManifest{}, err
+	}
+
+	for _, album := range albums {
+		if err := r.store.writeAlbum(album); err != nil {
+			return GalleryManifest{}, err
+		}
+	}
+
+	manifest, err := r.store.loadManifestForMutation()
+	if err != nil {
+		return GalleryManifest{}, err
+	}
+
+	for _, album := range albums {
+		manifest = upsertManifestYear(manifest, album)
+	}
+
+	if err := r.store.writeManifest(manifest); err != nil {
+		return GalleryManifest{}, err
+	}
+
+	for _, album := range albums {
+		if err := r.store.publisher.PublishYear(album); err != nil {
+			return GalleryManifest{}, err
+		}
+	}
+
+	if err := r.store.publisher.PublishManifest(manifest); err != nil {
+		return GalleryManifest{}, err
+	}
+
+	if err := r.store.EnsureSourceConfigPublished(); err != nil {
+		return GalleryManifest{}, err
+	}
+
+	return manifest, nil
+}
+
 func (r *galleryRepository) UpsertPhoto(photo Photo) (GalleryManifest, error) {
 	if photo.Year == "" {
 		photo.Year = time.Now().Format("2006")
@@ -142,30 +190,7 @@ func (r *galleryRepository) UpsertPhoto(photo Photo) (GalleryManifest, error) {
 		album.Photos = append(album.Photos, photo)
 	}
 
-	normalizeYearAlbum(&album)
-	if err := r.store.writeAlbum(album); err != nil {
-		return GalleryManifest{}, err
-	}
-
-	manifest, err := r.store.loadManifestForMutation()
-	if err != nil {
-		return GalleryManifest{}, err
-	}
-	manifest = upsertManifestYear(manifest, album)
-	if err := r.store.writeManifest(manifest); err != nil {
-		return GalleryManifest{}, err
-	}
-	if err := r.store.publisher.PublishYear(album); err != nil {
-		return GalleryManifest{}, err
-	}
-	if err := r.store.publisher.PublishManifest(manifest); err != nil {
-		return GalleryManifest{}, err
-	}
-	if err := r.store.EnsureSourceConfigPublished(); err != nil {
-		return GalleryManifest{}, err
-	}
-
-	return manifest, nil
+	return r.SaveYears([]YearAlbum{album})
 }
 
 func (r *galleryRepository) DeletePhoto(year, filename string) (GalleryManifest, error) {
