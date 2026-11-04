@@ -1,6 +1,19 @@
 [
   {
     "item": {
+      "uuid": "7lDObOaE2TR0WL8281RpFG",
+      "title": "登峰传奇：丹增·诺尔盖",
+      "cover_image_url": "https://neodb.social/m/item/doubanmovie/2026/09/04/3ab25769-1d58-489e-88e9-fca5518a9dd6.webp",
+      "category": "movie",
+      "url": "/movie/7lDObOaE2TR0WL8281RpFG",
+      "rating": 7.2,
+      "release_date": "2026-09-15"
+    },
+    "created_time": "2026-11-04T15:08:27.441Z",
+    "rating_grade": 6
+  },
+  {
+    "item": {
       "uuid": "7kTAKhCRH1vBDAu8fCYpZ7",
       "title": "世界之主",
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2025/09/11/3565b4c8-9c0b-4d9e-aafd-4ac533bd465d.jpg",
@@ -253,7 +266,7 @@
       "cover_image_url": "https://neodb.social/m/item/movie/2026/08/08/f6f0459f-35fd-43fa-9e7e-0a84aa28749a.jpeg",
       "category": "movie",
       "url": "/movie/31Emt5g7KlZQd14XWHYXCh",
-      "rating": 8.2,
+      "rating": 8.1,
       "release_date": "2024"
     },
     "created_time": "2025-06-01T13:54:00Z",
@@ -444,7 +457,7 @@
       "cover_image_url": "https://neodb.social/m/movie/2022/01/026f727af7-d878-42d4-a53a-c464d0c0ecb4.jpg",
       "category": "movie",
       "url": "/movie/1TyukDnZPNKIK3J7sXxsIy",
-      "rating": 8.3,
+      "rating": 8.2,
       "release_date": "2007"
     },
     "created_time": "2022-07-17T13:54:00Z",
