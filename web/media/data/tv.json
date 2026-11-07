@@ -6,7 +6,7 @@
       "cover_image_url": "https://neodb.social/m/item/doubanmovie/2026/07/16/35ba49a2-6fd1-447b-801e-be05aaafb797.webp",
       "category": "tv",
       "url": "/tv/season/6fTbyd7citV20NSUBczEiS",
-      "rating": 8.2,
+      "rating": 8.3,
       "release_date": "2026-07-03"
     },
     "created_time": "2026-09-05T07:37:37.558Z",
@@ -270,13 +270,13 @@
   },
   {
     "item": {
-      "uuid": "7J4WYxjqbpLWjWq8XG3XKW",
+      "uuid": "5aZqeAbKzm4xwmELxVis6K",
       "title": "摆渡身",
-      "cover_image_url": "https://neodb.social/m/movie/2021/09/16e38923c7-4108-4c18-9bb3-d90107ee832d.jpg",
+      "cover_image_url": "https://neodb.social/m/item/tmdb_tvseason/2026/11/07/e759d73e-b942-49b6-88b6-7a908fb1af22.jpg",
       "category": "tv",
-      "url": "/tv/season/7J4WYxjqbpLWjWq8XG3XKW",
+      "url": "/tv/season/5aZqeAbKzm4xwmELxVis6K",
       "rating": 6.5,
-      "release_date": "2019"
+      "release_date": "2019-10-31"
     },
     "created_time": "2022-12-09T00:58:10Z",
     "rating_grade": 10
