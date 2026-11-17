@@ -1,6 +1,17 @@
 [
   {
     "item": {
+      "uuid": "7lCGxo6lQWlHd1arhhVX8C",
+      "title": "她机器",
+      "cover_image_url": "https://neodb.social/m/item/doubanmusic/2026/09/19/0938fd05-8f76-4232-9181-6f37cd2070c8.jpg",
+      "category": "music",
+      "url": "/album/7lCGxo6lQWlHd1arhhVX8C",
+      "release_date": "2026-09-16"
+    },
+    "created_time": "2026-11-16T07:43:19.142Z"
+  },
+  {
+    "item": {
       "uuid": "2QjOh2DOknYsVn6NHVs0AW",
       "title": "The Dark Side of the Moon (50th Anniversary) [Remastered]",
       "cover_image_url": "https://neodb.social/m/item/apple_music/2026/08/30/cb3091e7-b909-4033-b326-f5d8830d0f13.jpg",
@@ -463,7 +474,7 @@
       "cover_image_url": "https://neodb.social/m/album/2021/10/1458feb139-01dc-4df1-897a-0f1c85c454a0.jpg",
       "category": "music",
       "url": "/album/3QamSc3DR6wzljcAX4iQb8",
-      "rating": 9,
+      "rating": 8.9,
       "release_date": "1996-01-01"
     },
     "created_time": "2026-07-20T03:50:00.373Z"
